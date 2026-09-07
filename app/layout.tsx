@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SF / Midnight Run',
-  description: 'Race a real San Francisco street circuit in a neon night time trial.',
+  title: 'SF / Bay City Kart',
+  description: 'A 3D kart race through real South Park, SoMa, and Embarcadero streets.',
 };
 
 export default function RootLayout({
