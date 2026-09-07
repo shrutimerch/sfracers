@@ -1,22 +1,41 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {buildingGeometry,type Building,type FacadeKind} from './building-geometry';
 export type Point=number[];
-export type MapData={roads:{name:string;points:Point[]}[];route:Point[];buildings:{points:Point[];height:number}[];coast?:Point[][];parks?:Point[][]};
+export type MapData={roads:{name:string;points:Point[]}[];route:Point[];buildings:Building[];coast?:Point[][];parks?:Point[][]};
 export type HUD={mode:string;speed:number;time:number;boost:number;progress:number;street:string;position:number;count:number;drift:boolean;camera:string};
 const distance=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-export function makeGame(canvas:HTMLCanvasElement,mini:HTMLCanvasElement,d:MapData,update:(h:HUD)=>void){
-const renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio,1.6));renderer.setClearColor('#8dd5ed');renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.25;
-const scene=new T.Scene();scene.fog=new T.Fog('#b3deec',180,680);const camera=new T.PerspectiveCamera(65,1,.15,1300);scene.add(new T.HemisphereLight('#e5f9ff','#827f5b',2.5));const sun=new T.DirectionalLight('#fff1c6',3.1);sun.position.set(-160,240,-80);scene.add(sun);
+export type Facades=Record<FacadeKind,T.Texture>;
+export async function loadFacades():Promise<Facades>{
+ const loader=new T.TextureLoader();
+ const names:FacadeKind[]=['brick','masonry','glass'];
+ const entries=await Promise.all(names.map(async name=>{const texture=await loader.loadAsync(`/textures/${name}-facade.png`);texture.colorSpace=T.SRGBColorSpace;texture.wrapS=T.RepeatWrapping;texture.wrapT=T.RepeatWrapping;texture.minFilter=T.LinearMipmapLinearFilter;texture.magFilter=T.LinearFilter;return [name,texture] as const;}));
+ return Object.fromEntries(entries) as Facades;
+}
+export function makeGame(canvas:HTMLCanvasElement,mini:HTMLCanvasElement,d:MapData,update:(h:HUD)=>void,facades:Facades){
+const renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor('#8dd5ed');renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+const scene=new T.Scene();scene.fog=new T.Fog('#b3deec',700,2200);const camera=new T.PerspectiveCamera(65,1,.15,2800);scene.add(new T.HemisphereLight('#e5f9ff','#827f5b',1.5));const sun=new T.DirectionalLight('#fff1c6',2.3);sun.position.set(-160,240,-80);scene.add(sun);
 const material=(color:T.ColorRepresentation)=>new T.MeshStandardMaterial({color,roughness:.85});const ground=new T.Mesh(new T.PlaneGeometry(6500,6500),material('#c5cbb7'));ground.rotation.x=-Math.PI/2;ground.position.y=-.2;scene.add(ground);
 const boxGeo=new T.BoxGeometry(1,1,1);const cube=(parent:T.Object3D,x:number,y:number,z:number,sx:number,sy:number,sz:number,color:T.ColorRepresentation)=>{const m=new T.Mesh(boxGeo,material(color));m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m;};
 function ribbons(lines:Point[][],width:number,color:string,y:number){const vertices:number[]=[];for(const points of lines)for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],len=distance(a,b);if(!len)continue;const nx=-(b[1]-a[1])/len*width/2,nz=(b[0]-a[0])/len*width/2;vertices.push(a[0]+nx,y,a[1]+nz,b[0]+nx,y,b[1]+nz,a[0]-nx,y,a[1]-nz,b[0]+nx,y,b[1]+nz,b[0]-nx,y,b[1]-nz,a[0]-nx,y,a[1]-nz);}const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();const mat=material(color);mat.side=T.DoubleSide;const mesh=new T.Mesh(geo,mat);scene.add(mesh);return mesh;}
 ribbons(d.roads.map(r=>r.points),22,'#e1ddcd',.015);ribbons(d.roads.map(r=>r.points),17,'#586877',.055);ribbons([d.route],.6,'#91ffcd',.09);
 // Road markings are aligned with the downloaded centerlines.
 const stripes:T.Matrix4[]=[];const temp=new T.Object3D();for(const road of d.roads){for(let i=1;i<road.points.length;i++){const a=road.points[i-1],b=road.points[i],len=distance(a,b);for(let t=4;t<len;t+=15){temp.position.set(a[0]+(b[0]-a[0])*t/len,.08,a[1]+(b[1]-a[1])*t/len);temp.rotation.set(0,-Math.atan2(b[1]-a[1],b[0]-a[0]),0);temp.scale.set(Math.min(4,len-t),.015,.17);temp.updateMatrix();stripes.push(temp.matrix.clone());}}}const stripeMesh=new T.InstancedMesh(boxGeo,material('#f8eab7'),stripes.length);stripes.forEach((m,i)=>stripeMesh.setMatrixAt(i,m));scene.add(stripeMesh);
-// Actual OSM footprints, with stylized facade colors and estimated heights where absent.
-const colors=['#e1a47e','#8cb9b6','#b8c4d6','#e4c989','#c8afc4','#d8d9ce'];const groups:T.BufferGeometry[][]=colors.map(()=>[]);const windows:T.Matrix4[]=[];
-d.buildings.forEach((b,index)=>{if(b.points.length<4)return;const shape=new T.Shape();b.points.forEach((p,i)=>i?shape.lineTo(p[0],-p[1]):shape.moveTo(p[0],-p[1]));const geo=new T.ExtrudeGeometry(shape,{depth:b.height,bevelEnabled:false,steps:1});geo.rotateX(-Math.PI/2);groups[index%colors.length].push(geo);for(let i=1;i<b.points.length&&windows.length<23000;i++){const a=b.points[i-1],p=b.points[i],len=distance(a,p);if(len<5||len>160)continue;const ang=Math.atan2(p[1]-a[1],p[0]-a[0]);for(let along=3;along<len-2;along+=5)for(let y=3;y<Math.min(b.height-1,55);y+=4.5){temp.position.set(a[0]+Math.cos(ang)*along+Math.sin(ang)*.06,y,a[1]+Math.sin(ang)*along-Math.cos(ang)*.06);temp.rotation.set(0,-ang,0);temp.scale.set(1.7,2,.15);temp.updateMatrix();windows.push(temp.matrix.clone());}}});
-groups.forEach((list,i)=>{if(!list.length)return;const merged=mergeGeometries(list);scene.add(new T.Mesh(merged,material(colors[i])));list.forEach(g=>g.dispose());});const wm=new T.InstancedMesh(boxGeo,material('#365c73'),windows.length);windows.forEach((m,i)=>wm.setMatrixAt(i,m));scene.add(wm);
+// Textures use metres-per-window UVs, so tall walls repeat floors instead of stretching one photograph.
+const kinds:FacadeKind[]=['brick','masonry','glass'];
+const walls:Record<FacadeKind,T.BufferGeometry[]>={brick:[],masonry:[],glass:[]};const roofs:T.BufferGeometry[]=[];const ledges:T.Matrix4[]=[];
+for(const texture of Object.values(facades))texture.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());
+for(const building of d.buildings){
+ if(building.points.length<4)continue;
+ const kind=building.facade||'masonry';const geometry=buildingGeometry(building);walls[kind].push(geometry.walls);roofs.push(geometry.roof);
+ for(let i=1;i<building.points.length;i++){
+  const a=building.points[i-1],b=building.points[i],len=distance(a,b);if(len<1)continue;
+  temp.position.set((a[0]+b[0])/2,building.height+.06,(a[1]+b[1])/2);temp.rotation.set(0,-Math.atan2(b[1]-a[1],b[0]-a[0]),0);temp.scale.set(len+.12,.26,.45);temp.updateMatrix();ledges.push(temp.matrix.clone());
+ }
+}
+for(const kind of kinds){if(!walls[kind].length)continue;const merged=mergeGeometries(walls[kind]);const m=new T.MeshStandardMaterial({map:facades[kind],color:'#ffffff',roughness:kind==='glass'?.32:.87,metalness:kind==='glass'?.18:0,side:T.DoubleSide});scene.add(new T.Mesh(merged,m));walls[kind].forEach(g=>g.dispose());}
+if(roofs.length){const merged=mergeGeometries(roofs);scene.add(new T.Mesh(merged,new T.MeshStandardMaterial({color:'#8b8981',roughness:1,side:T.DoubleSide})));roofs.forEach(g=>g.dispose());}
+const cornices=new T.InstancedMesh(boxGeo,material('#a9a59a'),ledges.length);ledges.forEach((m,i)=>cornices.setMatrixAt(i,m));scene.add(cornices);
 if(d.coast?.length){for(const coast of d.coast){ribbons([coast],3,'#ddd1b0',.1);const waterShape=new T.Shape();const pts=[...coast,[3000,coast[coast.length-1][1]],[3000,coast[0][1]]];pts.forEach((p,i)=>i?waterShape.lineTo(p[0],-p[1]):waterShape.moveTo(p[0],-p[1]));const water=new T.Mesh(new T.ShapeGeometry(waterShape),new T.MeshStandardMaterial({color:'#32a8c4',roughness:.3,metalness:.25,side:T.DoubleSide}));water.rotation.x=-Math.PI/2;water.position.y=-.12;scene.add(water);}}
 for(const park of d.parks||[]){const shape=new T.Shape();park.forEach((p,i)=>i?shape.lineTo(p[0],-p[1]):shape.moveTo(p[0],-p[1]));const m=new T.Mesh(new T.ShapeGeometry(shape),material('#76b955'));m.rotation.x=-Math.PI/2;m.position.y=.12;scene.add(m);}
 const lengths=[0];for(let i=1;i<d.route.length;i++)lengths.push(lengths[i-1]+distance(d.route[i-1],d.route[i]));const total=lengths[lengths.length-1];function at(s:number){s=Math.max(0,Math.min(total-.01,s));let i=1;while(lengths[i]<s)i++;const a=d.route[i-1],b=d.route[i],t=(s-lengths[i-1])/(lengths[i]-lengths[i-1]||1);return {x:a[0]+(b[0]-a[0])*t,z:a[1]+(b[1]-a[1])*t,a:Math.atan2(b[1]-a[1],b[0]-a[0])};}
@@ -39,5 +58,5 @@ const next=at(checks[Math.min(cp,checks.length-1)]);ring.position.set(next.x,5.8
 const ready=mode==='ready';const behind=firstPerson?-.85:ready?10:8.5+Math.abs(speed)*.035;camPos.set(x-Math.cos(angle)*behind,firstPerson?1.8:ready?5.8:4.3,z-Math.sin(angle)*behind);camera.position.lerp(camPos,1-Math.exp(-dt*8));look.set(x+Math.cos(angle)*18,firstPerson?1.7:1.5,z+Math.sin(angle)*18);camera.lookAt(look);camera.fov=T.MathUtils.lerp(camera.fov,boostTimer>0||keys.shift?76:65,dt*3);camera.updateProjectionMatrix();renderer.render(scene,camera);
 if(now-hudTime>100){hudTime=now;miniMap();update({mode,speed:Math.round(Math.abs(speed)*2.237),time,boost,progress:mode==='finished'?100:progress/total*100,street,position:mode==='finished'?1+rivals.filter(r=>r.s>=total).length:1+rivals.filter(r=>r.s>progress+25).length,count:Math.ceil(count),drift:drifting,camera:firstPerson?'Driver':'Chase'});}}
 camera.position.set(x-Math.cos(angle)*10,5,z-Math.sin(angle)*10);raf=requestAnimationFrame(frame);
-return {start:reset,pause,recover,toggleCamera,setKey,getState:()=>({mode,time,progress}),dispose:()=>{disposed=true;cancelAnimationFrame(raf);window.removeEventListener('keydown',handleDown);window.removeEventListener('keyup',handleUp);window.removeEventListener('blur',blur);scene.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m.dispose());}});renderer.dispose();}};
+return {start:reset,pause,recover,toggleCamera,setKey,getState:()=>({mode,time,progress}),dispose:()=>{disposed=true;cancelAnimationFrame(raf);window.removeEventListener('keydown',handleDown);window.removeEventListener('keyup',handleUp);window.removeEventListener('blur',blur);scene.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m.dispose());}});Object.values(facades).forEach(t=>t.dispose());renderer.dispose();}};
 }

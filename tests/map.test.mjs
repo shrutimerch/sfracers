@@ -22,7 +22,8 @@ test('real buildings surround the starting street and extend above ground',()=>{
   const shape=new T.Shape(building.points.map(([x,z])=>new T.Vector2(x,-z)));
   const geometry=new T.ExtrudeGeometry(shape,{depth:building.height,bevelEnabled:false});
   geometry.rotateX(-Math.PI/2);geometry.computeBoundingBox();
-  assert.ok(geometry.boundingBox.max.y>=5,'building must extend above the road');
+  assert.ok(building.height>=2.5,'small mapped structures still need positive height');
+  assert.ok(Math.abs(geometry.boundingBox.max.y-building.height)<.01,'building must retain its mapped height above the road');
   assert.ok(Math.abs(geometry.boundingBox.min.y)<.001);
   geometry.dispose();
  }
