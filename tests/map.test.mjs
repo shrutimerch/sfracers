@@ -5,13 +5,13 @@ import * as T from 'three';
 const data=JSON.parse(readFileSync(new URL('../public/streets.json',import.meta.url),'utf8'));
 const unproject=([x,z])=>[37.786-z/111200,x/87900-122.395];
 const meters=([lat,lon],[a,b])=>Math.hypot((lat-a)*111200,(lon-b)*87900);
-test('course starts at South Park and reaches the Embarcadero',()=>{
- const latlon=data.route.map(unproject);
- assert.ok(meters(latlon[0],[37.7810517,-122.3946605])<1,'start must be South Park');
- for(const landmark of [[37.782144,-122.3932921],[37.7842355,-122.3879418],[37.7946218,-122.3933097]]){
-  assert.ok(Math.min(...latlon.map(p=>meters(p,landmark)))<5,'course must reach the named street anchor');
- }
+test('course follows the closed South Park street ring',()=>{
  assert.deepEqual(data.route[0],data.route.at(-1));
+ const length=data.route.slice(1).reduce((n,p,i)=>n+Math.hypot(p[0]-data.route[i][0],p[1]-data.route[i][1]),0);
+ assert.ok(length>350&&length<390);
+ for(const p of data.route)assert.ok(meters(unproject(p),[37.7816,-122.39395])<110);
+ assert.ok(data.parkDetails.trees.length>=20);
+ assert.ok(data.parkDetails.paths.find(p=>p.id===549848273).points.length>20);
 });
 test('real buildings surround the starting street and extend above ground',()=>{
  const start=data.route[0];let nearby=0;

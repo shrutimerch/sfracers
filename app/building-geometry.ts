@@ -1,6 +1,6 @@
 import * as T from 'three';
 export type FacadeKind='brick'|'masonry'|'glass';
-export type Building={points:number[][];height:number;facade?:FacadeKind;id?:number};
+export type Building={points:number[][];height:number;facade?:FacadeKind;id?:number;address?:string;street?:string;name?:string};
 /** Each facade image represents two window bays and two floors, about 8 × 7 metres. */
 export function buildingGeometry(building:Building){
  const position:number[]=[],uv:number[]=[];

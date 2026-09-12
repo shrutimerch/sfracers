@@ -1,0 +1,21 @@
+South Park scenery references
+
+Mapped park boundary, buildings, tree positions and pedestrian paths:
+OpenStreetMap contributors, ODbL, retrieved September 2026.
+https://www.openstreetmap.org/copyright
+
+Park paving, landscape and furniture design reference:
+https://www.fletcher.studio/southpark
+https://www.sfrecpark.org/576/South-Park
+
+164 South Park facade reference:
+https://www.saitowitz.com/164-south-park
+
+The user's street-level South Park screenshot guided colors, trees, planted edges,
+concrete slabs, gravel and furniture proportions. No Google photographs are
+embedded, copied into textures or served by this game.
+
+Building footprints and available mapped heights are real map geometry.
+Unmapped heights, window patterns, facade colors, furnishings, vegetation shape
+and parked cars are approximations. This is a reference-based 3D reconstruction,
+not photogrammetry or an address-by-address photographic survey.
