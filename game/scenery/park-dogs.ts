@@ -1,3 +1,4 @@
+import { parkSurfaceHeight } from './park-surface.ts';
 import * as T from 'three';
 import survey from './data/waterfront-geometry.ts';
 import type { MapData, Point } from '../types';
@@ -93,7 +94,11 @@ export function buildParkDogs(root: T.Group, data: MapData, human: T.Group) {
     const owner = human.clone(true);
     owner.name = `Dog owner — ${area.name}`;
     owner.visible = true;
-    owner.position.set(area.center[0], 0.14, area.center[1]);
+    owner.position.set(
+      area.center[0],
+      parkSurfaceHeight(data, area.center[0], area.center[1]) + 0.02,
+      area.center[1],
+    );
     owner.traverse((object) => {
       if (object instanceof T.Group && (object.name === 'knee' || object.name === 'elbow'))
         object.rotation.z = 0.1;
@@ -151,7 +156,9 @@ export function buildParkDogs(root: T.Group, data: MapData, human: T.Group) {
         dz = r * 0.55 * Math.cos(t);
       dog.group.position.set(
         dog.area.center[0] + x,
-        0.15 + Math.abs(Math.sin(time * 9 + dog.phase)) * 0.045,
+        parkSurfaceHeight(data, dog.area.center[0] + x, dog.area.center[1] + z) +
+          0.02 +
+          Math.abs(Math.sin(time * 9 + dog.phase)) * 0.045,
         dog.area.center[1] + z,
       );
       dog.group.rotation.y = -Math.atan2(dz, dx);

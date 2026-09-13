@@ -1,3 +1,4 @@
+import { SOUTH_PARK_GRASS_HEIGHT } from './park-surface';
 import { createTreePlacement } from './tree-clearance';
 import { SCENERY_LOCATIONS } from './config/scenery-locations';
 import { parkParking } from './south-park-parking';
@@ -168,7 +169,7 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
     }
   }
   // The park boundary and paths sit over the road's inner edge, following actual survey points.
-  texturedSlab(park, grass, 0.16);
+  texturedSlab(park, grass, SOUTH_PARK_GRASS_HEIGHT);
   strip(park, 0.32, edge, 0.25);
   for (const path of d.parkDetails?.paths || []) {
     if (path.crossing) continue; // Painted crossings now come from the shared OSM marking layer.

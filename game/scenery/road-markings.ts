@@ -1,4 +1,4 @@
-import { EMBARCADERO_LAYOUT } from './config/embarcadero-layout';
+import { embarcaderoBikeCenter } from './config/embarcadero-layout';
 import { hasBrannanDoubleYellow, hasObservedGreenLane } from './config/scenery-locations';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -285,7 +285,7 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
           offset =
             side.side *
             (tags.name === 'The Embarcadero'
-              ? EMBARCADERO_LAYOUT.bikeCenter
+              ? embarcaderoBikeCenter({ name: tags.name, points: feature.points })
               : tags.name === 'King Street'
                 ? 3.7
                 : side.kind === 'shared_lane'

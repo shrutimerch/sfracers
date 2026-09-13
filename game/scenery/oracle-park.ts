@@ -2,6 +2,12 @@ import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Facades, Point } from '../types';
 
+// The mapped stadium relation must not also render as a generic apartment block.
+// The small approach service structures are modeled below at their low real-world scale.
+export const ORACLE_GENERIC_BUILDING_IDS = new Set([
+  -7330762, 149167947, 149167945, 149167940, 288716390,
+]);
+
 type Perimeter = { points: Point[] };
 
 // The footprint comes from OSM. Heights and entrance details are modeled estimates
@@ -88,6 +94,11 @@ export function buildOraclePark(
       box(mx, 9, mz, length, 18, 2, brick, angle);
       detail(length / 2, 0.9, length, 1.8, stone);
       detail(length / 2, 17.7, length, 0.8, stone, 1.12, 0.45);
+      // Three floors are separated by brick spandrels and narrow pale stone bands.
+      for (const y of [6.5, 12.3]) {
+        detail(length / 2, y, length, 1.45, brick, 1.42, 0.48);
+        detail(length / 2, y + 0.74, length, 0.32, stone, 1.7, 0.48);
+      }
       const bays = Math.max(1, Math.round(length / 7.5)),
         step = length / bays;
       for (let j = 0; j < bays; j++) {
@@ -108,6 +119,29 @@ export function buildOraclePark(
         for (const y of [20, 24.5, 29]) beam(p(j * step, y), p((j + 1) * step, y));
       }
     }
+  }
+
+  // Low utility frontage beside the stadium replaces generic multi-story blocks.
+  // The photo shows a pale wall, brick entrance piers and dark gates behind the planting.
+  for (const [x, z, w, depth] of [
+    [576, 660, 17, 11],
+    [565, 677, 22, 13],
+    [546, 700, 12, 8],
+  ]) {
+    box(x, 2, z, w, 4, depth, stone, Math.PI / 4);
+    box(x, 4.1, z, w + 0.4, 0.25, depth + 0.4, insetBrick, Math.PI / 4);
+    const nx = -Math.SQRT1_2,
+      nz = -Math.SQRT1_2;
+    box(
+      x + nx * (depth / 2 + 0.1),
+      1.7,
+      z + nz * (depth / 2 + 0.1),
+      3,
+      3.4,
+      0.18,
+      steel,
+      Math.PI / 4,
+    );
   }
 
   // Clock tower at the King / Second Street corner. Local -Z faces King Street.
@@ -131,6 +165,12 @@ export function buildOraclePark(
   towerBox(0, 1, 0, 13.3, 2, 13.3, stone);
   towerBox(0, 34.5, 0, 14, 0.9, 14, stone);
   towerBox(0, 35.3, 0, 13.4, 0.6, 13.4, insetBrick);
+  const towerRoof = new T.Mesh(new T.ConeGeometry(10, 4.2, 4), material('#68736b'));
+  towerRoof.position.copy(transform(0, 37.7, 0));
+  towerRoof.rotation.y = rotation + Math.PI / 4;
+  towerRoof.name = 'Oracle clock tower pyramidal roof';
+  group.add(towerRoof);
+  beam(transform(0, 39.8, 0), transform(0, 44, 0), 0.09);
   // Tall stone-framed tower window beneath the clock and banner.
   towerBox(0, 10, -6.62, 4.6, 16, 0.3, stone);
   towerBox(0, 10, -6.83, 3.5, 15, 0.12, glass);
@@ -226,7 +266,7 @@ export function buildOraclePark(
     approachSign.position.set(525.9, 20.7, 715.4);
     approachSign.rotation.y = Math.PI * 0.75;
   }
-  box(525.5, 20.7, 715.8, 28, 4.2, 0.3, steel, Math.PI / 4);
+  for (const y of [18.7, 22.8]) box(525.5, y, 715.8, 29, 0.18, 0.3, steel, Math.PI / 4);
   for (const offset of [-10, 0, 10]) {
     box(525.5 + offset * Math.SQRT1_2, 18.6, 715.8 + offset * Math.SQRT1_2, 0.18, 4, 0.25, steel);
   }

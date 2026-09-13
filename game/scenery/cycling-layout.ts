@@ -1,4 +1,4 @@
-import { EMBARCADERO_LAYOUT } from './config/embarcadero-layout.ts';
+import { embarcaderoBikeCenter } from './config/embarcadero-layout.ts';
 import data from './data/road-marking-data.ts';
 import { bicycleSides, bicycleAppearance, type Tags } from './road-marking-rules.ts';
 import type { MapData, Point } from '../types';
@@ -30,11 +30,14 @@ export function cyclingStrips(_d: MapData): CyclingStrip[] {
   return strips;
 }
 // Original road-marking offsets, shared with tree-clearance geometry.
-function bikeOffset(feature: { tags: Tags }, side: { side: number; kind: string }) {
+function bikeOffset(
+  feature: { tags: Tags; points: Point[] },
+  side: { side: number; kind: string },
+) {
   return (
     side.side *
     (feature.tags.name === 'The Embarcadero'
-      ? EMBARCADERO_LAYOUT.bikeCenter
+      ? embarcaderoBikeCenter({ name: feature.tags.name, points: feature.points })
       : feature.tags.name === 'King Street'
         ? 3.7
         : side.kind === 'shared_lane'

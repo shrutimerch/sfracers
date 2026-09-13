@@ -1,3 +1,4 @@
+import survey from './data/waterfront-geometry.ts';
 import { cyclingStrips } from './cycling-layout.ts';
 import type { MapData, Point } from '../types';
 
@@ -28,7 +29,7 @@ export function waterfrontTreePosition(point: Point, roads: MapData['roads']): P
   return [x, z];
 }
 
-/** Resolve trunks against the same road widths and bike-lane offsets used by the renderer. */
+/** Resolve trunks against the road, bike-lane and Muni corridors used by the renderer. */
 export function createTreePlacement(d: MapData) {
   const strips = [
     ...[...d.roads, ...(d.paths || [])].flatMap((r) =>
@@ -39,6 +40,14 @@ export function createTreePlacement(d: MapData) {
       })),
     ),
     ...cyclingStrips(d),
+    // Reserve the full tram corridor, not just the two narrow steel rails.
+    ...survey.rails.flatMap((track) =>
+      track.points.slice(1).map((b, i) => ({
+        a: track.points[i],
+        b,
+        halfWidth: 1.5,
+      })),
+    ),
   ];
   const clear = (p: Point) =>
     strips.every(({ a, b, halfWidth }) => {

@@ -118,7 +118,8 @@ test('cars stay opaque and solid at route ends near the driver', () => {
   const path = motionPath(road.points);
   const end = path.at(path.length, 0.75);
   const city = buildCityMotion(new T.Scene(), data);
-  city.update(1000, end);
+  // Reach the endpoint before placing the driver nearby; approaching traffic now yields.
+  city.update((path.length * 0.8) / 6 - 0.00001);
   const obstacle = city.obstacles[0];
   assert.ok(Math.hypot(obstacle.x - end.x, obstacle.z - end.z) < 0.001);
   city.update(1, end);

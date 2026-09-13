@@ -1,4 +1,6 @@
-import { EMBARCADERO_LAYOUT } from '../scenery/config/embarcadero-layout';
+import { ORACLE_GENERIC_BUILDING_IDS } from '../scenery/oracle-park';
+import { buildPromenadePaving } from '../scenery/promenade-paving';
+import { embarcaderoDivider } from '../scenery/config/embarcadero-layout';
 import { buildEmbarcaderoStreetscape } from '../scenery/embarcadero-streetscape';
 import { createBayWater } from '../scenery/bay-water';
 import { DELANCEY_PATIO_ID } from '../scenery/delancey-street';
@@ -119,22 +121,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   }
   for (const r of d.roads.filter((r) => r.name === 'South Park'))
     ribbons([r.points], (r.width ?? 9.8) + 3.7, '#b8b9b1', 0.015);
-  // Promenade is a separate paved racing surface, not an asphalt traffic lane.
-  for (const path of d.paths || []) {
-    ribbons([path.points], path.width + 1, '#b6b1a2', 0.025);
-    ribbons([path.points], path.width, '#a6a397', 0.075);
-    for (let i = 1; i < path.points.length; i++) {
-      const a = path.points[i - 1],
-        b = path.points[i],
-        len = distance(a, b);
-      for (let t = 2; t < len; t += 4) {
-        const x = a[0] + ((b[0] - a[0]) * t) / len,
-          z = a[1] + ((b[1] - a[1]) * t) / len;
-        const seam = cube(scene, x, 0.08, z, 0.055, 0.008, path.width, '#777b74');
-        seam.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]);
-      }
-    }
-  }
+  buildPromenadePaving(scene, d.paths || []);
   // Road markings are aligned with the downloaded centerlines.
   const stripes: T.Matrix4[] = [];
   const temp = new T.Object3D();
@@ -148,7 +135,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
       for (let t = 4; t < len; t += 15) {
         const stripeX = a[0] + ((b[0] - a[0]) * t) / len;
         if (road.name === 'Brannan Street' && hasBrannanDoubleYellow(stripeX)) continue;
-        const divider = road.name === 'The Embarcadero' ? EMBARCADERO_LAYOUT.divider : 0;
+        const divider = road.name === 'The Embarcadero' ? embarcaderoDivider(road) : 0;
         temp.position.set(
           a[0] + ((b[0] - a[0]) * t) / len - ((b[1] - a[1]) / len) * divider,
           0.08,
@@ -178,6 +165,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
       hasRouteProfile(building) ||
       building.id === DELANCEY_PATIO_ID ||
       HARBOR_BUILDING_IDS.has(building.id ?? 0) ||
+      ORACLE_GENERIC_BUILDING_IDS.has(building.id ?? 0) ||
       building.id === 443021970
     )
       continue;
@@ -274,13 +262,13 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   }
   const disposeRoute = buildRouteScenery(scene, d, facades);
   const disposePark = buildSouthPark(scene, d);
-  buildSidewalks(scene, d);
+  const sidewalkWalks = buildSidewalks(scene, d);
   const disposeMarkings = buildRoadMarkings(scene, d);
   const disposeTraffic = buildTrafficControls(scene, d);
   const disposeSigns = buildStreetSigns(scene, d);
   const disposeBikeStations = buildBikeStations(scene, d.bikeStations || []);
 
-  const cityMotion = buildCityMotion(scene, d);
+  const cityMotion = buildCityMotion(scene, d, sidewalkWalks);
   const curbside = buildEmbarcaderoStreetscape(scene, d);
   const scenery = new T.Group();
   // Reparenting removes children from scene; iterate a snapshot, not the live array.

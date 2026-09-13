@@ -126,7 +126,7 @@ export function createRaceSimulation(
         x = contact.x;
         z = contact.z;
         if (contact.hit) {
-          speed = 0;
+          if (contact.blocked) speed = 0;
           boostTimer = 0;
           drifting = false;
           driftCharge = 0;

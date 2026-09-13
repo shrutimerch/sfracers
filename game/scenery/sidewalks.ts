@@ -3,6 +3,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { MapData, Point } from '../types';
 import { buildSidewalkScooters, type ScooterPlacement } from './sidewalk-scooters.ts';
 
+export type SidewalkWalk = { name: string; points: Point[]; width: number };
+
 // A first detailed streetscape pass: real centerlines, representative SF concrete and fixtures.
 export function buildSidewalks(scene: T.Scene, d: MapData) {
   const groups = new Map<T.Material, T.BufferGeometry[]>();
@@ -96,6 +98,7 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
     }
     return inside;
   };
+  const walkingPaths: SidewalkWalk[] = [];
   let count = 0;
   const scooters: ScooterPlacement[] = [];
   for (const road of d.roads) {
@@ -110,6 +113,7 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
       ].includes(road.name)
     )
       continue;
+    const lastWalk = new Map<number, SidewalkWalk>();
     const pts = road.points,
       half = (road.width ?? (road.name === 'South Park' ? 9.8 : 14)) / 2,
       width = road.name === 'South Park' ? 1.9 : 3;
@@ -176,6 +180,35 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
             outer1 = at(t1, side * (half + width));
           const clear = Math.min(...[inner0, inner1, outer0, outer1].map(clearance));
           if (clear < 0.25 || inPark(center)) continue;
+          // Pedestrian paths come from the actual accepted sidewalk slabs, so
+          // gaps at intersections, park boundaries and missing sidewalks stay gaps.
+          const start = at(t0, side * (half + width / 2));
+          const end = at(t1, side * (half + width / 2));
+          const safeForWalking = [start, center, end].every(
+            (p) =>
+              !all.some(
+                (s) =>
+                  Math.min(s.a[0], s.b[0]) - s.half - 1 < p[0] &&
+                  Math.max(s.a[0], s.b[0]) + s.half + 1 > p[0] &&
+                  Math.min(s.a[1], s.b[1]) - s.half - 1 < p[1] &&
+                  Math.max(s.a[1], s.b[1]) + s.half + 1 > p[1] &&
+                  distanceTo(p, s.a, s.b) - s.half < 0.9,
+              ),
+          );
+          if (safeForWalking) {
+            let walk = lastWalk.get(side);
+            const previous = walk?.points.at(-1);
+            if (
+              !walk ||
+              !previous ||
+              Math.hypot(previous[0] - start[0], previous[1] - start[1]) > 0.05
+            ) {
+              walk = { name: road.name, points: [start], width };
+              walkingPaths.push(walk);
+              lastWalk.set(side, walk);
+            }
+            walk.points.push(end);
+          }
           const height = (p: Point) =>
             0.075 + 0.205 * Math.min(1, Math.max(0, (clearance(p) - 0.25) / 2.2));
           const y0 = height(inner0),
@@ -246,4 +279,5 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
     scene.add(mesh);
     geometries.forEach((g) => g.dispose());
   }
+  return walkingPaths;
 }

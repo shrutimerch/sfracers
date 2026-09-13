@@ -82,3 +82,49 @@ The subsequent front reference at 691 The Embarcadero distinguishes the taller t
 ## Pier 38 waterside details
 
 The supplied May 2025 close-up from 675 The Embarcadero guides `game/scenery/waterfront-railings.ts`: five horizontal metal rails between pale concrete posts following the retained Brannan Wharf shoreline, and a black-and-ivory banded square marker. `game/scenery/bay-water.ts` adds shared procedural color/bump maps with slow wind-ripple movement and a muted bay-water palette. Both water textures are released during world teardown.
+
+The supplied view at 600 The Embarcadero shows the restaurant continuing onto footprint 125401320. This wing now shares the terracotta facade, a longer striped canopy along the waterfront and its patio-facing return, and repeated restaurant lettering. The Brannan canopy remains limited to the short corner section. Flower boxes sit below the terrace glass; the patio is built once for both wings.
+
+The additional Brannan/Embarcadero corner photo corrects footprint 125401311: it is the substantial rounded restaurant building, not an open terrace. The model now uses a three-story terracotta corner with cream loggia columns, railings and a hipped roof. A continuous mitered green/cream canopy follows its perimeter; a shallow brick/glass seating strip hugs the outer corner. Dimensions are photo-based estimates.
+
+Bayside Village corner: the supplied May 2025 Brannan/Embarcadero screenshot
+informs the pale three-story finishes on footprints 37058279 and 37058283,
+green corner roof cap, dark café canopy, circular entrance monument, flagpole,
+cream bollards, planters and branching trees. `bayside-village.ts` places the
+plaza north of Brannan, west of the Embarcadero; dimensions and furnishings are
+photo-based estimates. Existing surveyed crossings and signals are retained.
+
+The supplied 652 The Embarcadero S view guides `delancey-courtyard.ts`: paired sand-colored entrance bays, recessed terracotta walls, an overhead arched connector, iron double gates and fencing, planted courtyard, and a small rear fountain. It occupies the gap between footprints 125401320 and 125401313; placement and dimensions are estimates from the photo and mapped footprints.
+
+The supplied views near 654 and 684 Embarcadero guide `delancey-waterfront-gardens.ts`: a private planted garden behind terracotta walls and black ironwork, followed by a public paved green with edged lawn beds, wooden benches, bollards and broadleaf trees. Placement is estimated in the open land south of footprint 125401313, clear of the neighboring Townsend buildings.
+
+Pier 40 now uses the supplied 731 Embarcadero view: cream warehouse walls and dark industrial glazing replace the generic brick footprint. The entrance has curved pale paving inlays, panel joints, white flower planters, yellow bollards and drain grates. Five boats are moored along the pier apron with fenders and mooring lines. Dimensions and boat arrangement are modeled estimates.
+
+The extended promenade now retains its mapped widths with individual approximately 2m concrete panels, narrow joints, pale edge bands and curb depth. The supplied 31 King Street photo guides the Oracle approach border: red/pink flowers, clipped shrubs, tall black iron fencing and broadleaf trees behind the sidewalk. All decorative dimensions are estimates, not surveyed measurements.
+
+
+Townsend/Embarcadero: the supplied January 2025 image guides the South Beach
+Marina Apartments corner in `townsend-corner.ts`: curved paved forecourt,
+circular concrete hedge planter and white identification sign, lawns, pale
+colonnade, hipped roofs, bollards and sparse winter trees. Existing footprints
+288647983, 288647982 and 288648572 retain their mapped positions; facade colors
+and scene dimensions are photo-based estimates. The planting is set back from
+both carriageways and the existing crossing geometry is retained.
+
+Pier 40 entrance correction from the in-game comparison: extend the approach paving to the sidewalk, place 14 decorative white planters along both curved borders and the street end, and use a repeating running-bond block texture with mortar bump detail. The entrance remains open between planter rows.
+
+The 753 Embarcadero reference corrects the Oracle border extent: fencing, dense flower beds and supplemental shrubs are restricted to the stadium end, leaving the sculpture lawn frontage open.
+
+Muni median paving: the supplied Embarcadero/King approach photo guides the
+staggered gray cobblestone track bed and pale sandstone-colored palm surrounds.
+`muni-paving.ts` clips paving outside the prepared road, promenade and bicycle
+surfaces; embedded steel rails remain visible above the stone without exposed
+sleepers. Texture scale and colors are modeled estimates from the reference.
+
+Muni median layout refinement: the track pair stays central, with palm planting
+rows on its two outer sides. Blue twin-arm lamps fill gaps within those rows.
+Tree clearance now reserves the full tram corridor in addition to road and bike
+surfaces. Rail heads use brighter steel over dark raised bases, topping out at
+0.205 m above the modeled ground (0.12 m above the cobblestone surface).
+
+Oracle Park approach correction: omit generic relation -7330762, which was rendering a 30m apartment-textured duplicate behind the custom stadium. Replace the nearby service footprints with low utility frontage; add brick floor spandrels, cream horizontal bands and a pyramidal clock roof. The large approach lettering sits on an open steel frame rather than a solid signboard.

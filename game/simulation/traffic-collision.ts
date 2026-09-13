@@ -21,6 +21,7 @@ export function resolveTrafficCollision(
 ) {
   let { x, z } = target;
   let hit = false;
+  let blocked = false;
   const forward = { x: Math.cos(angle), z: Math.sin(angle) };
   const right = { x: -forward.z, z: forward.x };
   for (let pass = 0; pass < 3; pass++)
@@ -86,6 +87,9 @@ export function resolveTrafficCollision(
       x += n.x * correction;
       z += n.z * correction;
       hit = true;
+      // Depenetration can come from traffic movement or a slight initial overlap.
+      // Only cancel the driver's speed when they are steering into the obstacle.
+      if ((target.x - start.x) * n.x + (target.z - start.z) * n.z < -1e-8) blocked = true;
     }
-  return { x, z, hit };
+  return { x, z, hit, blocked };
 }

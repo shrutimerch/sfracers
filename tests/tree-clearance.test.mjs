@@ -18,7 +18,7 @@ const distance = (p, a, b) => {
   );
   return Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dz);
 };
-test('mapped park trees and waterfront palms/broadleaf trunks clear roads and cycling strips', () => {
+test('mapped trees clear roads, cycling strips and the full Muni corridor', () => {
   const placement = createTreePlacement(d);
   const strips = cyclingStrips(d);
   let retained = 0;
@@ -35,6 +35,12 @@ test('mapped park trees and waterfront palms/broadleaf trunks clear roads and cy
             (road.width ?? (road.name === 'South Park' ? 9.8 : 14)) / 2 + 1 - 1e-8,
         );
     for (const s of strips) assert.ok(distance(p, s.a, s.b) >= s.halfWidth + 1 - 1e-8);
+    for (const track of survey.rails)
+      for (let i = 1; i < track.points.length; i++)
+        assert.ok(
+          distance(p, track.points[i - 1], track.points[i]) >= 2.5 - 1e-8,
+          'tree trunk intrudes into tram corridor',
+        );
     assert.ok(Math.hypot(p[0] - point[0], p[1] - point[1]) <= 12.001);
   }
   assert.ok(retained > 50);
@@ -74,4 +80,49 @@ test('centerline and intersection trees relocate safely; oversized junctions omi
     ]),
     null,
   );
+});
+
+test('median palms form two outer rows with lamps clear of tracks and trunks', async () => {
+  const { medianPalmRows } = await import('../game/scenery/median-layout.ts');
+  const { medianLampPositions } = await import('../game/scenery/median-lamps.ts');
+  const rows = medianPalmRows(d),
+    palms = rows.flat();
+  assert.ok(rows.every((row) => row.length > 10));
+  const clear = createTreePlacement(d).clear;
+  for (const p of palms) assert.ok(clear(p));
+  // No trunk may sit in the strip joining nearby centerlines of the two tracks.
+  for (const p of palms) {
+    const feet = survey.rails.map((track) => {
+      let best = Infinity,
+        foot;
+      for (let i = 1; i < track.points.length; i++) {
+        const a = track.points[i - 1],
+          b = track.points[i],
+          dx = b[0] - a[0],
+          dz = b[1] - a[1];
+        const t = Math.max(
+          0,
+          Math.min(1, ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / (dx * dx + dz * dz)),
+        );
+        const q = [a[0] + t * dx, a[1] + t * dz],
+          dist = Math.hypot(p[0] - q[0], p[1] - q[1]);
+        if (dist < best) {
+          best = dist;
+          foot = q;
+        }
+      }
+      return foot;
+    });
+    const [a, b] = feet,
+      dx = b[0] - a[0],
+      dz = b[1] - a[1];
+    const projection = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dz) / (dx * dx + dz * dz);
+    assert.ok(projection < 0 || projection > 1, 'palm sits between the two tracks');
+  }
+  const lamps = medianLampPositions(d, palms);
+  assert.ok(lamps.length > 10);
+  for (const { point } of lamps) {
+    assert.ok(clear(point));
+    assert.ok(palms.every((p) => Math.hypot(p[0] - point[0], p[1] - point[1]) >= 4));
+  }
 });

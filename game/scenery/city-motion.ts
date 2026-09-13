@@ -1,3 +1,5 @@
+import { parkSurfaceHeight } from './park-surface.ts';
+import type { SidewalkWalk } from './sidewalks';
 import { buildParkDogs } from './park-dogs.ts';
 import * as T from 'three';
 import survey from './data/waterfront-geometry.ts';
@@ -34,7 +36,7 @@ export function motionPath(points: Point[]) {
   };
 }
 
-export function buildCityMotion(scene: T.Scene, data: MapData) {
+export function buildCityMotion(scene: T.Scene, data: MapData, sidewalks: SidewalkWalk[] = []) {
   const root = new T.Group();
   root.name = 'Animated city life';
   scene.add(root);
@@ -87,6 +89,7 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
     walking: boolean;
     limbs: T.Group[];
     direction: number;
+    groundHeight: number;
   };
   const actors: Actor[] = [];
   function add(points: Point[], speed: number, fraction: number, offset: number, walking = false) {
@@ -102,6 +105,7 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
       walking,
       limbs: [] as T.Group[],
       direction: 1,
+      groundHeight: walking ? 0.14 : 0.12,
     };
     actors.push(actor);
     return actor;
@@ -147,23 +151,35 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
       for (const z of [-0.6, 0.6]) box(group, '#fff0bd', 2.16, 0.8, z, 0.04, 0.2, 0.38);
     });
   const walkingPaths = [
-    ...survey.parkPaths.map((path) => ({ ...path, width: 2, promenade: false })),
-    ...(data.paths ?? []).map((path) => ({ ...path, promenade: true })),
+    ...survey.parkPaths.map((path) => ({
+      ...path,
+      width: 2,
+      promenade: false,
+      sidewalk: false,
+      name: 'Park path',
+    })),
+    ...(data.paths ?? []).map((path) => ({ ...path, promenade: true, sidewalk: false })),
+    ...sidewalks.map((path) => ({ ...path, promenade: false, sidewalk: true })),
   ];
   walkingPaths
-    .filter((p) => motionPath(p.points).length > 30)
+    .filter((p) => motionPath(p.points).length > (p.sidewalk ? 8 : 30))
     .forEach((path, i) => {
       const length = motionPath(path.points).length;
       const count = Math.min(
         path.promenade ? 48 : 18,
-        Math.max(4, Math.ceil(length / (path.promenade ? 8 : 12))),
+        Math.max(
+          path.sidewalk ? 1 : 4,
+          Math.ceil(length / (path.sidewalk ? 18 : path.promenade ? 8 : 12)),
+        ),
       );
       for (let j = 0; j < count; j++) {
         const variation = ((i * 37 + j * 17) % 101) / 101;
         const side = j % 2 ? 1 : -1;
-        const lateral = path.promenade
-          ? 0.8 + variation * Math.min(2.5, path.width / 2 - 1.3)
-          : 0.35 + variation * 0.18;
+        const lateral = path.sidewalk
+          ? 0.18
+          : path.promenade
+            ? 0.8 + variation * Math.min(2.5, path.width / 2 - 1.3)
+            : 0.35 + variation * 0.18;
         const actor = add(
           path.points,
           0.95 + variation * 0.6,
@@ -172,6 +188,10 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
           true,
         );
         actor.direction = side;
+        if (path.sidewalk) {
+          actor.groundHeight = 0.28;
+          actor.group.userData.sidewalkStreet = path.name;
+        }
         const { group } = actor;
         group.scale.setScalar(0.91 + variation * 0.17);
         group.name = 'Walking pedestrian';
@@ -252,6 +272,7 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
     halfLength: 2.2,
     halfWidth: 1.01,
   }));
+  const yieldingCars = new Set<Actor>();
   let elapsed = 0;
   function update(dt: number, observer?: { x: number; z: number }) {
     elapsed += dt;
@@ -260,7 +281,32 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
       const previousX = group.position.x,
         previousZ = group.position.z;
       let recycled = false;
-      actor.distance += dt * speed * actor.direction;
+      const carIndex = cars.indexOf(actor);
+      let travel = dt * speed * actor.direction;
+      if (carIndex >= 0 && observer) {
+        const next = path.at(Math.min(path.length, actor.distance + travel), actor.offset);
+        const dx = next.x - previousX,
+          dz = next.z - previousZ;
+        const t = Math.max(
+          0,
+          Math.min(
+            1,
+            ((observer.x - previousX) * dx + (observer.z - previousZ) * dz) /
+              (dx * dx + dz * dz || 1),
+          ),
+        );
+        const separation = Math.hypot(
+          observer.x - previousX - t * dx,
+          observer.z - previousZ - t * dz,
+        );
+        // Traffic yields before touching the kart and leaves room to reverse or turn.
+        // A wider release distance prevents repeated stop/start pushing at contact.
+        if (separation < (yieldingCars.has(actor) ? 7 : 4.8)) {
+          yieldingCars.add(actor);
+          travel = 0;
+        } else yieldingCars.delete(actor);
+      }
+      actor.distance += travel;
       if (walking) {
         if (actor.distance > path.length || actor.distance < 0) {
           actor.direction *= -1;
@@ -277,9 +323,12 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
         recycled = !nearby;
       }
       const p = path.at(actor.distance, actor.offset);
-      group.position.set(p.x, walking ? 0.14 : 0.12, p.z);
+      group.position.set(
+        p.x,
+        walking ? parkSurfaceHeight(data, p.x, p.z, actor.groundHeight) : actor.groundHeight,
+        p.z,
+      );
       group.rotation.y = -p.angle + (actor.direction < 0 ? Math.PI : 0);
-      const carIndex = cars.indexOf(actor);
       if (carIndex >= 0)
         Object.assign(obstacles[carIndex], {
           x: p.x,

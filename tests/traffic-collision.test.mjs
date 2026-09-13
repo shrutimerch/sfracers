@@ -71,3 +71,11 @@ test('simulation stops on impact, preserves pause, and allows backing away', () 
   for (let i = 0; i < 120; i++) sim.step(1 / 60, true, [car(12)]);
   assert.ok(sim.state.x < paused.x - 1);
 });
+
+test('escaping an initial overlap preserves movement away from contact', () => {
+  const escaping = resolveTrafficCollision({ x: -3.2, z: 0 }, { x: -3.22, z: 0 }, 0, [car()]);
+  assert.ok(escaping.hit);
+  assert.equal(escaping.blocked, false);
+  const into = resolveTrafficCollision({ x: -3.2, z: 0 }, { x: -3.18, z: 0 }, 0, [car()]);
+  assert.equal(into.blocked, true);
+});

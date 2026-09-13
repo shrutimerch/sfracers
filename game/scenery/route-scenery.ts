@@ -1,3 +1,13 @@
+import { beachHeight, inPolygon, BRANNAN_LAWN_HEIGHT } from './park-surface';
+import { isMedianPalm, medianPalmRows } from './median-layout';
+import { buildMedianLamps, medianLampPositions } from './median-lamps';
+import { buildMuniPaving } from './muni-paving';
+import { buildTownsendCorner } from './townsend-corner';
+import { buildOracleApproachGarden } from './oracle-approach-garden';
+import { buildPier40, PIER_40_ID } from './pier-40';
+import { buildDelanceyWaterfrontGardens } from './delancey-waterfront-gardens';
+import { buildDelanceyCourtyard } from './delancey-courtyard';
+import { buildBaysideVillage } from './bayside-village';
 import { buildWaterfrontRailings } from './waterfront-railings';
 import {
   buildEmbarcaderoLamps,
@@ -7,7 +17,11 @@ import {
 import { buildDelanceyGarden } from './delancey-garden';
 import { buildPier38, PIER_38_ID } from './pier-38';
 import { buildBrannanWaterfront } from './brannan-waterfront';
-import { buildDelanceyStreet, DELANCEY_RESTAURANT_ID } from './delancey-street';
+import {
+  buildDelanceyStreet,
+  DELANCEY_RESTAURANT_ID,
+  DELANCEY_EMBARCADERO_ID,
+} from './delancey-street';
 import { broadleafGeometry } from './geometry/broadleaf-geometry';
 import { buildHarborBuildings } from './harbor-buildings';
 import { buildBayBridge } from './bay-bridge';
@@ -27,8 +41,11 @@ import type { MapData, Facades, Point } from '../types';
 
 // Mapped positions; modeled detail sizes are estimates from reference/waterfront-streetview.json.
 export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) {
+  const disposeBaysideVillage = buildBaysideVillage(scene);
+  const disposeTownsendCorner = buildTownsendCorner(scene);
   const groups = new Map<T.Material, T.BufferGeometry[]>();
-  let disposeDelancey: (() => void) | undefined;
+  const disposeDelancey: (() => void)[] = [];
+  let disposePier40: (() => void) | undefined;
   let disposePier38: (() => void) | undefined;
   const mat = (color: string) =>
     new T.MeshStandardMaterial({ color, roughness: 0.88, side: T.DoubleSide });
@@ -123,11 +140,15 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   for (const b of d.buildings) {
     const p = routeProfiles[b.id ?? 0];
     if (!p) continue;
+    if (b.id === PIER_40_ID) {
+      disposePier40 = buildPier40(scene);
+      continue;
+    }
     if (b.id === PIER_38_ID) {
       disposePier38 = buildPier38(scene, b);
       continue;
     }
-    const geom = buildingGeometry(b),
+    const geom = buildingGeometry(b.id === DELANCEY_EMBARCADERO_ID ? { ...b, height: 12 } : b),
       wallMat = new T.MeshStandardMaterial({
         color: p.color,
         map: p.brick && b.id !== 112927451 ? facades.brick : null,
@@ -141,8 +162,8 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       scene.add(wall);
     } else add(geom.walls, wallMat);
     add(geom.roof, dark);
-    if (b.id === DELANCEY_RESTAURANT_ID) {
-      disposeDelancey = buildDelanceyStreet(scene, b);
+    if (b.id === DELANCEY_RESTAURANT_ID || b.id === DELANCEY_EMBARCADERO_ID) {
+      disposeDelancey.push(buildDelanceyStreet(scene, b));
       continue;
     }
     const trim = mat(p.trim),
@@ -385,21 +406,11 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   buildBayBridge(scene);
   buildBrannanWaterfront(scene);
   buildWaterfrontRailings(scene, d);
+  buildOracleApproachGarden(scene);
   buildDelanceyGarden(scene);
+  buildDelanceyCourtyard(scene);
+  buildDelanceyWaterfrontGardens(scene);
   const disposeHarborBuildings = buildHarborBuildings(scene);
-  const inPolygon = (p: Point, pts: Point[]) => {
-    let inside = false;
-    for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
-      const a = pts[i],
-        b = pts[j];
-      if (
-        a[1] > p[1] !== b[1] > p[1] &&
-        p[0] < ((b[0] - a[0]) * (p[1] - a[1])) / (b[1] - a[1]) + a[0]
-      )
-        inside = !inside;
-    }
-    return inside;
-  };
   const southBeach = survey.parks.find((p) => p.id === 23750468)!;
   buildSouthBeachMarina(
     d,
@@ -407,24 +418,6 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     survey.trees.map((tree) => tree.point),
     add,
   );
-  const beachHeight = (x: number, z: number) => {
-    if (!inPolygon([x, z], southBeach.points)) return 0.15;
-    const cx = 632,
-      cz = 565;
-    let edge = 100;
-    for (let i = 1; i < southBeach.points.length; i++) {
-      const a = southBeach.points[i - 1],
-        b = southBeach.points[i],
-        dx = b[0] - a[0],
-        dz = b[1] - a[1],
-        t = Math.max(
-          0,
-          Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz || 1)),
-        );
-      edge = Math.min(edge, Math.hypot(x - a[0] - dx * t, z - a[1] - dz * t));
-    }
-    return 0.15 + 0.85 * Math.min(1, edge / 7) * Math.exp(-((x - cx) ** 2 + (z - cz) ** 2) / 2500);
-  };
   const lawnSurface = (pts: Point[], height: (x: number, z: number) => number) => {
     const g = new T.ShapeGeometry(
         new T.Shape(pts.map((p) => new T.Vector2(p[0], p[1]))),
@@ -467,7 +460,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   }
   // Brannan Wharf's lawn has its own mapped outline, not a shrunken copy of the park boundary.
   for (const lawn of survey.lawns) {
-    lawnSurface(lawn.points, () => 0.48);
+    lawnSurface(lawn.points, () => BRANNAN_LAWN_HEIGHT);
     for (let i = 1; i < lawn.points.length; i++) {
       const a = lawn.points[i - 1],
         b = lawn.points[i],
@@ -582,16 +575,18 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       }
     }
   }
-  // Each King centerline is one carriageway. The green railing borders the Muni median,
+  // Each King centerline is one carriageway. Blue railings border the Muni median,
   // while the outside curb carries a continuously green bike lane.
-  const barrierGreen = mat('#326c61'),
+  const barrierBlue = mat('#6096ae'),
     laneWhite = mat('#e4e2d8'),
     bikeGreen = mat('#79ac48');
-  const nearCrossStreet = (x: number, z: number) =>
+  const nearCrossStreet = (x: number, z: number, street = 'King Street') =>
     d.roads.some(
-      (r) => r.name !== 'King Street' && r.points.some((p) => Math.hypot(p[0] - x, p[1] - z) < 12),
+      (r) => r.name !== street && r.points.some((p) => Math.hypot(p[0] - x, p[1] - z) < 12),
     );
-  for (const road of d.roads.filter((r) => r.name === 'King Street')) {
+  for (const road of d.roads.filter(
+    (r) => r.name === 'King Street' || r.name === 'The Embarcadero',
+  )) {
     for (let i = 1; i < road.points.length; i++) {
       const a = road.points[i - 1],
         b = road.points[i];
@@ -603,14 +598,15 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       ];
       for (let u = 0; u < length; u += 2.5) {
         const span = Math.min(2.5, length - u),
-          p = at(u + span / 2, -5.05);
-        if (nearCrossStreet(p[0], p[1])) continue;
+          p = at(u + span / 2, -(road.width ?? 9.6) / 2 - 0.25);
+        if (nearCrossStreet(p[0], p[1], road.name)) continue;
         box(p[0], 0.16, p[1], span, 0.22, 0.35, pale, angle);
-        for (const h of [0.4, 0.76, 1.1])
-          box(p[0], h, p[1], span, 0.055, 0.055, barrierGreen, angle);
-        const post = at(u, -5.05);
-        box(post[0], 0.64, post[1], 0.09, 1.18, 0.09, barrierGreen, angle);
+        for (const h of [0.32, 0.53, 0.74, 0.95, 1.16])
+          box(p[0], h, p[1], span, h === 1.16 ? 0.085 : 0.045, 0.075, barrierBlue, angle);
+        const post = at(u, -(road.width ?? 9.6) / 2 - 0.25);
+        box(post[0], 0.66, post[1], 0.105, 1.2, 0.105, barrierBlue, angle);
       }
+      if (road.name !== 'King Street') continue;
       for (let u = 1; u < length; u += 8) {
         const p = at(u, -0.8);
         if (!nearCrossStreet(p[0], p[1]))
@@ -641,7 +637,20 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     ring.translate(x, 16, z);
     add(ring, redSteel);
   }
+  const medianPalms = medianPalmRows(d).flat();
+  for (const [index, [x, z]] of medianPalms.entries())
+    palmGeometry(x, z, 10 + (index % 4), add, { bark, leaves: palmLeaves });
   for (const tree of survey.trees) {
+    if (tree.palm && isMedianPalm(tree.point)) continue;
+    // The Townsend forecourt has its own reference-matched winter trees.
+    if (
+      !tree.palm &&
+      tree.point[0] > 530 &&
+      tree.point[0] < 568 &&
+      tree.point[1] > 418 &&
+      tree.point[1] < 457
+    )
+      continue;
     const position = treePlacement.place(tree.point);
     if (!position) continue;
     const [x, z] = position;
@@ -655,12 +664,18 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       });
     }
   }
+  const medianLamps = medianLampPositions(d, medianPalms);
+  buildMedianLamps(scene, medianLamps);
   buildEmbarcaderoLamps(
     scene,
     embarcaderoLampPositions(
       d,
       survey.lamps.map((lamp) => lamp.point),
-    ).filter(([x, z]) => routeDistance(x, z) <= 85),
+    ).filter(
+      ([x, z]) =>
+        routeDistance(x, z) <= 85 &&
+        !medianLamps.some(({ point }) => Math.hypot(point[0] - x, point[1] - z) < 5),
+    ),
   );
   for (const lamp of survey.lamps) {
     const [x, z] = lamp.point;
@@ -673,37 +688,26 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     add(g, pale);
     box(x, 7.02, z, 0.43, 0.1, 0.43, blue);
   }
+  const disposeMuniPaving = buildMuniPaving(scene, d, medianPalms);
+  const railBase = mat('#454642');
+  const railHead = new T.MeshStandardMaterial({
+    color: '#c3cdd0',
+    metalness: 0.65,
+    roughness: 0.32,
+  });
   for (const track of survey.rails) {
-    line(track.points, 2.2, pale, 0.09);
     for (let i = 1; i < track.points.length; i++) {
       const a = track.points[i - 1],
-        b = track.points[i],
-        len = Math.hypot(b[0] - a[0], b[1] - a[1]),
-        angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
+        b = track.points[i];
+      const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
       for (const side of [-1, 1]) {
-        const nx = -Math.sin(angle) * 0.718 * side,
-          nz = Math.cos(angle) * 0.718 * side;
-        line(
-          [
-            [a[0] + nx, a[1] + nz],
-            [b[0] + nx, b[1] + nz],
-          ],
-          0.065,
-          rail,
-          0.12,
-        );
+        const x = (a[0] + b[0]) / 2 - Math.sin(angle) * 0.718 * side;
+        const z = (a[1] + b[1]) / 2 + Math.cos(angle) * 0.718 * side;
+        // Dark web and bright steel head stand above the 0.085m cobbled bed.
+        box(x, 0.135, z, length + 0.04, 0.08, 0.18, railBase, angle);
+        box(x, 0.1875, z, length + 0.04, 0.035, 0.105, railHead, angle);
       }
-      for (let u = 0.6; u < len; u += 1.2)
-        box(
-          a[0] + Math.cos(angle) * u,
-          0.115,
-          a[1] + Math.sin(angle) * u,
-          0.13,
-          0.02,
-          1.85,
-          dark,
-          angle,
-        );
     }
   }
   // Observed lane types, fitted to the game's simplified road widths; not surveyed lane boundaries.
@@ -742,9 +746,13 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     gs.forEach((g) => g.dispose());
   }
   return () => {
+    disposeTownsendCorner();
+    disposeBaysideVillage();
+    disposeMuniPaving();
     groundGrass.texture.dispose();
-    disposeDelancey?.();
+    disposeDelancey.forEach((dispose) => dispose());
     disposePier38?.();
+    disposePier40?.();
     disposeOraclePark();
     disposeHarborBuildings();
   };

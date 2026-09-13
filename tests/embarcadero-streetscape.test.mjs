@@ -7,11 +7,35 @@ import { prepareCourse } from '../game/simulation/course.ts';
 import {
   EMBARCADERO_LAYOUT as layout,
   hasEmbarcaderoParking,
+  embarcaderoBikeCenter,
+  embarcaderoDivider,
 } from '../game/scenery/config/embarcadero-layout.ts';
 import {
   embarcaderoPlacements,
   buildEmbarcaderoStreetscape,
 } from '../game/scenery/embarcadero-streetscape.ts';
+test('both Embarcadero carriageways have equal-width traffic lanes clear of the bike lane', () => {
+  for (const parking of [false, true]) {
+    const road = {
+      name: 'The Embarcadero',
+      points: parking
+        ? [
+            [598, 150],
+            [581, 400],
+          ]
+        : [
+            [621, 400],
+            [624, 150],
+          ],
+      width: parking ? 14 : 9.6,
+    };
+    const median = -road.width / 2,
+      bikeEdge = embarcaderoBikeCenter(road) - 0.9,
+      divider = embarcaderoDivider(road);
+    assert.ok(Math.abs(divider - median - (bikeEdge - divider)) < 1e-9);
+    assert.ok(divider - median >= 3.3);
+  }
+});
 const d = prepareCourse(
   JSON.parse(readFileSync(new URL('../public/race-course.json', import.meta.url))),
 );

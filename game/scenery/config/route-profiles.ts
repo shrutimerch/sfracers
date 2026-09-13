@@ -10,6 +10,13 @@ export type RouteProfile = {
   bay?: number;
 };
 export const routeProfiles: Record<number, RouteProfile> = {
+  288647983: { color: '#c6c6b9', trim: '#e1e0d4', frames: '#72807a', floors: 3, bay: 3.7 }, // South Beach Marina Apartments, Townsend corner
+  288647982: { color: '#c6c5b8', trim: '#e3e0d3', frames: '#617573', floors: 10, bay: 3.5 }, // Apartment tower behind the Townsend lawn
+  288648572: { color: '#c6c6b9', trim: '#e1e0d4', frames: '#72807a', floors: 3, bay: 3.7 }, // Townsend west wing
+  104599990: { color: '#d8d4bf', trim: '#ede8d6', frames: '#303c36', floors: 1 }, // Pier 40 cream warehouse
+  37058279: { color: '#c7c7b8', trim: '#e2e2d5', frames: '#63736c', floors: 3, bay: 3.4 }, // Bayside Village corner / 570 Beale
+  37058283: { color: '#c4c6b8', trim: '#e1e2d6', frames: '#65736a', floors: 3, bay: 3.6 }, // Bayside Village west wing
+  125401320: { color: '#ad745b', trim: '#dfd5b7', frames: '#455653', floors: 3, bay: 4.5 }, // Delancey restaurant Embarcadero wing
   148551351: { color: '#bdb7a4', trim: '#d3cfc0', frames: '#829b9c', floors: 16, bay: 4.5 }, // The Brannan courtyard west tower
   148551352: { color: '#c3bdab', trim: '#d8d3c4', frames: '#829b9c', floors: 16, bay: 4.5 }, // The Brannan courtyard east tower
   112927451: {

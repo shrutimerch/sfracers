@@ -17,3 +17,11 @@ export const EMBARCADERO_LAYOUT = {
   parkingHalfWidth: 1,
   treeOffset: 8.4,
 };
+
+/** Keep the divider midway between the median curb and the bike lane. */
+export function embarcaderoBikeCenter(road: { name: string; points: number[][] }) {
+  return hasEmbarcaderoParking(road) ? EMBARCADERO_LAYOUT.bikeCenter : 3.7;
+}
+export function embarcaderoDivider(road: { name: string; points: number[][]; width?: number }) {
+  return (-(road.width ?? 9.6) / 2 + embarcaderoBikeCenter(road) - 0.9) / 2;
+}
