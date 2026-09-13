@@ -23,3 +23,6 @@ Five additional park views are recorded in `park-streetview.json`, including two
 
 ### The Brannan courtyard (September 12 update)
 The user’s May 2025 Street View screenshot, camera label 250 Brannan St, shows the landscaped entrance to The Brannan across the street. `brannan-courtyard-osm.json` records residential site 233785893 and footways 1169522854–1169522862. These mapped paths and adjacent tower footprints locate the courtyard. Cream raised planter walls, clipped hedges, shrubs, paving and canopy trees are modeled from the supplied image; bed outlines, planting positions and heights are visual approximations, not surveyed data. Tower facade colors are photo-derived approximations. No Street View imagery is shipped as a texture.
+
+### Second and Brannan corner reference
+The supplied May 2025 Street View view (camera label 599 2nd St) is used for the Brannan-facing warehouse at OSM footprint 112927451 and adjacent footprint 112927456. Red lower facade, green metal awning, narrow upper windows, fire escapes and gray neighboring facade are modeled approximations. The screenshot's blurred upper area is not treated as reliable detail. Double yellow paint is applied only on the photographed Brannan stretch from Second toward The Brannan courtyard (projected x 250–380); existing public-data crosswalks and intersection bicycle-lane clipping are retained.

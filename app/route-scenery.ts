@@ -21,7 +21,7 @@ export function buildRouteScenery(scene:T.Scene,d:MapData,facades:Facades){
  const line=(pts:Point[],width:number,m:T.Material,y=.11)=>{for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],l=Math.hypot(b[0]-a[0],b[1]-a[1]);box((a[0]+b[0])/2,y,(a[1]+b[1])/2,l,.035,width,m,Math.atan2(b[1]-a[1],b[0]-a[0]));}};
  const routeDistance=(x:number,z:number)=>{let best=Infinity;for(let i=1;i<d.route.length;i++){const a=d.route[i-1],b=d.route[i],dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((x-a[0])*dx+(z-a[1])*dz)/(dx*dx+dz*dz||1)));best=Math.min(best,Math.hypot(x-a[0]-t*dx,z-a[1]-t*dz));}return best;};
  for(const b of d.buildings){const p=routeProfiles[b.id??0];if(!p)continue;
-  const geom=buildingGeometry(b),wallMat=new T.MeshStandardMaterial({color:p.color,map:p.brick?facades.brick:null,roughness:.9,side:T.DoubleSide});
+  const geom=buildingGeometry(b),wallMat=new T.MeshStandardMaterial({color:p.color,map:p.brick&&b.id!==112927451?facades.brick:null,roughness:.9,side:T.DoubleSide});
   // Brick texture retains masonry grain; the large physical frames define the actual facade character.
   if(p.brick){const wall=new T.Mesh(geom.walls,wallMat);wall.castShadow=true;scene.add(wall);}else add(geom.walls,wallMat);add(geom.roof,dark);
   const trim=mat(p.trim),frame=mat(p.frames),glass=mat('#53686e');
@@ -30,8 +30,19 @@ export function buildRouteScenery(scene:T.Scene,d:MapData,facades:Facades){
    const detail=(u:number,y:number,w:number,h:number,m:T.Material,depth=.16,offset=.15)=>box(a[0]+Math.cos(angle)*u+nx*offset,y,a[1]+Math.sin(angle)*u+nz*offset,w,h,depth,m,angle);
    detail(l/2,b.height-.2,l,.4,trim,.5);detail(l/2,3.8,l,.35,trim,.35);
    const bays=Math.max(1,Math.round(l/(p.bay||3.6))),step=l/bays,fh=b.height/p.floors;
-   for(let f=0;f<p.floors;f++)for(let j=0;j<bays;j++){const u=(j+.5)*step,y=(f+.5)*fh,w=step*(p.grid?.78:.5),h=fh*.65;detail(u,y,w+.22,h+.22,trim);detail(u,y,w,h,glass,.12,.26);const divisions=p.grid?4:2;for(let k=1;k<divisions;k++){detail(u-w/2+w*k/divisions,y,.065,h,frame,.12,.35);detail(u,y-h/2+h*k/divisions,w,.055,frame,.12,.35);}if(p.grid)detail((j+1)*step,b.height/2,.23,b.height,trim,.3);}
+   for(let f=0;f<p.floors;f++)for(let j=0;j<bays;j++){const u=(j+.5)*step,y=(f+.5)*fh,w=step*(b.id===112927451?.22:p.grid?.78:.5),h=fh*.65;detail(u,y,w+.22,h+.22,trim);detail(u,y,w,h,glass,.12,.26);const divisions=p.grid?4:2;for(let k=1;k<divisions;k++){detail(u-w/2+w*k/divisions,y,.065,h,frame,.12,.35);detail(u,y-h/2+h*k/divisions,w,.055,frame,.12,.35);}if(p.grid)detail((j+1)*step,b.height/2,.23,b.height,trim,.3);}
   }
+ }
+ // Photo-referenced Brannan-facing warehouse frontage, on mapped footprint 112927451.
+ const warehouse=d.buildings.find(b=>b.id===112927451);
+ if(warehouse){const a=warehouse.points[0],b=warehouse.points[1],length=Math.hypot(b[0]-a[0],b[1]-a[1]),angle=Math.atan2(b[1]-a[1],b[0]-a[0]);
+  const redBase=mat('#873f35'),awning=mat('#657c6b'),fascia=mat('#a89370');
+  const front=(u:number,y:number,w:number,h:number,m:T.Material,depth=.2,out=.18)=>box(a[0]+Math.cos(angle)*u+Math.sin(angle)*out,y,a[1]+Math.sin(angle)*u-Math.cos(angle)*out,w,h,depth,m,angle);
+  front(length/2,2.6,length,5.2,redBase);
+  front(length/2,5.35,length-2,.18,awning,2.1,1.05);front(length/2,5.15,length-2,.45,fascia,.18,2.05);
+  for(let u=4;u<length-2;u+=6){front(u,2.2,1.6,2.8,dark,.2,.32);front(u,1.2,3.6,.18,pale,1.1,.8);front(u,1.85,3.6,.06,rail,.1,1.35);for(let k=-1.7;k<1.8;k+=.22)front(u+k,1.52,.035,.66,rail,.08,1.35);}
+  // Open steel landings and alternating stair flights, rather than flat facade texture.
+  const u=length*.64;for(let floor=1;floor<5;floor++){const y=5+floor*3.5;front(u,y,4,.14,dark,1.25,.8);front(u,y+.75,4,.07,dark,.08,1.4);for(let k=-2;k<=2;k+=.5)front(u+k,y+.4,.04,.8,dark,.08,1.4);if(floor<4)for(let k=0;k<12;k++)front(u-1.7+k*.29,y+k*3.5/12,.34,.07,dark,.65,1.05);}
  }
  // The Brannan: opening and paths follow OSM; beds and elevations approximate the supplied May 2025 photo.
  const courtStone=mat('#d3cfc0'),courtPave=mat('#b6b5af'),hedge=mat('#405b29'),soil=mat('#655c44');
