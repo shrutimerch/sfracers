@@ -1,0 +1,122 @@
+[
+  {
+    "index": 1,
+    "station": 1,
+    "direction": "facades",
+    "x": 144.15,
+    "z": 426.5,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7821646,-122.3933600&heading=40.5&pitch=5&fov=90",
+    "visibleLocationLabel": "10 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "Pale unit paving at NE neck; ochre left facade; white three-storey industrial facade with ground arches opposite."
+  },
+  {
+    "index": 2,
+    "station": 3,
+    "direction": "facades",
+    "x": 113.06,
+    "z": 443.74,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7820096,-122.3937137&heading=315&pitch=5&fov=90",
+    "visibleLocationLabel": "56 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "Mixed gray-green and pale gray industrial frontage; large glazed panes and gridded window wall."
+  },
+  {
+    "index": 3,
+    "station": 5,
+    "direction": "facades",
+    "x": 86.67,
+    "z": 469.81,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7817751,-122.3940140&heading=315&pitch=5&fov=90",
+    "visibleLocationLabel": "94 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "Modern gray frontage near alley; projecting window frames, tree well and corner ramp."
+  },
+  {
+    "index": 4,
+    "station": 7,
+    "direction": "facades",
+    "x": 60.65,
+    "z": 496.25,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7815373,-122.3943100&heading=315&pitch=5&fov=90",
+    "visibleLocationLabel": "108 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "Dark green two-storey frontage at 108/110; heavy green cornice and storefront framing."
+  },
+  {
+    "index": 5,
+    "station": 9,
+    "direction": "facades",
+    "x": 34.66,
+    "z": 522.71,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7812993,-122.3946057&heading=270&pitch=5&fov=90",
+    "visibleLocationLabel": "150 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "150 charcoal upper floor and white ground floor with projecting dark awning; neighboring gray industrial grid and arched upper window."
+  },
+  {
+    "index": 6,
+    "station": 11,
+    "direction": "facades",
+    "x": 36.39,
+    "z": 552.11,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7810350,-122.3945860&heading=225&pitch=5&fov=90",
+    "visibleLocationLabel": "181 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "181 pale gray siding and light decorative trim; curved corner sidewalk; pale unit paving at SW neck."
+  },
+  {
+    "index": 7,
+    "station": 13,
+    "direction": "facades",
+    "x": 67.97,
+    "z": 536.53,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7811751,-122.3942268&heading=135&pitch=5&fov=90",
+    "visibleLocationLabel": "135 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "135 red brick two-storey warehouse; narrow upper windows, glazed sectional garage left and entry at right."
+  },
+  {
+    "index": 8,
+    "station": 15,
+    "direction": "facades",
+    "x": 93.88,
+    "z": 509.99,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7814138,-122.3939319&heading=135&pitch=5&fov=90",
+    "visibleLocationLabel": "101 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "101 charcoal two-storey facade; continuous upper glazing and warm timber ground-floor window frames."
+  },
+  {
+    "index": 9,
+    "station": 17,
+    "direction": "park",
+    "x": 120.02,
+    "z": 483.66,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7816506,-122.3936346&heading=258.1&pitch=5&fov=90",
+    "visibleLocationLabel": "41 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "Tall mostly bare plane trees; low concrete lawn edge, green lawn, planting strips and transverse paths."
+  },
+  {
+    "index": 10,
+    "station": 19,
+    "direction": "park",
+    "x": 145.96,
+    "z": 457.14,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7818891,-122.3933395&heading=239.6&pitch=5&fov=90",
+    "visibleLocationLabel": "21 S Park St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "East-end view of lawn and tall bare trees; cream facade with dark green doors and arched openings at 21."
+  }
+]
