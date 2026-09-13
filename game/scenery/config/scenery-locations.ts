@@ -61,6 +61,7 @@ export function hasObservedGreenLane(name: string | undefined, point: Point) {
   return (
     name === '2nd Street' ||
     name === 'King Street' ||
+    name === 'The Embarcadero' ||
     (name === '3rd Street' && point[1] > ROAD_APPEARANCE.thirdGreenLaneMinZ)
   );
 }
