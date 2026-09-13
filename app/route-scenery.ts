@@ -1,3 +1,4 @@
+import {courtyardPaths} from './brannan-courtyard-data';
 import {palmGeometry} from './palm-geometry';
 import {parkGrass} from './park-ground';
 import * as T from 'three';
@@ -32,6 +33,25 @@ export function buildRouteScenery(scene:T.Scene,d:MapData,facades:Facades){
    for(let f=0;f<p.floors;f++)for(let j=0;j<bays;j++){const u=(j+.5)*step,y=(f+.5)*fh,w=step*(p.grid?.78:.5),h=fh*.65;detail(u,y,w+.22,h+.22,trim);detail(u,y,w,h,glass,.12,.26);const divisions=p.grid?4:2;for(let k=1;k<divisions;k++){detail(u-w/2+w*k/divisions,y,.065,h,frame,.12,.35);detail(u,y-h/2+h*k/divisions,w,.055,frame,.12,.35);}if(p.grid)detail((j+1)*step,b.height/2,.23,b.height,trim,.3);}
   }
  }
+ // The Brannan: opening and paths follow OSM; beds and elevations approximate the supplied May 2025 photo.
+ const courtStone=mat('#d3cfc0'),courtPave=mat('#b6b5af'),hedge=mat('#405b29'),soil=mat('#655c44');
+ const courtOutline:Point[]=[[365.17,366.68],[392.07,339.69],[409.64,357.59],[417.47,358.36],[407.66,368.01],[386.72,388.59]];
+ slab(courtOutline,courtPave,.18);
+ for(const path of courtyardPaths)line(path.points,2.2,pale,.205);
+ // Local axes run northeast along Brannan and southeast into the planted courtyard.
+ const cp=(u:number,v:number):Point=>[365.17+(u+v)*Math.SQRT1_2,366.68+(-u+v)*Math.SQRT1_2];
+ const cb=(u:number,v:number,y:number,w:number,h:number,depth:number,m:T.Material)=>{const [x,z]=cp(u,v);box(x,y,z,w,h,depth,m,-Math.PI/4);};
+ const bed=(u:number,v:number,w:number,depth:number)=>{
+  const pts=[cp(u-w/2,v-depth/2),cp(u+w/2,v-depth/2),cp(u+w/2,v+depth/2),cp(u-w/2,v+depth/2),cp(u-w/2,v-depth/2)];
+  slab(pts,soil,.64);
+  for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]),angle=Math.atan2(b[1]-a[1],b[0]-a[0]);box((a[0]+b[0])/2,.43,(a[1]+b[1])/2,len,.5,.35,courtStone,angle);box((a[0]+b[0])/2,.93,(a[1]+b[1])/2,len-.25,.52,.65,hedge,angle);for(let k=1;k<len;k+=1.5)box(a[0]+(b[0]-a[0])*k/len,.43,a[1]+(b[1]-a[1])*k/len,.025,.48,.37,pale,angle);}
+  for(let k=0;k<7;k++){const [x,z]=cp(u+Math.sin(k*2.4)*w*.29,v+Math.cos(k*3.1)*depth*.26),g=new T.SphereGeometry(1,10,7);g.scale(1.2,.7,1.1);g.translate(x,1,z);add(g,leaf);}
+ };
+ bed(9,7,12,9);bed(27,7,13,9);bed(5,23,6,7);bed(28,19,10,7);
+ // Broad paved approach remains open between the front planters.
+ for(let u=0;u<38;u+=2)line([cp(u,0),cp(u,2)],.025,pale,.22);
+ for(const [u,v,h] of [[8,7,8],[27,8,9],[5,23,7],[27,20,8]]){const [x,z]=cp(u,v);rod(new T.Vector3(x,.6,z),new T.Vector3(x,h,z),.17,bark);for(let j=0;j<6;j++){const a=j*2.4,tx=x+Math.cos(a)*1.7,tz=z+Math.sin(a)*1.7;rod(new T.Vector3(x,h*.55,z),new T.Vector3(tx,h-.3,tz),.07,bark);const g=new T.SphereGeometry(1,12,9);g.scale(1.8,2.1,1.7);g.translate(tx,h+(j%2)*.7,tz);add(g,leaf);}}
+ cb(10,3,1.35,3.3,1.2,.38,courtStone);
  // Oracle Park's mapped perimeter locates its facade; elevations and bay spacing are visual estimates.
  const stadiumBrick=mat('#985b49'),stadiumGlass=mat('#40575b');
  for(const stadium of survey.stadium){for(let i=1;i<stadium.points.length;i++){const a=stadium.points[i-1],b=stadium.points[i],mx=(a[0]+b[0])/2,mz=(a[1]+b[1])/2;if(routeDistance(mx,mz)>90)continue;const len=Math.hypot(b[0]-a[0],b[1]-a[1]);if(len<3)continue;const angle=Math.atan2(b[1]-a[1],b[0]-a[0]);box(mx,10,mz,len,20,2,stadiumBrick,angle);box(mx,15,mz,len,.65,2.3,pale,angle);box(mx,20,mz,len,.7,2.5,pale,angle);

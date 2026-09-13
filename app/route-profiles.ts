@@ -2,6 +2,8 @@
 // Window spacing and vertical proportions are modeled approximations, not measured elevations.
 export type RouteProfile={color:string;trim:string;frames:string;floors:number;grid?:boolean;brick?:boolean;bay?:number};
 export const routeProfiles:Record<number,RouteProfile>={
+ 148551351:{color:'#bdb7a4',trim:'#d3cfc0',frames:'#829b9c',floors:16,bay:4.5}, // The Brannan courtyard west tower
+ 148551352:{color:'#c3bdab',trim:'#d8d3c4',frames:'#829b9c',floors:16,bay:4.5}, // The Brannan courtyard east tower
  112758589:{color:'#976b55',trim:'#c3bcb0',frames:'#333d3d',floors:6,brick:true}, // 300 Brannan
  112775864:{color:'#d0d0c7',trim:'#dfded3',frames:'#626e6c',floors:6,grid:true,bay:5}, // 274 Brannan
  104599982:{color:'#dfded1',trim:'#eeeee1',frames:'#46585c',floors:2,grid:true,bay:6}, // Pier 38
