@@ -1,3 +1,5 @@
+import {parkGrass} from './park-ground';
+import {hasRouteProfile} from './route-profiles';
 import playgroundSource from './playground-geometry';
 import {southParkProfiles} from './south-park-profiles';
 import * as T from 'three';
@@ -23,7 +25,7 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  const slab=(pts:Point[],m:T.Material,y=.15)=>{const shape=new T.Shape(pts.map(([x,z])=>new T.Vector2(x,-z)));const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);g.translate(0,y,0);add(g,m);};
  const strip=(pts:Point[],width:number,m:T.Material,y=.18)=>{for(let i=1;i<pts.length;i++){const [x,z]=pts[i-1],[xx,zz]=pts[i],len=Math.hypot(xx-x,zz-z);box((x+xx)/2,y,(z+zz)/2,len,.12,width,m,Math.atan2(zz-z,xx-x));}};
  const surface=(base:string,amount:number,repeat:number)=>{const c=document.createElement('canvas');c.width=c.height=256;const ctx=c.getContext('2d')!;ctx.fillStyle=base;ctx.fillRect(0,0,256,256);for(let i=0;i<14000;i++){const k=random();ctx.fillStyle=`rgba(${k>.5?'255,255,240':'25,30,22'},${random()*amount})`;ctx.fillRect(random()*256,random()*256,1+random()*2,1+random()*2);}const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(repeat,repeat);textures.push(t);return new T.MeshStandardMaterial({map:t,roughness:1});};
- const grass=surface('#557a38',.22,1),gravel=surface('#b7ab91',.35,1),asphalt=surface('#646965',.14,18);
+ const parkTurf=parkGrass();textures.push(parkTurf.texture);const grass=parkTurf.material,gravel=surface('#b7ab91',.35,1),asphalt=surface('#646965',.14,18);
  bark.map=surface('#807a6c',.5,2).map;
  // Ground UVs are in metres, preserving grain scale at driving height.
  const texturedSlab=(pts:Point[],m:T.Material,y:number)=>{const shape=new T.Shape(pts.map(([x,z])=>new T.Vector2(x,-z)));const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);g.translate(0,y,0);const uv=g.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)/9,uv.getY(i)/9);add(g,m);};
@@ -97,7 +99,7 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  for(const u of [-75,75]){const p=local(u,0);rod(p.clone().setY(.15),p.clone().setY(3.1),.055,steel);label('SOUTH PARK',p.x,2.8,p.z,2.8,-.68);const q=local(u+4,1);box(q.x,.65,q.z,.5,1,.5,steel);}
  // Address-specific building footprints with actual depth: frames, mullions, lintels and storefronts.
  const palette=['#a79e8b','#bdbbae','#596366','#b5ad94','#866451','#c3c2b9','#727878'];
- for(const original of d.buildings.filter(isLocal)){
+ for(const original of d.buildings.filter(b=>isLocal(b)&&!hasRouteProfile(b))){
   const profile=original.street==='South Park'?southParkProfiles[original.address||'']:undefined;const b=profile?{...original,height:profile.height}:original;
   const id=b.id||0,paint=mat(profile?.color||palette[id%palette.length]);const geom=buildingGeometry(b);add(geom.walls,paint);add(geom.roof,dark);
   const center=b.points.reduce((p,v)=>p.add(new T.Vector2(v[0],v[1])),new T.Vector2()).divideScalar(b.points.length);
@@ -124,7 +126,7 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  }
  // Parked cars occupy the outside curb; the clear racing line stays on the road.
  const route=d.route;let travelled=0;
- for(let i=1;i<route.length;i++){const a=route[i-1],b=route[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]),ang=Math.atan2(b[1]-a[1],b[0]-a[0]);for(let s=4;s<len-3;s+=9){travelled++;if(travelled%3===0)continue;const mid=new T.Vector2(a[0]+Math.cos(ang)*s,a[1]+Math.sin(ang)*s);let nx=-Math.sin(ang),nz=Math.cos(ang);if((mid.x-90)*nx+(mid.y-490)*nz<0){nx=-nx;nz=-nz;}const x=mid.x+nx*3.5,z=mid.y+nz*3.5,body=mat(['#dadbd5','#343b42','#afb3b1','#243c4a','#6e3431'][travelled%5]);box(x,.65,z,4.2,.75,1.75,body,ang);box(x,1.18,z,2.2,.62,1.5,glass,ang);box(x,1.53,z,2.2,.06,1.53,body,ang);for(const dx of [-1.25,1.25])for(const dz of [-.84,.84]){const q=new T.Vector3(x+Math.cos(ang)*dx-Math.sin(ang)*dz,.42,z+Math.sin(ang)*dx+Math.cos(ang)*dz);ellipsoid(q.x,q.y,q.z,.32,.32,.26,dark);}}
+ for(let i=1;i<route.length;i++){const a=route[i-1],b=route[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]),ang=Math.atan2(b[1]-a[1],b[0]-a[0]);for(let s=4;s<len-3;s+=9){travelled++;if(travelled%3===0||Math.hypot(a[0]-90,a[1]-490)>125)continue;const mid=new T.Vector2(a[0]+Math.cos(ang)*s,a[1]+Math.sin(ang)*s);let nx=-Math.sin(ang),nz=Math.cos(ang);if((mid.x-90)*nx+(mid.y-490)*nz<0){nx=-nx;nz=-nz;}const x=mid.x+nx*3.5,z=mid.y+nz*3.5,body=mat(['#dadbd5','#343b42','#afb3b1','#243c4a','#6e3431'][travelled%5]);box(x,.65,z,4.2,.75,1.75,body,ang);box(x,1.18,z,2.2,.62,1.5,glass,ang);box(x,1.53,z,2.2,.06,1.53,body,ang);for(const dx of [-1.25,1.25])for(const dz of [-.84,.84]){const q=new T.Vector3(x+Math.cos(ang)*dx-Math.sin(ang)*dz,.42,z+Math.sin(ang)*dx+Math.cos(ang)*dz);ellipsoid(q.x,q.y,q.z,.32,.32,.26,dark);}}
  }
  for(const [m,geoms] of groups){if(!geoms.length)continue;const g=mergeGeometries(geoms,false);const mesh=new T.Mesh(g,m);mesh.castShadow=m!==grass&&m!==asphalt&&m!==gravel;mesh.receiveShadow=true;scene.add(mesh);geoms.forEach(g=>g.dispose());}
  return ()=>textures.forEach(t=>t.dispose());

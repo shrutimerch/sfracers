@@ -1,0 +1,525 @@
+{
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+    "timestamp_osm_base": "2026-09-13T01:58:32Z",
+    "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+
+{
+  "type": "node",
+  "id": 10869899410,
+  "lat": 37.7853452,
+  "lon": -122.3883982,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913810,
+  "lat": 37.7813152,
+  "lon": -122.3926312,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "bent_mast",
+    "lamp_type": "LED",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913851,
+  "lat": 37.7832223,
+  "lon": -122.3895358,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "bent_mast",
+    "lamp_type": "LED",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913872,
+  "lat": 37.7828445,
+  "lon": -122.3888477,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "bent_mast",
+    "lamp_type": "LED",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913888,
+  "lat": 37.7831082,
+  "lon": -122.3890899,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "bent_mast",
+    "lamp_type": "LED",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913928,
+  "lat": 37.7845213,
+  "lon": -122.3885591,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "bent_mast",
+    "lamp_type": "LED",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913933,
+  "lat": 37.7844674,
+  "lon": -122.3883193,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913967,
+  "lat": 37.7818355,
+  "lon": -122.3871321,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913968,
+  "lat": 37.7818226,
+  "lon": -122.3872856,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913969,
+  "lat": 37.7818154,
+  "lon": -122.3874397,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913972,
+  "lat": 37.7815167,
+  "lon": -122.3874120,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913973,
+  "lat": 37.7815247,
+  "lon": -122.3872534,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874913974,
+  "lat": 37.7815332,
+  "lon": -122.3870979,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874914009,
+  "lat": 37.7802398,
+  "lon": -122.3878024,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874914010,
+  "lat": 37.7803231,
+  "lon": -122.3878094,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874914013,
+  "lat": 37.7800767,
+  "lon": -122.3877853,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874914014,
+  "lat": 37.7799942,
+  "lon": -122.3877803,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874914017,
+  "lat": 37.7797494,
+  "lon": -122.3877584,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10874914023,
+  "lat": 37.7796672,
+  "lon": -122.3877499,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10882326824,
+  "lat": 37.7820130,
+  "lon": -122.3933260,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10882326828,
+  "lat": 37.7813348,
+  "lon": -122.3941319,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10882326829,
+  "lat": 37.7812195,
+  "lon": -122.3942868,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10882326831,
+  "lat": 37.7811794,
+  "lon": -122.3946295,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10882326841,
+  "lat": 37.7822712,
+  "lon": -122.3948430,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "bent_mast",
+    "lamp_type": "LED",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10968501904,
+  "lat": 37.7849764,
+  "lon": -122.3878168,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10968514705,
+  "lat": 37.7851185,
+  "lon": -122.3878048,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 10968514706,
+  "lat": 37.7852611,
+  "lon": -122.3877941,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11041008179,
+  "lat": 37.7832703,
+  "lon": -122.3879669,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "lamp_type": "electric",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805817,
+  "lat": 37.7777964,
+  "lon": -122.3921564,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805818,
+  "lat": 37.7778595,
+  "lon": -122.3922351,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805819,
+  "lat": 37.7776166,
+  "lon": -122.3923827,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805820,
+  "lat": 37.7776901,
+  "lon": -122.3924655,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805822,
+  "lat": 37.7775117,
+  "lon": -122.3926878,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805833,
+  "lat": 37.7775553,
+  "lon": -122.3928274,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805834,
+  "lat": 37.7777051,
+  "lon": -122.3926424,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805835,
+  "lat": 37.7778545,
+  "lon": -122.3924551,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805836,
+  "lat": 37.7779485,
+  "lon": -122.3923345,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11110805837,
+  "lat": 37.7780675,
+  "lon": -122.3921822,
+  "tags": {
+    "highway": "street_lamp",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11938344346,
+  "lat": 37.7854052,
+  "lon": -122.3880700,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11938344347,
+  "lat": 37.7853988,
+  "lon": -122.3879266,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11938344348,
+  "lat": 37.7851534,
+  "lon": -122.3880923,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11938344349,
+  "lat": 37.7851459,
+  "lon": -122.3879469,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11938344350,
+  "lat": 37.7848962,
+  "lon": -122.3881059,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11938344351,
+  "lat": 37.7848866,
+  "lon": -122.3879658,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "support": "pole"
+  }
+},
+{
+  "type": "node",
+  "id": 11938344352,
+  "lat": 37.7854079,
+  "lon": -122.3877818,
+  "tags": {
+    "highway": "street_lamp",
+    "lamp_mount": "straight_mast",
+    "support": "pole"
+  }
+}
+
+  ]
+}

@@ -1,0 +1,158 @@
+[
+  {
+    "index": 1,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7822928,-122.3926255&heading=136&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7822928,
+      -122.3926255
+    ],
+    "heading": 136,
+    "visibleLocationLabel": "572 2nd St",
+    "imageryDate": "April 2022",
+    "inspected": true,
+    "observations": "Protected green curbside cycle lane and white delineators; pale sidewalk slabs and trees; white industrial facade with dark arched windows."
+  },
+  {
+    "index": 2,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7822576,-122.3915802&heading=45&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7822576,
+      -122.3915802
+    ],
+    "heading": 45,
+    "visibleLocationLabel": "275 Brannan St",
+    "imageryDate": "May 2025",
+    "inspected": true,
+    "observations": "White gridded industrial facade on northwest side; gray industrial wall with arched window heads on southeast side; double yellow road line."
+  },
+  {
+    "index": 3,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7835225,-122.3899633&heading=44&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7835225,
+      -122.3899633
+    ],
+    "heading": 44,
+    "visibleLocationLabel": "200 Brannan St",
+    "imageryDate": "May 2025",
+    "inspected": true,
+    "observations": "View snaps to Delancey intersection: pale apartment facade, terracotta residential block, leafy street trees and zebra crossings."
+  },
+  {
+    "index": 4,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7847531,-122.3883288&heading=88&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7847531,
+      -122.3883288
+    ],
+    "heading": 88,
+    "visibleLocationLabel": "2 Brannan St",
+    "imageryDate": "May 2025",
+    "inspected": true,
+    "observations": "Wide waterfront intersection, palms, paired blue ornamental lamps, transit wires, low white pier frontage."
+  },
+  {
+    "index": 5,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7837937,-122.3878826&heading=184&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7837937,
+      -122.3878826
+    ],
+    "heading": 184,
+    "visibleLocationLabel": "San Francisco Bay Trl",
+    "imageryDate": "April 2025",
+    "inspected": true,
+    "observations": "Gray-brown square concrete promenade, low stone lawn wall on bay side, green lawn, blue single lanterns, low pale pier building with green openings."
+  },
+  {
+    "index": 6,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.782449,-122.3880168&heading=185&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.782449,
+      -122.3880168
+    ],
+    "heading": 185,
+    "visibleLocationLabel": "38 San Francisco Bay Trl",
+    "imageryDate": "April 2025",
+    "inspected": true,
+    "observations": "Pier 38 cream-white industrial walls and large dark gridded windows directly beside walkway; palms on transit median; blue lamps."
+  },
+  {
+    "index": 7,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7810156,-122.3885568&heading=198&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7810156,
+      -122.3885568
+    ],
+    "heading": 198,
+    "visibleLocationLabel": "898 The Embarcadero",
+    "imageryDate": "May 2025",
+    "inspected": true,
+    "observations": "View snaps onto street: palm-lined cobbled rail median, curbside green cycle lane, tan wall and trees; ballpark ahead."
+  },
+  {
+    "index": 8,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7796636,-122.3900253&heading=227&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7796636,
+      -122.3900253
+    ],
+    "heading": 227,
+    "visibleLocationLabel": "114 King St",
+    "imageryDate": "May 2025",
+    "inspected": true,
+    "observations": "Brick warehouse frontage northwest side, dark teal storefront framing, fire escapes; transit tracks and blue railings on opposite side."
+  },
+  {
+    "index": 9,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7782718,-122.3918019&heading=230&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7782718,
+      -122.3918019
+    ],
+    "heading": 230,
+    "visibleLocationLabel": "198 King St",
+    "imageryDate": "January 2025",
+    "inspected": true,
+    "observations": "Third intersection has pale modern buildings with broad blue-gray window grids, white zebra crossings and curb ramps."
+  },
+  {
+    "index": 10,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7793597,-122.3934024&heading=315&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.7793597,
+      -122.3934024
+    ],
+    "heading": 315,
+    "visibleLocationLabel": "658 3rd St",
+    "imageryDate": "May 2025",
+    "inspected": true,
+    "observations": "Red transit lane on northeast side, brick industrial buildings, large dark-framed ground windows, overhead wires."
+  },
+  {
+    "index": 11,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7796636,-122.3900253&heading=135&pitch=8&fov=90",
+    "requestedViewpoint": [
+      37.7796636,
+      -122.3900253
+    ],
+    "heading": 135,
+    "visibleLocationLabel": "114 King St, ballpark-facing",
+    "imageryDate": "May 2025",
+    "inspected": true,
+    "observations": "Oracle Park brick piers, tall gridded window bays, light horizontal stone band, open dark steel upper tier and lighting trusses; blue transit railing."
+  },
+  {
+    "index": 12,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.78035,-122.39465&heading=315&pitch=0&fov=90",
+    "requestedViewpoint": [
+      37.78035,
+      -122.39465
+    ],
+    "heading": 315,
+    "visibleLocationLabel": "577 3rd St",
+    "imageryDate": "May 2025",
+    "inspected": true,
+    "observations": "Return toward South Park: brick and tan buildings to left, gas station canopy to right, red transit lane and trolley wires."
+  }
+]

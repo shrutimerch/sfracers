@@ -15,7 +15,7 @@ export function buildSidewalks(scene:T.Scene,d:MapData){
  const park=d.parks?.[0]||[];
  const inPark=(p:Point)=>{let inside=false;for(let i=0,j=park.length-1;i<park.length;j=i++){const a=park[i],b=park[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])inside=!inside;}return inside;};
  let count=0;
- for(const road of d.roads){if(road.name!=='South Park'&&road.name!=='2nd Street')continue;
+ for(const road of d.roads){if(!['South Park','2nd Street','Brannan Street','King Street','3rd Street'].includes(road.name))continue;
   const pts=road.points,half=road.name==='South Park'?4.9:7,width=road.name==='South Park'?1.9:3;
   const others=all.filter(s=>s.name!==road.name);
   const clearance=(p:Point)=>{let value=100;for(const s of others){if(Math.min(s.a[0],s.b[0])-15>p[0]||Math.max(s.a[0],s.b[0])+15<p[0]||Math.min(s.a[1],s.b[1])-15>p[1]||Math.max(s.a[1],s.b[1])+15<p[1])continue;value=Math.min(value,distanceTo(p,s.a,s.b)-s.half);}return value;};
@@ -23,7 +23,7 @@ export function buildSidewalks(scene:T.Scene,d:MapData){
   for(let i=1;i<pts.length;i++){const a=pts[i-1],b=pts[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);if(len<.02)continue;const n0=normal(i-1),n1=normal(i),angle=Math.atan2(b[1]-a[1],b[0]-a[0]);
    const at=(t:number,offset:number)=>{const nx=n0[0]*(1-t)+n1[0]*t,nz=n0[1]*(1-t)+n1[1]*t,mag=Math.hypot(nx,nz)||1;return [a[0]+(b[0]-a[0])*t+nx/mag*offset,a[1]+(b[1]-a[1])*t+nz/mag*offset];};
    const steps=Math.ceil(len/1.8);
-   for(let j=0;j<steps;j++)for(const side of [-1,1]){const t0=j/steps,t1=(j+1)/steps,tm=(t0+t1)/2,center=at(tm,side*(half+width/2));if(Math.hypot(center[0]-110,center[1]-490)>235)continue;
+   for(let j=0;j<steps;j++)for(const side of [-1,1]){const t0=j/steps,t1=(j+1)/steps,tm=(t0+t1)/2,center=at(tm,side*(half+width/2));if(!d.route.slice(1).some((p,i)=>distanceTo(center,d.route[i],p)<28)&&Math.hypot(center[0]-90,center[1]-490)>155)continue;
     const inner0=at(t0,side*half),inner1=at(t1,side*half),outer0=at(t0,side*(half+width)),outer1=at(t1,side*(half+width));
     const clear=Math.min(...[inner0,inner1,outer0,outer1].map(clearance));if(clear<.25||inPark(center))continue;
     const height=(p:Point)=>.075+.205*Math.min(1,Math.max(0,(clearance(p)-.25)/2.2));

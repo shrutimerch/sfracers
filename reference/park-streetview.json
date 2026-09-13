@@ -1,0 +1,37 @@
+[
+  {
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7807,-122.3881&heading=90&pitch=0&fov=90",
+    "visibleLocationLabel": "South Beach Park, James Fuller",
+    "imageryDate": "April 2019",
+    "observations": "Broad uneven lawn, white waterfront benches and railings, marina behind.",
+    "inspected": true
+  },
+  {
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7807,-122.3881&heading=270&pitch=0&fov=90",
+    "visibleLocationLabel": "South Beach Park, James Fuller",
+    "imageryDate": "April 2019",
+    "observations": "Sloping lawn and red Sea Change sculpture; palms and street to west.",
+    "inspected": true
+  },
+  {
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7837937,-122.3878826&heading=60&pitch=0&fov=90",
+    "visibleLocationLabel": "San Francisco Bay Trl",
+    "imageryDate": "April 2025",
+    "observations": "Brannan Wharf raised grass lawn, pale stone retaining blocks and open dark shade canopy.",
+    "inspected": true
+  },
+  {
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7805,-122.38855&heading=40&pitch=12&fov=90",
+    "visibleLocationLabel": "29 The Embarcadero S",
+    "imageryDate": "May 2025",
+    "observations": "Full dense drooping date-palm crowns, ringed trunks; red sculpture and low flowering hedge beside lawn.",
+    "inspected": true
+  },
+  {
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7804,-122.3883&heading=180&pitch=0&fov=90",
+    "visibleLocationLabel": "San Francisco, California",
+    "imageryDate": "April 2025",
+    "observations": "South Beach southern planted area: mulch, spiky plants and mature trees near ballpark.",
+    "inspected": true
+  }
+]
