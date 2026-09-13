@@ -5,7 +5,7 @@ export const DEV_SHORTCUTS = {
   '1': { name: 'South Park', section: 'South Park', fraction: 0.5 },
   '2': { name: '2nd & Brannan', section: '2nd Street', fraction: 0.85 },
   '3': { name: 'Brannan Street', section: 'Brannan Street', fraction: 0.55 },
-  '4': { name: 'Waterfront promenade', section: 'Waterfront Promenade', fraction: 0.55 },
+  '4': { name: 'Embarcadero', section: 'The Embarcadero', fraction: 0.55 },
   '5': { name: 'Ballpark — Second Street Gate', point: [484.9, 693.43] },
   '6': { name: 'King & 3rd', section: 'King Street', fraction: 0.95 },
   '7': { name: '3rd Street', section: '3rd Street', fraction: 0.55 },

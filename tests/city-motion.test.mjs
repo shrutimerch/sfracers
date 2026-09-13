@@ -39,3 +39,73 @@ test('city actors move at frame-independent speed and stay finite across route b
     assert.ok(Number.isFinite(actor.rotation.y));
   }
 });
+
+test('waterfront cars clear the promenade, bike lane, and road edges along their routes', () => {
+  const data = JSON.parse(readFileSync(new URL('../public/race-course.json', import.meta.url)));
+  const roads = data.roads
+    .filter((r) => /Embarcadero|King Street/.test(r.name))
+    .filter((r) => motionPath(r.points).length > 100)
+    .slice(0, 8);
+  const city = buildCityMotion(new T.Scene(), data);
+  const cars = city.root.children.filter((o) => o.name === 'Ambient car');
+  const distanceToSegment = (x, z, a, b) => {
+    const dx = b[0] - a[0],
+      dz = b[1] - a[1];
+    const t = Math.max(
+      0,
+      Math.min(1, ((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz || 1)),
+    );
+    return Math.hypot(x - a[0] - dx * t, z - a[1] - dz * t);
+  };
+  // Check the full car footprint, including its wheels, throughout each route.
+  for (let frame = 0; frame < 1200; frame++) {
+    city.update(0.1);
+    cars.forEach((car, i) => {
+      const road = roads[i];
+      const distance = Math.min(
+        ...road.points
+          .slice(1)
+          .map((b, j) => distanceToSegment(car.position.x, car.position.z, road.points[j], b)),
+      );
+      assert.ok(distance + 1.01 < (road.width ?? (road.name === 'King Street' ? 9.6 : 14)) / 2);
+      if (road.name === 'King Street')
+        assert.ok(distance + 1.01 < 2.875, 'car overlaps curbside bike lane');
+      car.updateMatrixWorld(true);
+      for (const x of [-2.2, 0, 2.2])
+        for (const z of [-1.01, 1.01]) {
+          const point = car.localToWorld(new T.Vector3(x, 0, z));
+          for (const path of data.paths ?? []) {
+            const clearance = Math.min(
+              ...path.points
+                .slice(1)
+                .map((b, j) => distanceToSegment(point.x, point.z, path.points[j], b)),
+            );
+            assert.ok(clearance > path.width / 2 + 0.5, 'car overlaps promenade paving');
+          }
+        }
+    });
+  }
+});
+
+test('dense human crowd uses rounded instanced parts and animates knees and elbows', () => {
+  const data = JSON.parse(readFileSync(new URL('../public/race-course.json', import.meta.url)));
+  const city = buildCityMotion(new T.Scene(), data);
+  assert.ok(city.counts.pedestrians >= 100);
+  const pedestrians = city.root.children.filter((o) => o.name === 'Walking pedestrian');
+  const batches = city.root.children.filter((o) => o instanceof T.InstancedMesh);
+  assert.ok(batches.length > 0 && batches.length < 60);
+  const pedestrian = pedestrians[0];
+  assert.ok(pedestrian.getObjectByName('knee'));
+  assert.ok(pedestrian.getObjectByName('elbow'));
+  pedestrian.traverse((o) => {
+    if (o instanceof T.Mesh) assert.notEqual(o.geometry.type, 'BoxGeometry');
+  });
+  const before = batches.map((b) => b.instanceMatrix.array.slice());
+  const kneeAngle = pedestrian.getObjectByName('knee').rotation.z;
+  city.update(0.25);
+  assert.notEqual(pedestrian.getObjectByName('knee').rotation.z, kneeAngle);
+  assert.ok(
+    batches.some((b, i) => b.instanceMatrix.array.some((value, j) => value !== before[i][j])),
+  );
+  for (const batch of batches) assert.ok(batch.instanceMatrix.array.every(Number.isFinite));
+});

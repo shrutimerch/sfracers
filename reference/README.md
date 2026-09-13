@@ -39,10 +39,18 @@ Changes include corner facade colors/window patterns, De Boom's red shelter, pai
 `game/scenery/oracle-park.ts` uses the user-supplied Street View screenshot labeled 85 King St, May 2025, for the Second Street Gate: red brick, pale stone base and coping, tall dark window grids, corner clock tower, Oracle Park entrance lettering, and exposed steelwork. The OSM perimeter remains the location source; tower dimensions, clock time, banner artwork, and facade elevations are modeled approximations. The banner is a simplified Giants graphic, not a reproduction of the photographed advertisement.
 
 King Street update (September 2026): the supplied May 2025 Street View at 85 King St
-is the visual reference for the park-side carriageway. The course joins it at
-[602.99, 482.15] and stays on that mapped carriageway until Third Street; it no
-longer crosses the Muni median at the promenade exit. Each King carriageway is
+is the visual reference for the park-side carriageway. The course follows the Embarcadero roadway from Brannan and joins King at
+[603.67, 470.49], staying on the park-side carriageway until Third Street.
+The promenade is retained as scenery rather than part of the race route. Each King carriageway is
 modeled as 9.6 m wide, with a narrow curbside bicycle lane, white lane divisions,
 continuous green bike-lane paint, and a low green metal railing at the
 transit median. South Beach Park's street edge has red flowering beds. Widths,
 railing dimensions and planting detail are photo-based estimates, not a survey.
+
+The Embarcadero roadway uses a 9.6 m carriageway estimate. The promenade is a
+3 m pedestrian ribbon without road-crossing connectors, keeping it clear of
+the roadway beside Pier 38; palm trunks are offset into the median where necessary to clear the road edges.
+
+## King Street approach and Bay Bridge references
+
+The supplied May 2025 King Street and Embarcadero screenshots guide the northeast-facing Oracle Park roof sign, decorative marina sailboats, supplemental South Beach Park planting, and distant Bay Bridge silhouette. `game/scenery/south-beach-marina.ts` keeps boats beyond the modeled shoreline and new trees inside the park with road/path clearance. `game/scenery/bay-bridge.ts` approximates the western suspension spans in local coordinates; dimensions and placement are illustrative, not surveyed. Existing source geometry remains unchanged by these scenery additions.

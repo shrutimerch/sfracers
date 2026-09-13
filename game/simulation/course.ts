@@ -7,7 +7,7 @@ export function prepareCourse(data: MapData): MapData {
     roads: data.roads.map((r) =>
       isEastParkEntrance(r) || isWestParkEntrance(r)
         ? { ...r, width: 14.8 }
-        : r.name === 'King Street'
+        : r.name === 'King Street' || r.name === 'The Embarcadero'
           ? { ...r, width: 9.6 }
           : r,
     ),

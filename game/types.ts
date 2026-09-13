@@ -2,7 +2,15 @@ import type * as T from 'three';
 import type { TrafficNode } from './scenery/traffic-controls';
 import type { Building, FacadeKind } from './scenery/geometry/building-geometry';
 export type Point = number[];
+export type StreetSign = {
+  id: string;
+  intersectionPosition: Point;
+  position: Point;
+  streetNames: string[];
+  blades: { name: string; angle: number; sourceWayIds: number[] }[];
+};
 export type MapData = {
+  streetSigns?: StreetSign[];
   trafficControls?: TrafficNode[];
   course?: {
     landmarks?: { name: string; address: string; position: Point; height: number }[];

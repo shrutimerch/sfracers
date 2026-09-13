@@ -50,10 +50,30 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
   ) {
     if (!materials.has(color))
       materials.set(color, new T.MeshStandardMaterial({ color, roughness: 0.65 }));
-    const mesh = new T.Mesh(geometry, materials.get(color));
+    const mesh = new T.Mesh<T.BufferGeometry, T.MeshStandardMaterial>(
+      geometry,
+      materials.get(color),
+    );
     mesh.position.set(x, y, z);
     mesh.scale.set(l, h, w);
     parent.add(mesh);
+    return mesh;
+  }
+  const rounded = new T.SphereGeometry(0.5, 12, 8);
+  const tapered = new T.CylinderGeometry(0.5, 0.38, 1, 10);
+  function bodyPart(
+    parent: T.Object3D,
+    color: string,
+    x: number,
+    y: number,
+    z: number,
+    width: number,
+    height: number,
+    depth: number,
+    tube = false,
+  ) {
+    const mesh = box(parent, color, x, y, z, width, height, depth);
+    mesh.geometry = tube ? tapered : rounded;
     return mesh;
   }
   type Actor = {
@@ -101,13 +121,17 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
     const pole = box(group, '#42494b', -1.8, 4.2, 0, 5, 0.07, 0.07);
     pole.rotation.z = -0.42;
   });
+  // These mapped lines are individual carriageways, not the whole boulevard.
+  // Keep cars in the outer motor lane, clear of the curbside bike lane/promenade.
+  // King Street's divider is at -0.8 m and its bike lane starts at +2.875 m.
+  const carLaneOffset = 0.75;
   // Keep the first traffic pass sparse and on long waterfront road segments.
   data.roads
     .filter((r) => /Embarcadero|King Street/.test(r.name))
     .filter((r) => motionPath(r.points).length > 100)
     .slice(0, 8)
     .forEach((road, i) => {
-      const { group } = add(road.points, 6 + (i % 3), 0.2 + (i % 3) * 0.25, 3.6);
+      const { group } = add(road.points, 6 + (i % 3), 0.2 + (i % 3) * 0.25, carLaneOffset);
       group.name = 'Ambient car';
       box(group, ['#345c78', '#e1d7bc', '#ad493e', '#53645c'][i % 4], 0, 0.7, 0, 4.3, 0.85, 1.85);
       box(group, '#344852', -0.2, 1.32, 0, 2.3, 0.65, 1.65);
@@ -115,32 +139,71 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
         for (const z of [-0.92, 0.92]) box(group, '#202526', x, 0.36, z, 0.68, 0.68, 0.18);
       for (const z of [-0.6, 0.6]) box(group, '#fff0bd', 2.16, 0.8, z, 0.04, 0.2, 0.38);
     });
-  survey.parkPaths
+  const walkingPaths = [
+    ...survey.parkPaths.map((path) => ({ ...path, width: 2, promenade: false })),
+    ...(data.paths ?? []).map((path) => ({ ...path, promenade: true })),
+  ];
+  walkingPaths
     .filter((p) => motionPath(p.points).length > 30)
-    .slice(0, 10)
     .forEach((path, i) => {
-      for (let j = 0; j < 2; j++) {
+      const length = motionPath(path.points).length;
+      const count = Math.min(
+        path.promenade ? 48 : 18,
+        Math.max(4, Math.ceil(length / (path.promenade ? 8 : 12))),
+      );
+      for (let j = 0; j < count; j++) {
+        const variation = ((i * 37 + j * 17) % 101) / 101;
+        const side = j % 2 ? 1 : -1;
+        const lateral = path.promenade
+          ? 0.8 + variation * Math.min(2.5, path.width / 2 - 1.3)
+          : 0.35 + variation * 0.18;
         const actor = add(
           path.points,
-          1.1 + (i % 3) * 0.15,
-          0.2 + j * 0.55,
-          j ? 0.45 : -0.45,
+          0.95 + variation * 0.6,
+          (j + 0.25 + variation * 0.5) / count,
+          side * lateral,
           true,
         );
+        actor.direction = side;
         const { group } = actor;
+        group.scale.setScalar(0.91 + variation * 0.17);
         group.name = 'Walking pedestrian';
-        const shirt = ['#b1543e', '#416478', '#dab957', '#637857'][i % 4];
-        box(group, shirt, 0, 1.12, 0, 0.34, 0.6, 0.48);
-        box(group, '#be9475', 0, 1.63, 0, 0.28, 0.32, 0.29);
+        const shirt = ['#b1543e', '#416478', '#dab957', '#637857', '#784f76', '#e0d5bb'][
+          (i + j) % 6
+        ];
+        const skin = ['#e2b89a', '#bd8967', '#8b5c42', '#62402f'][(i * 3 + j) % 4];
+        const hair = ['#29221f', '#654333', '#b28b55', '#b9b5ae'][(i + j * 3) % 4];
+        const trousers = ['#344253', '#41403d', '#796e5b'][(i + j) % 3];
+        // Human proportions: a shaped ribcage, shoulders, pelvis and a small oval head.
+        bodyPart(group, shirt, 0, 1.17, 0, 0.25, 0.53, 0.43, true);
+        bodyPart(group, shirt, 0, 1.35, 0, 0.26, 0.21, 0.47);
+        bodyPart(group, trousers, 0, 0.91, 0, 0.26, 0.25, 0.32);
+        bodyPart(group, skin, 0, 1.49, 0, 0.105, 0.16, 0.11, true);
+        bodyPart(group, skin, 0.015, 1.65, 0, 0.205, 0.28, 0.19);
+        bodyPart(group, skin, 0.117, 1.64, 0, 0.057, 0.067, 0.045);
+        bodyPart(group, hair, -0.022, 1.735, 0, 0.2, 0.15, 0.205);
+        if (j % 3 === 0) bodyPart(group, hair, -0.088, 1.61, 0, 0.14, 0.24, 0.21);
         for (const side of [-1, 1]) {
           const leg = new T.Group();
-          leg.position.set(0, 0.84, side * 0.14);
+          leg.position.set(0, 0.88, side * 0.105);
           group.add(leg);
-          box(leg, '#343e49', 0, -0.36, 0, 0.18, 0.72, 0.18);
+          bodyPart(leg, trousers, 0, -0.2, 0, 0.15, 0.4, 0.16, true);
+          const knee = new T.Group();
+          knee.name = 'knee';
+          knee.position.y = -0.4;
+          leg.add(knee);
+          bodyPart(knee, trousers, 0, -0.18, 0, 0.115, 0.36, 0.12, true);
+          bodyPart(knee, '#292c30', 0.055, -0.395, 0, 0.27, 0.11, 0.135);
           const arm = new T.Group();
-          arm.position.set(0, 1.37, side * 0.33);
+          arm.position.set(0, 1.37, side * 0.23);
           group.add(arm);
-          box(arm, shirt, 0, -0.27, 0, 0.16, 0.55, 0.16);
+          bodyPart(arm, shirt, 0, -0.13, 0, 0.125, 0.28, 0.13, true);
+          const elbow = new T.Group();
+          elbow.name = 'elbow';
+          elbow.position.y = -0.26;
+          arm.add(elbow);
+          bodyPart(elbow, skin, 0, -0.115, 0, 0.085, 0.23, 0.09, true);
+          bodyPart(elbow, skin, 0, -0.255, 0, 0.09, 0.13, 0.075);
           actor.limbs.push(leg, arm);
         }
       }
@@ -163,6 +226,32 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
     if (object instanceof T.Mesh) used.add(object.material as T.Material);
   });
   for (const material of materials.values()) if (!used.has(material)) material.dispose();
+  // Batch the crowd by geometry and material so more people do not add a draw call per limb.
+  const crowdParts = new Map<T.BufferGeometry, Map<T.Material, T.Mesh[]>>();
+  for (const actor of actors.filter((a) => a.walking)) {
+    actor.group.traverse((object) => {
+      if (!(object instanceof T.Mesh)) return;
+      const byMaterial = crowdParts.get(object.geometry) ?? new Map<T.Material, T.Mesh[]>();
+      const material = object.material as T.Material;
+      const parts = byMaterial.get(material) ?? [];
+      parts.push(object);
+      byMaterial.set(material, parts);
+      crowdParts.set(object.geometry, byMaterial);
+    });
+    actor.group.visible = false;
+  }
+  const crowdBatches: { mesh: T.InstancedMesh; parts: T.Mesh[] }[] = [];
+  for (const [geometry, byMaterial] of crowdParts)
+    for (const [material, parts] of byMaterial) {
+      const mesh = new T.InstancedMesh(geometry, material, parts.length);
+      mesh.name = 'Pedestrian crowd';
+      mesh.instanceMatrix.setUsage(T.DynamicDrawUsage);
+      mesh.frustumCulled = false;
+      root.add(mesh);
+      crowdBatches.push({ mesh, parts });
+    }
+  const inverseRoot = new T.Matrix4(),
+    instanceMatrix = new T.Matrix4();
   let elapsed = 0;
   function update(dt: number) {
     elapsed += dt;
@@ -192,8 +281,23 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
         material.depthWrite = !transparent;
       }
       actor.limbs.forEach((limb, i) => {
-        limb.rotation.z = Math.sin(elapsed * speed * 5 + (i === 0 || i === 3 ? 0 : Math.PI)) * 0.42;
+        const phase =
+          elapsed * speed * 5 + actor.path.length * speed + (i === 0 || i === 3 ? 0 : Math.PI);
+        const swing = Math.sin(phase);
+        limb.rotation.z = swing * (i % 2 ? 0.28 : 0.36);
+        const joint = limb.children.find((child) => child instanceof T.Group);
+        if (joint)
+          joint.rotation.z = i % 2 ? 0.18 + (swing + 1) * 0.12 : -Math.max(0, -swing) * 0.65;
       });
+    }
+    root.updateMatrixWorld(true);
+    inverseRoot.copy(root.matrixWorld).invert();
+    for (const { mesh, parts } of crowdBatches) {
+      parts.forEach((part, index) => {
+        instanceMatrix.multiplyMatrices(inverseRoot, part.matrixWorld);
+        mesh.setMatrixAt(index, instanceMatrix);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
     }
   }
   update(0);

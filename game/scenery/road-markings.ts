@@ -2,7 +2,13 @@ import { hasBrannanDoubleYellow, hasObservedGreenLane } from './config/scenery-l
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import data from './data/road-marking-data';
-import { crossingStyle, bicycleSides, type Tags } from './road-marking-rules';
+import {
+  crossingStyle,
+  bicycleSides,
+  bicycleAppearance,
+  separateCyclewayAppearance,
+  type Tags,
+} from './road-marking-rules';
 import type { MapData, Point } from '../types';
 // Actual OSM geometry and tags. Paint widths/road-side offsets are fitted to the game's 14m road surface.
 export function buildRoadMarkings(scene: T.Scene, d: MapData) {
@@ -11,7 +17,8 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
     new T.MeshStandardMaterial({ color, roughness: 0.98, side: T.DoubleSide });
   const white = material('#e0dfcb'),
     yellow = material('#e8b849'),
-    green = material('#659955');
+    green = material('#659955'),
+    concrete = material('#b4b5ab');
   const add = (g: T.BufferGeometry, m: T.Material) => {
     const n = g.index ? g.toNonIndexed() : g;
     if (n !== g) g.dispose();
@@ -240,9 +247,35 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
       lines([aa, bb], 0.045, white, 0, 0.17);
     }
   };
+  const protection = (points: Point[], offset: number, separator: string | null) => {
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1],
+        b = points[i];
+      const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      const posts = ['bollard', 'flex_post', 'vertical_panel'].includes(separator || '');
+      const planting = ['planter', 'greenery', 'hedge', 'tree_row'].includes(separator || '');
+      if (separator === 'parking_lane') continue;
+      const step = posts || planting ? 5 : 2;
+      for (let u = 1; u < length - 1; u += step) {
+        const x = a[0] + Math.cos(angle) * u - Math.sin(angle) * offset;
+        const z = a[1] + Math.sin(angle) * u + Math.cos(angle) * offset;
+        if (!near([x, z]) || inJunction([x, z])) continue;
+        const height = posts ? 0.8 : planting ? 0.55 : 0.14;
+        const geometry = posts
+          ? new T.CylinderGeometry(0.045, 0.065, height, 6)
+          : new T.BoxGeometry(planting ? 1.2 : 1.5, height, planting ? 0.6 : 0.22);
+        geometry.rotateY(-angle);
+        geometry.translate(x, 0.1 + height / 2, z);
+        add(geometry, posts ? white : concrete);
+        if (planting) box(x, z, 1.1, 0.5, angle, green, height + 0.12);
+      }
+    }
+  };
   for (const feature of data.bikeRoads) {
     const tags = feature.tags as Tags;
     for (const side of bicycleSides(tags)) {
+      const appearance = bicycleAppearance(tags, side.side, side.kind);
       for (let i = 1; i < feature.points.length; i++) {
         const a = feature.points[i - 1],
           b = feature.points[i],
@@ -250,7 +283,11 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
           angle = Math.atan2(b[1] - a[1], b[0] - a[0]),
           offset =
             side.side *
-            (tags.name === 'King Street' ? 3.7 : side.kind === 'shared_lane' ? 3.5 : 5.55),
+            (tags.name === 'King Street' || tags.name === 'The Embarcadero'
+              ? 3.7
+              : side.kind === 'shared_lane'
+                ? 3.5
+                : 5.55),
           nx = -Math.sin(angle) * offset,
           nz = Math.cos(angle) * offset,
           p = [(a[0] + b[0]) / 2 + nx, (a[1] + b[1]) / 2 + nz];
@@ -266,31 +303,56 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
             [a[0] + nx, a[1] + nz],
             [b[0] + nx, b[1] + nz],
           ],
-          observedGreen = hasObservedGreenLane(tags.name, p);
+          observedGreen = appearance.green ?? hasObservedGreenLane(tags.name, p);
         if (side.kind !== 'shared_lane') {
-          if (observedGreen && tags.name !== 'King Street')
+          if (observedGreen && (appearance.green === true || tags.name !== 'King Street'))
             lines(points, 1.65, green, 0, 0.105, true);
           lines(points, 0.1, white, -0.9 * side.side, 0.14, true);
-          if (side.kind === 'track') lines(points, 0.1, white, -1.45 * side.side, 0.14, true);
+          if (appearance.buffered || appearance.protected) {
+            lines(points, 0.1, white, -1.45 * side.side, 0.14, true);
+            for (let u = 2; u < len - 2; u += 4) {
+              const x = a[0] + Math.cos(angle) * u + nx + Math.sin(angle) * side.side * 1.18;
+              const z = a[1] + Math.sin(angle) * u + nz - Math.cos(angle) * side.side * 1.18;
+              if (!inJunction([x, z])) box(x, z, 0.65, 0.1, angle + Math.PI / 4, white);
+            }
+          }
+          if (appearance.protected) protection(points, -1.18 * side.side, appearance.separator);
         }
         for (let u = 6; u < len; u += 24) {
           const x = a[0] + Math.cos(angle) * u + nx,
             z = a[1] + Math.sin(angle) * u + nz;
-          if (!inJunction([x, z])) bikeSymbol(x, z, angle);
-        }
-        if (observedGreen && side.kind === 'track')
-          for (let u = 3; u < len - 2; u += 5) {
-            const x = a[0] + Math.cos(angle) * u + nx + Math.sin(angle) * side.side * 1.18,
-              z = a[1] + Math.sin(angle) * u + nz - Math.cos(angle) * side.side * 1.18;
-            if (inJunction([x, z])) continue;
-            const g = new T.CylinderGeometry(0.035, 0.05, 0.8, 6);
-            g.translate(x, 0.48, z);
-            add(g, white);
+          if (!inJunction([x, z])) {
+            bikeSymbol(x, z, angle);
+            if (side.kind === 'shared_lane') {
+              for (const ahead of [1.5, 2.25]) {
+                const cx = x + Math.cos(angle) * ahead,
+                  cz = z + Math.sin(angle) * ahead;
+                for (const direction of [-1, 1]) {
+                  box(
+                    cx - Math.sin(angle) * direction * 0.23,
+                    cz + Math.cos(angle) * direction * 0.23,
+                    0.65,
+                    0.1,
+                    angle - (direction * Math.PI) / 4,
+                    white,
+                    0.17,
+                  );
+                }
+              }
+            }
           }
+        }
       }
     }
   }
   for (const track of data.cycleways) {
+    const appearance = bicycleAppearance(track.tags as Tags);
+    lines(track.points, 2.3, asphalt, 0, 0.095, true);
+    if (appearance.green) lines(track.points, 1.9, green, 0, 0.105, true);
+    for (const side of [-1, 1]) {
+      const edge = separateCyclewayAppearance(track.tags as Tags, side);
+      if (edge.protected && edge.separator) protection(track.points, side * 1.15, edge.separator);
+    }
     lines(track.points, 0.1, white, -1, 0.15, true);
     lines(track.points, 0.1, white, 1, 0.15, true);
   }

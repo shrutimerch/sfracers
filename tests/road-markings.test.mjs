@@ -42,3 +42,37 @@ test('all projected crossing and bike geometry retains source feature IDs and ta
     }
   }
 });
+
+test('green surfacing, painted buffers and physical protection are independent', async () => {
+  const { bicycleAppearance } = await import('../game/scenery/road-marking-rules.ts');
+  const green = bicycleAppearance({ 'cycleway:right:surface:colour': 'green' }, 1, 'lane');
+  assert.equal(green.green, true);
+  assert.equal(green.protected, false);
+  const buffer = bicycleAppearance({ 'cycleway:both:buffer': 'yes' }, 1, 'lane');
+  assert.equal(buffer.buffered, true);
+  assert.equal(buffer.protected, false);
+  const protectedLane = bicycleAppearance({ 'cycleway:right:separation': 'flex_post' }, 1, 'lane');
+  assert.equal(protectedLane.protected, true);
+  assert.equal(protectedLane.separator, 'flex_post');
+  assert.equal(protectedLane.green, null);
+  assert.equal(
+    bicycleAppearance({ 'cycleway:right:separation': 'no' }, 1, 'track').protected,
+    false,
+  );
+  assert.equal(
+    bicycleAppearance(
+      { 'cycleway:right:surface:colour': 'red', 'cycleway:surface:colour': 'green' },
+      1,
+      'lane',
+    ).green,
+    false,
+  );
+  assert.equal(bicycleAppearance({ 'surface:colour': 'green' }, undefined).green, true);
+  assert.equal(bicycleAppearance({}, 1, 'shared_lane').protected, false);
+});
+
+test('unspecified marked crossings use a neutral style without asserting zebra stripes', () => {
+  assert.equal(crossingStyle({ 'crossing:markings': 'yes' }), 'lines');
+  assert.equal(crossingStyle({ crossing: 'marked' }), 'lines');
+  assert.equal(crossingStyle({ crossing: 'marked', 'crossing:markings': 'no' }), null);
+});

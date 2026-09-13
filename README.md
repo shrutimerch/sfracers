@@ -1,5 +1,23 @@
 # Bay City Kart
 
+## Dev shortcuts
+
+Development URL shortcuts skip the start screen and let you drive immediately:
+
+| URL | Starting spot |
+| --- | --- |
+| [/1](http://localhost:3000/1) | South Park |
+| [/2](http://localhost:3000/2) | 2nd & Brannan |
+| [/3](http://localhost:3000/3) | Brannan Street |
+| [/4](http://localhost:3000/4) | Embarcadero roadway |
+| [/5](http://localhost:3000/5) | Ballpark, Second Street Gate on King |
+| [/6](http://localhost:3000/6) | King & 3rd |
+| [/7](http://localhost:3000/7) | 3rd Street |
+
+Use your dev server's address, for example `http://localhost:3000/5`.
+WASD/arrows drive, V switches cameras, Escape pauses, and R returns to the
+shortcut's starting spot. These paths return 404 in production.
+
 A browser-based Three.js racing game on mapped San Francisco streets. The waterfront circuit uses two laps. React handles the interface; a standalone simulation handles gameplay.
 
 ## Develop and verify
@@ -17,22 +35,6 @@ npm run build
 ```
 
 Use `npm run format -- app game tests` after editing. Large generated geometry datasets are excluded by `.oxfmtrc.json`; their generation scripts own their formatting. Dependencies and the lockfile are intentionally preserved.
-
-Development URL shortcuts skip the start screen and let you drive immediately:
-
-| URL | Starting spot |
-| --- | --- |
-| `/1` | South Park |
-| `/2` | 2nd & Brannan |
-| `/3` | Brannan Street |
-| `/4` | Waterfront promenade |
-| `/5` | Ballpark, Second Street Gate on King |
-| `/6` | King & 3rd |
-| `/7` | 3rd Street |
-
-Use your dev server's address, for example `http://localhost:3000/5`.
-WASD/arrows drive, V switches cameras, Escape pauses, and R returns to the
-shortcut's starting spot. These paths return 404 in production.
 
 Development-only `/?inspect=395` positions a stationary camera 395 meters along the selected route. It is ignored in production.
 

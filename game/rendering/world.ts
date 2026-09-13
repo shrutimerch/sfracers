@@ -9,6 +9,7 @@ import { buildSidewalks } from '../scenery/sidewalks';
 import { buildRoadMarkings } from '../scenery/road-markings';
 import { buildCityMotion } from '../scenery/city-motion';
 import { buildTrafficControls } from '../scenery/traffic-controls';
+import { buildStreetSigns } from '../scenery/street-signs';
 import type { MapData, Facades, Point } from '../types';
 const distance = (a: Point, b: Point) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Facades) {
@@ -268,6 +269,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   buildSidewalks(scene, d);
   const disposeMarkings = buildRoadMarkings(scene, d);
   const disposeTraffic = buildTrafficControls(scene, d);
+  const disposeSigns = buildStreetSigns(scene, d);
 
   const cityMotion = buildCityMotion(scene, d);
   const scenery = new T.Group();
@@ -289,6 +291,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
       disposeRoute();
       disposeMarkings();
       disposeTraffic();
+      disposeSigns();
     },
   };
 }

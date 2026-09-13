@@ -186,7 +186,7 @@ export default function RaceGame() {
                   ? `Finished in ${fmt(hud.time)}. Ready for another race?`
                   : hud.mode === 'paused'
                     ? 'The race is paused. Your rivals can wait.'
-                    : 'Race from South Park along the waterfront promenade and King, then return on 3rd. Either side of South Park is open. Follow the green checkpoint rings; Shift accelerates faster.')}
+                    : 'Race from South Park along the Embarcadero roadway and King, then return on 3rd. Either side of South Park is open. Follow the green checkpoint rings; Shift accelerates faster.')}
             </p>
             <div className="race-spec">
               <div>

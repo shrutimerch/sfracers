@@ -176,6 +176,7 @@ export function buildOraclePark(
     mesh.position.copy(transform(x, y, z));
     mesh.rotation.y = rotation + (side ? Math.PI / 2 : Math.PI);
     group.add(mesh);
+    return mesh;
   };
   panel(
     1024,
@@ -218,6 +219,17 @@ export function buildOraclePark(
   };
   panel(1024, 192, towerSign, 0, 33.35, -6.73, 9.5, 1.5);
   panel(1024, 192, towerSign, 6.73, 33.35, 0, 9.5, 1.5, true);
+  // Broad northeast-facing roof sign is readable from the southbound King Street approach.
+  const approachSign = panel(1024, 192, towerSign, 0, 21, 0, 27, 3.8);
+  if (approachSign) {
+    approachSign.name = 'Oracle Park — King Street approach sign';
+    approachSign.position.set(525.9, 20.7, 715.4);
+    approachSign.rotation.y = Math.PI * 0.75;
+  }
+  box(525.5, 20.7, 715.8, 28, 4.2, 0.3, steel, Math.PI / 4);
+  for (const offset of [-10, 0, 10]) {
+    box(525.5 + offset * Math.SQRT1_2, 18.6, 715.8 + offset * Math.SQRT1_2, 0.18, 4, 0.25, steel);
+  }
   const clock = (ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = '#c6b995';
     ctx.beginPath();

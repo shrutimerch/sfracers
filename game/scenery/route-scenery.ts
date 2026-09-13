@@ -1,3 +1,6 @@
+import { buildBayBridge } from './bay-bridge';
+import { buildSouthBeachMarina } from './south-beach-marina';
+import { waterfrontTreePosition } from './tree-clearance';
 import { buildOraclePark } from './oracle-park';
 import { SCENERY_LOCATIONS, ROAD_APPEARANCE } from './config/scenery-locations';
 import { courtyardPaths } from './data/brannan-courtyard-data';
@@ -353,6 +356,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   }
   cb(10, 3, 1.35, 3.3, 1.2, 0.38, courtStone);
   const disposeOraclePark = buildOraclePark(scene, survey.stadium, facades, routeDistance);
+  buildBayBridge(scene);
   const inPolygon = (p: Point, pts: Point[]) => {
     let inside = false;
     for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
@@ -367,6 +371,12 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     return inside;
   };
   const southBeach = survey.parks.find((p) => p.id === 23750468)!;
+  buildSouthBeachMarina(
+    d,
+    southBeach.points,
+    survey.trees.map((tree) => tree.point),
+    add,
+  );
   const beachHeight = (x: number, z: number) => {
     if (!inPolygon([x, z], southBeach.points)) return 0.15;
     const cx = 632,
@@ -602,7 +612,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     add(ring, redSteel);
   }
   for (const tree of survey.trees) {
-    const [x, z] = tree.point;
+    const [x, z] = tree.palm ? waterfrontTreePosition(tree.point, d.roads) : tree.point;
     if (Math.hypot(x - 90, z - 490) < 170 || routeDistance(x, z) > 90) continue;
     if (tree.palm) {
       palmGeometry(x, z, 10 + (tree.id % 4), add, { bark, leaves: palmLeaves });
