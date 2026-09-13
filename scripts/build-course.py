@@ -1,6 +1,9 @@
 import json,math,heapq
 from pathlib import Path
 p=Path('public/streets.json');d=json.loads(p.read_text())
+# Preserve the bounded race scenery; streets.json may contain a citywide import.
+existing=json.loads(Path('public/race-course.json').read_text())
+d={**existing,'roads':d['roads']}
 # Use the mapped Herb Caen Way promenade and its existing connecting crossings.
 raw={w['id']:w for w in json.loads(Path('public/waterfront-paths-osm.json').read_text())['elements']}
 def projected(wid):return [[round((g['lon']+122.395)*87900,2),round((37.786-g['lat'])*111200,2)] for g in raw[wid]['geometry']]
