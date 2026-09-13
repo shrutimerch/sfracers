@@ -1,3 +1,5 @@
+import { DELANCEY_PATIO_ID } from '../scenery/delancey-street';
+import { HARBOR_BUILDING_IDS } from '../scenery/harbor-buildings';
 import { hasBrannanDoubleYellow } from '../scenery/config/scenery-locations';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -165,6 +167,8 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
       building.points.length < 4 ||
       isLocal(building) ||
       hasRouteProfile(building) ||
+      building.id === DELANCEY_PATIO_ID ||
+      HARBOR_BUILDING_IDS.has(building.id ?? 0) ||
       building.id === 443021970
     )
       continue;

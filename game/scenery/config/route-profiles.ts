@@ -38,7 +38,7 @@ export const routeProfiles: Record<number, RouteProfile> = {
     bay: 5,
   }, // Second/De Boom to Brannan
   37058259: { color: '#d5d3c5', trim: '#e7e3d3', frames: '#748782', floors: 4, bay: 3.8 }, // Delancey northwest apartments
-  125401316: { color: '#b87c61', trim: '#d4b390', frames: '#768279', floors: 3, bay: 3.6 }, // Delancey southeast apartments
+  125401316: { color: '#ad745b', trim: '#dfd5b7', frames: '#455653', floors: 3, bay: 3.6 }, // Delancey southeast apartments
   288714475: { color: '#a88c7d', trim: '#e2dfcc', frames: '#b2c0b9', floors: 4, bay: 4 }, // King/Townsend cafe apartments
   148547436: { color: '#ccc3a2', trim: '#ece3c7', frames: '#343f38', floors: 1, bay: 4 }, // Second/King low restaurant
   149167944: { color: '#c0af87', trim: '#e0d5b9', frames: '#3c433c', floors: 2, bay: 4 }, // Third/King retail

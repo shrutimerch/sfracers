@@ -1,3 +1,8 @@
+import { buildDelanceyGarden } from './delancey-garden';
+import { buildPier38, PIER_38_ID } from './pier-38';
+import { buildBrannanWaterfront } from './brannan-waterfront';
+import { buildDelanceyStreet, DELANCEY_RESTAURANT_ID } from './delancey-street';
+import { buildHarborBuildings } from './harbor-buildings';
 import { buildBayBridge } from './bay-bridge';
 import { buildSouthBeachMarina } from './south-beach-marina';
 import { waterfrontTreePosition } from './tree-clearance';
@@ -16,6 +21,8 @@ import type { MapData, Facades, Point } from '../types';
 // Mapped positions; modeled detail sizes are estimates from reference/waterfront-streetview.json.
 export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) {
   const groups = new Map<T.Material, T.BufferGeometry[]>();
+  let disposeDelancey: (() => void) | undefined;
+  let disposePier38: (() => void) | undefined;
   const mat = (color: string) =>
     new T.MeshStandardMaterial({ color, roughness: 0.88, side: T.DoubleSide });
   const pale = mat('#c3bfb2'),
@@ -107,6 +114,10 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   for (const b of d.buildings) {
     const p = routeProfiles[b.id ?? 0];
     if (!p) continue;
+    if (b.id === PIER_38_ID) {
+      disposePier38 = buildPier38(scene, b);
+      continue;
+    }
     const geom = buildingGeometry(b),
       wallMat = new T.MeshStandardMaterial({
         color: p.color,
@@ -121,6 +132,10 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       scene.add(wall);
     } else add(geom.walls, wallMat);
     add(geom.roof, dark);
+    if (b.id === DELANCEY_RESTAURANT_ID) {
+      disposeDelancey = buildDelanceyStreet(scene, b);
+      continue;
+    }
     const trim = mat(p.trim),
       frame = mat(p.frames),
       glass = mat('#53686e');
@@ -357,6 +372,9 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   cb(10, 3, 1.35, 3.3, 1.2, 0.38, courtStone);
   const disposeOraclePark = buildOraclePark(scene, survey.stadium, facades, routeDistance);
   buildBayBridge(scene);
+  buildBrannanWaterfront(scene);
+  buildDelanceyGarden(scene);
+  const disposeHarborBuildings = buildHarborBuildings(scene);
   const inPolygon = (p: Point, pts: Point[]) => {
     let inside = false;
     for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
@@ -707,6 +725,9 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   }
   return () => {
     groundGrass.texture.dispose();
+    disposeDelancey?.();
+    disposePier38?.();
     disposeOraclePark();
+    disposeHarborBuildings();
   };
 }

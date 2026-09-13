@@ -54,3 +54,23 @@ the roadway beside Pier 38; palm trunks are offset into the median where necessa
 ## King Street approach and Bay Bridge references
 
 The supplied May 2025 King Street and Embarcadero screenshots guide the northeast-facing Oracle Park roof sign, decorative marina sailboats, supplemental South Beach Park planting, and distant Bay Bridge silhouette. `game/scenery/south-beach-marina.ts` keeps boats beyond the modeled shoreline and new trees inside the park with road/path clearance. `game/scenery/bay-bridge.ts` approximates the western suspension spans in local coordinates; dimensions and placement are illustrative, not surveyed. Existing source geometry remains unchanged by these scenery additions.
+
+## South Beach harbor buildings
+
+The user-supplied May 2025 view from 89 The Embarcadero S guides `game/scenery/harbor-buildings.ts`: low cream harbor buildings, blue trim, Frankie’s sign, picnic tables, and timber patio fencing. The modeled cafe and Bike Hut replace generic blocks for OSM footprints 148551355 and 572156641; heights and patio layout are visual estimates. `public/textures/harbor-octopus-mural.png` is AI-generated original artwork inspired by the photographed mural, not a photograph or exact reproduction of it. Its texture is disposed with the world.
+
+## Delancey Street Restaurant
+
+The supplied May 2025 image at 160 Brannan guides `game/scenery/delancey-street.ts`: terracotta stucco, forest-green and cream striped canvas awnings, burgundy entries, cream upper window frames and loggia columns, curved dark balcony railings, and a low brick terrace wall with transparent glass wind screens. The restaurant retains footprint 125401316; the terrace uses footprint 125401311 in place of its generic tall block. Colors, heights, and furniture are photo-based approximations.
+
+## Brannan waterfront view
+
+`game/scenery/brannan-waterfront.ts` uses the supplied May 2025 view from 2 Brannan Street for three red waterfront columns with dark crowns and gold bands, and the long single-story white pier building with green openings to the south/right. Placement, building dimensions, colors, and opening spacing are visual estimates, preserving the open central bay view.
+
+The user identified the white waterfront building as Pier 38. `game/scenery/pier-38.ts` therefore uses existing footprint 104599982 (about 290 m in extent), replacing its generic facade rather than adding a second shed. The complete pier gets low white walls, green openings, gridded glazing, and Pier 38 lettering, including surfaces beyond the near-road detail cutoff.
+
+The subsequent front reference at 691 The Embarcadero distinguishes the taller two-story street frontage from the low pier shed. The entrance now includes a central triangular pediment, layered arch molding, tall gridded entry glazing, paired window levels, cream pilasters/cornices, and pediment lettering. The original long pier footprint is retained.
+
+## Private garden at Brannan and Delancey
+
+`game/scenery/delancey-garden.ts` models the planted corner shown in the supplied May 2025 view from 198 Brannan: a low terracotta boundary with black iron railings, mature tree canopy, interior paths/seating, and pale sidewalk bollards. Garden bounds and furnishings are photo-based estimates placed between the existing road and building footprints; the enclosure remains private scenery.
