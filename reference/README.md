@@ -43,6 +43,6 @@ is the visual reference for the park-side carriageway. The course joins it at
 [602.99, 482.15] and stays on that mapped carriageway until Third Street; it no
 longer crosses the Muni median at the promenade exit. Each King carriageway is
 modeled as 9.6 m wide, with a narrow curbside bicycle lane, white lane divisions,
-intermittent green conflict-area paint, and a low green metal railing at the
+continuous green bike-lane paint, and a low green metal railing at the
 transit median. South Beach Park's street edge has red flowering beds. Widths,
 railing dimensions and planting detail are photo-based estimates, not a survey.

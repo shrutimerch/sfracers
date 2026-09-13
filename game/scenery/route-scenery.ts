@@ -543,7 +543,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     }
   }
   // Each King centerline is one carriageway. The green railing borders the Muni median,
-  // while the outside curb carries a narrow bike lane with green junction blocks.
+  // while the outside curb carries a continuously green bike lane.
   const barrierGreen = mat('#326c61'),
     laneWhite = mat('#e4e2d8'),
     bikeGreen = mat('#79ac48');
@@ -576,12 +576,9 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
         if (!nearCrossStreet(p[0], p[1]))
           box(p[0], 0.09, p[1], Math.min(3, length - u), 0.015, 0.13, laneWhite, angle);
       }
-      // Photo shows intermittent green rectangles where turning vehicles cross the bike lane.
-      for (let u = 1; u < length; u += 5) {
-        const p = at(u, 3.7);
-        if (nearCrossStreet(p[0], p[1]))
-          box(p[0], 0.11, p[1], Math.min(2.7, length - u), 0.018, 1.65, bikeGreen, angle);
-      }
+      // Continuous green paint, including through the crossing areas.
+      const bikeCenter = at(length / 2, 3.7);
+      box(bikeCenter[0], 0.11, bikeCenter[1], length + 0.2, 0.018, 1.65, bikeGreen, angle);
     }
   }
   for (const art of survey.art) {

@@ -3,7 +3,12 @@ import { advanceSpeed, drivingSurface, raceChecks } from './driving.ts';
 import { createRoute } from './route-math.ts';
 import type { MapData } from '../types';
 // Pure racing state: no DOM, Three.js objects, network access, or animation scheduling.
-export function createRaceSimulation(d: MapData, inspection = 0, photographic = false) {
+export function createRaceSimulation(
+  d: MapData,
+  inspection = 0,
+  photographic = false,
+  freeDrive = false,
+) {
   const route = createRoute(d),
     { total, at, nearest } = route;
   inspection = Math.max(0, Math.min(total - 1, inspection));
@@ -26,7 +31,7 @@ export function createRaceSimulation(d: MapData, inspection = 0, photographic = 
     drifting = false,
     boostTimer = 0,
     progress = 0,
-    street = d.course?.sections[0]?.name || 'South Park',
+    street = route.nearest(x, z).name || 'South Park',
     padCooldown = 0;
   const keys: Record<string, boolean> = {};
   const setKey = (key: string, value: boolean) => {
@@ -49,12 +54,15 @@ export function createRaceSimulation(d: MapData, inspection = 0, photographic = 
     Object.keys(keys).forEach((k) => delete keys[k]);
     rivals.forEach((r, i) => (r.s = 12 + i * 8));
   };
+  let pausedFrom = mode;
   const pause = () => {
-    if (mode === 'racing' || mode === 'countdown') mode = 'paused';
-    else if (mode === 'paused') mode = count > 0 ? 'countdown' : 'racing';
+    if (mode === 'racing' || mode === 'countdown' || mode === 'inspection') {
+      pausedFrom = mode;
+      mode = 'paused';
+    } else if (mode === 'paused') mode = pausedFrom;
   };
   const recover = () => {
-    const p = at(cp === 0 ? 0 : Math.max(0, checks[cp - 1] - 10));
+    const p = at(freeDrive ? inspection : cp === 0 ? 0 : Math.max(0, checks[cp - 1] - 10));
     x = p.x;
     z = p.z;
     angle = p.a;
@@ -69,7 +77,7 @@ export function createRaceSimulation(d: MapData, inspection = 0, photographic = 
         mode = 'racing';
       }
     }
-    if (mode === 'racing' && canRace) {
+    if ((mode === 'racing' || (mode === 'inspection' && freeDrive)) && canRace) {
       time += dt;
       const gas = keys.w || keys.arrowup,
         brake = keys.s || keys.arrowdown,
@@ -111,6 +119,7 @@ export function createRaceSimulation(d: MapData, inspection = 0, photographic = 
           speed *= Math.exp(-3 * dt);
         }
       }
+      if (mode === 'inspection') return;
       const previousLap = lap;
       const next = at(checks[cp]);
       if (Math.hypot(x - next.x, z - next.z) < (cp === checks.length - 1 ? 6 : 24)) {
@@ -157,7 +166,7 @@ export function createRaceSimulation(d: MapData, inspection = 0, photographic = 
     recover,
     blur() {
       Object.keys(keys).forEach((k) => delete keys[k]);
-      if (mode === 'racing' || mode === 'countdown') mode = 'paused';
+      if (mode === 'racing' || mode === 'countdown' || mode === 'inspection') pause();
     },
     setPhotographic(value: boolean) {
       photographic = value;

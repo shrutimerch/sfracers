@@ -1,3 +1,4 @@
+import { devShortcutDistance } from './simulation/dev-shortcuts';
 import { RACE_LAPS, lapDistance } from './simulation/race-laps';
 import { prepareCourse } from './simulation/course';
 import { createGoogleScenery } from './imagery/google-scenery';
@@ -23,11 +24,16 @@ export function makeGame(
   const d = prepareCourse(data);
   const world = createWorld(canvas, d, facades),
     { renderer, scene, camera, scenery, officeTextures } = world;
+  const shortcut =
+    process.env.NODE_ENV === 'development'
+      ? devShortcutDistance(window.location.pathname, d)
+      : null;
   const inspection =
     process.env.NODE_ENV === 'development'
-      ? Math.max(0, Number(new URLSearchParams(window.location.search).get('inspect')) || 0)
+      ? (shortcut ??
+        Math.max(0, Number(new URLSearchParams(window.location.search).get('inspect')) || 0))
       : 0;
-  const sim = createRaceSimulation(d, inspection, !!googleKey),
+  const sim = createRaceSimulation(d, inspection, !!googleKey, shortcut !== null),
     { route, checks, rivals } = sim,
     { total, at } = route;
   const { player, rivalMeshes, ring, pads } = createRaceVisuals(world, route);

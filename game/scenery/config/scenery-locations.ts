@@ -50,7 +50,6 @@ export const SCENERY_LOCATIONS = {
 // One definition is shared by the base-road and painted-marking layers, preventing overlap.
 export const ROAD_APPEARANCE = {
   brannanDoubleYellow: { minX: 250, maxX: 600 },
-  kingGreenLaneMinX: 500,
   thirdGreenLaneMinZ: 793,
   thirdTransitLaneMaxZ: 790,
 };
@@ -61,7 +60,7 @@ export function hasBrannanDoubleYellow(x: number) {
 export function hasObservedGreenLane(name: string | undefined, point: Point) {
   return (
     name === '2nd Street' ||
-    (name === 'King Street' && point[0] > ROAD_APPEARANCE.kingGreenLaneMinX) ||
+    name === 'King Street' ||
     (name === '3rd Street' && point[1] > ROAD_APPEARANCE.thirdGreenLaneMinZ)
   );
 }
