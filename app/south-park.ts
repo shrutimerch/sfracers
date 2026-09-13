@@ -1,4 +1,4 @@
-import playgroundSource from '../public/south-park-playground-osm.json';
+import playgroundSource from './playground-geometry';
 import {southParkProfiles} from './south-park-profiles';
 import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
