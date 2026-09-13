@@ -1,4 +1,4 @@
-import {parkParking} from './south-park-parking';
+import {parkParking,parkBikeDock} from './south-park-parking';
 import {parkGrass} from './park-ground';
 import {hasRouteProfile} from './route-profiles';
 import playgroundSource from './playground-geometry';
@@ -129,6 +129,16 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  let carIndex=0;for(const car of parkParking(d.roads)){const {x,z,angle:ang}=car,body=mat(['#dadbd5','#343b42','#afb3b1','#243c4a','#6e3431'][carIndex++%5]);box(x,.65,z,4.2,.75,1.75,body,ang);box(x-Math.cos(ang)*.22,1.18,z-Math.sin(ang)*.22,2.2,.62,1.5,glass,ang);box(x-Math.cos(ang)*.22,1.53,z-Math.sin(ang)*.22,2.2,.06,1.53,body,ang);
   for(const dx of [-1.25,1.25])for(const dz of [-.84,.84]){const q=new T.Vector3(x+Math.cos(ang)*dx-Math.sin(ang)*dz,.42,z+Math.sin(ang)*dx+Math.cos(ang)*dz);ellipsoid(q.x,q.y,q.z,.32,.32,.26,dark);}
   for(const side of [-1,1]){box(x+Math.cos(ang)*2.11-Math.sin(ang)*side*.58,.75,z+Math.sin(ang)*2.11+Math.cos(ang)*side*.58,.035,.18,.3,concrete,ang);box(x-Math.cos(ang)*2.11-Math.sin(ang)*side*.58,.75,z-Math.sin(ang)*2.11+Math.cos(ang)*side*.58,.035,.18,.3,mat('#963f35'),ang);}
+ }
+ // Blue bike-share row visible on the northwest side of the user's entrance photo.
+ const bikeBlue=mat('#2778b9'),tire=mat('#242b2d'),silver=mat('#b4babc');
+ for(const bike of parkBikeDock(d.roads)){const {x,z,angle}=bike;const p=(u:number,y:number,v=0)=>new T.Vector3(x+Math.cos(angle)*u-Math.sin(angle)*v,y,z+Math.sin(angle)*u+Math.cos(angle)*v);
+  for(const u of [-.7,.7]){const center=p(u,.39);for(const [radius,tube,m] of [[.35,.055,tire],[.29,.018,silver]] as const){const g=new T.TorusGeometry(radius,tube,6,20);g.rotateY(-angle);g.translate(...center.toArray());add(g,m);}for(let k=0;k<8;k++){const a=k*Math.PI/4;rod(center,p(u+Math.cos(a)*.28,.39+Math.sin(a)*.28),.009,silver);}}
+  const rear=p(-.7,.39),front=p(.7,.39),crank=p(-.06,.43),seat=p(-.28,.94),head=p(.4,1.02);
+  for(const [a,b] of [[rear,crank],[crank,seat],[seat,rear],[seat,head],[head,crank],[head,front]])rod(a,b,.032,bikeBlue);
+  rod(head,p(.4,1.2),.026,silver);rod(p(.4,1.2,-.25),p(.4,1.2,.25),.028,dark);box(...[p(-.29,1.03).x,1.03,p(-.29,1.03).z] as [number,number,number],.32,.09,.24,dark,angle);
+  const panel=p(-.58,.72);box(panel.x,.72,panel.z,.53,.28,.1,bikeBlue,angle);
+  const dock=p(.98,.42);box(dock.x,.42,dock.z,.28,.8,.24,silver,angle);const bollard=p(-1.2,.45);rod(bollard.clone().setY(.12),bollard.clone().setY(.92),.035,concrete);
  }
  for(const [m,geoms] of groups){if(!geoms.length)continue;const g=mergeGeometries(geoms,false);const mesh=new T.Mesh(g,m);mesh.castShadow=m!==grass&&m!==asphalt&&m!==gravel;mesh.receiveShadow=true;scene.add(mesh);geoms.forEach(g=>g.dispose());}
  return ()=>textures.forEach(t=>t.dispose());
