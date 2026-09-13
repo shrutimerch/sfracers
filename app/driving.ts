@@ -1,7 +1,6 @@
-export const MAX_SPEED=80/2.237;
 export function advanceSpeed(speed:number,gas:boolean,brake:boolean,boosting:boolean,dt:number){
  const acceleration=brake?-48:gas?(boosting?20:11):-3.8;
- return Math.max(brake?-8:0,Math.min(MAX_SPEED,speed+acceleration*dt));
+ return Math.max(brake?-8:0,speed+acceleration*dt);
 }
 type Line={name:string;points:number[][];width?:number};
 export function drivingSurface(roads:Line[],paths:Line[]=[]){
