@@ -95,3 +95,39 @@ test('countdown and blur pause do not advance the race or leave sticky throttle'
   sim.step(1);
   assert.equal(sim.state.count, 1);
 });
+
+test('start, finish and restart use the South Park entrance without changing the circuit', () => {
+  const data = loadCourse('race-course');
+  const original = structuredClone(data);
+  const prepared = prepareCourse(data);
+  const sim = createRaceSimulation(prepared);
+  assert.deepEqual(data, original);
+  assert.deepEqual(prepared.route[0], [-0.04, 580.5]);
+  assert.deepEqual(prepared.route[0], prepared.route.at(-1));
+  assert.ok(Math.abs(sim.route.total - data.course.length) < 0.02);
+  const edges = (points) =>
+    points
+      .slice(1)
+      .map((p, i) => JSON.stringify([points[i], p]))
+      .sort();
+  assert.deepEqual(edges(prepared.route), edges(data.route));
+  assert.equal(prepared.course.sections.at(-1).name, 'South Park');
+  assert.ok(
+    Math.hypot(
+      sim.route.at(sim.route.total).x - sim.state.x,
+      sim.route.at(sim.route.total).z - sim.state.z,
+    ) < 0.02,
+  );
+  for (const section of prepared.course.sections.slice(1, -1)) {
+    const old = data.course.sections.find((s) => s.name === section.name);
+    const point = sim.route.at(section.start);
+    assert.ok(old && section.start < old.start);
+    assert.ok(Number.isFinite(point.x) && Number.isFinite(point.z));
+  }
+  sim.start();
+  assert.equal(sim.state.x, prepared.route[0][0]);
+  assert.equal(sim.state.z, prepared.route[0][1]);
+  sim.recover();
+  assert.equal(sim.state.x, prepared.route[0][0]);
+  assert.equal(sim.state.z, prepared.route[0][1]);
+});

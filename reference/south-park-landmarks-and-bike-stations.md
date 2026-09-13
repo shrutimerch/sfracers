@@ -43,6 +43,16 @@ feed does not survey individual docks: rows are centered on those station
 anchors and aligned to the nearest mapped street. Dock spacing, kiosk layout
 and bike occupancy are estimates. About 40% of docks contain bikes, with a stable scattered selection per station. Empty docks remain visible. Bikes are static scenery, not live availability.
 
+The Third Street entrance has a rendering correction: its feed pin falls in
+the driving lane, so `prepareCourse` places the row 26m along South Park and
+5.8m to the southeast, in the reserved parking strip. This keeps all 29 docks
+beyond the pedestrian crossing and outside the central racing lane. The source
+coordinate remains unchanged in the course JSON. The start/finish is at the mapped South Park entrance node
+`[-0.04, 580.5]`, about 11m inward from the Third Street centerline. The closed
+route and section distances rotate to put lap timing, spawn and finish at this
+same entrance, with one checkered line directly
+under the gantry, limited to the central driving corridor.
+
 The existing silver step-through, purple-skirt Lyft bicycle model was extracted
 from South Park scenery into `game/scenery/bike-stations.ts`. It retains the
 two-sided Lyft branding, battery, basket, spokes, pedals, docks and bollards.

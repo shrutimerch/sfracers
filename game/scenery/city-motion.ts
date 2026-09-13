@@ -1,3 +1,5 @@
+import { cyclingStrips } from './cycling-layout.ts';
+import { buildCyclist } from './cyclist.ts';
 import { parkSurfaceHeight } from './park-surface.ts';
 import type { SidewalkWalk } from './sidewalks';
 import { buildParkDogs } from './park-dogs.ts';
@@ -150,6 +152,14 @@ export function buildCityMotion(scene: T.Scene, data: MapData, sidewalks: Sidewa
         for (const z of [-0.92, 0.92]) box(group, '#202526', x, 0.36, z, 0.68, 0.68, 0.18);
       for (const z of [-0.6, 0.6]) box(group, '#fff0bd', 2.16, 0.8, z, 0.04, 0.2, 0.38);
     });
+  const cyclists = new Map<Actor, (distance: number) => void>();
+  cyclingStrips(data)
+    .filter((strip) => Math.hypot(strip.b[0] - strip.a[0], strip.b[1] - strip.a[1]) > 35)
+    .forEach((strip, i) => {
+      const actor = add([strip.a, strip.b], 3.5 + (i % 3) * 0.6, 0.2 + (i % 4) * 0.18, 0);
+      actor.group.name = 'Cyclist';
+      cyclists.set(actor, buildCyclist(actor.group, i));
+    });
   const walkingPaths = [
     ...survey.parkPaths.map((path) => ({
       ...path,
@@ -262,15 +272,15 @@ export function buildCityMotion(scene: T.Scene, data: MapData, sidewalks: Sidewa
     }
   const inverseRoot = new T.Matrix4(),
     instanceMatrix = new T.Matrix4();
-  const cars = actors.filter((actor) => actor.group.name === 'Ambient car');
-  const obstacles: TrafficObstacle[] = cars.map(() => ({
+  const cars = actors.filter((actor) => actor.group.name === 'Ambient car' || cyclists.has(actor));
+  const obstacles: TrafficObstacle[] = cars.map((actor) => ({
     x: 0,
     z: 0,
     previousX: 0,
     previousZ: 0,
     angle: 0,
-    halfLength: 2.2,
-    halfWidth: 1.01,
+    halfLength: cyclists.has(actor) ? 1.08 : 2.2,
+    halfWidth: cyclists.has(actor) ? 0.36 : 1.01,
   }));
   const yieldingCars = new Set<Actor>();
   let elapsed = 0;
@@ -347,6 +357,7 @@ export function buildCityMotion(scene: T.Scene, data: MapData, sidewalks: Sidewa
           joint.rotation.z = i % 2 ? 0.18 + (swing + 1) * 0.12 : -Math.max(0, -swing) * 0.65;
       });
     }
+    cyclists.forEach((animate, actor) => animate(actor.distance));
     parkDogs.update(dt);
     root.updateMatrixWorld(true);
     inverseRoot.copy(root.matrixWorld).invert();
@@ -372,7 +383,8 @@ export function buildCityMotion(scene: T.Scene, data: MapData, sidewalks: Sidewa
       dogs: parkDogs.dogs.length,
       dogOwners: parkDogs.owners.length,
       streetcars: survey.rails.length,
-      cars: actors.filter((a) => !a.walking).length - survey.rails.length,
+      cars: actors.filter((a) => a.group.name === 'Ambient car').length,
+      cyclists: cyclists.size,
       pedestrians: actors.filter((a) => a.walking).length,
     },
   };

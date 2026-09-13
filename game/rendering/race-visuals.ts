@@ -21,20 +21,6 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
     arrow.rotation.y = -p.a;
     scene.add(arrow);
   }
-  for (let i = 0; i < 10; i++) {
-    const p = at(2);
-    const tile = cube(
-      scene,
-      p.x - Math.sin(p.a) * (i - 4.5),
-      0.17,
-      p.z + Math.cos(p.a) * (i - 4.5),
-      1,
-      0.04,
-      1,
-      i % 2 ? '#172d38' : '#ffffff',
-    );
-    tile.rotation.y = -p.a;
-  }
   function kart(color: string) {
     const group = new T.Group();
     cube(group, 0, 0.55, 0, 3.4, 0.55, 1.65, color);
@@ -112,12 +98,12 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
     gantry.add(face);
   }
   for (let row = 0; row < 2; row++)
-    for (let col = 0; col < 20; col++)
+    for (let col = 0; col < 12; col++)
       cube(
         gantry,
         (row - 0.5) * 0.55,
         0.18,
-        (col - 9.5) * 0.7,
+        (col - 5.5) * 0.7,
         0.55,
         0.025,
         0.7,

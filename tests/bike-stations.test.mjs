@@ -44,3 +44,23 @@ test('every physical Lyft station within 50m of the route is included at its pub
     assert.deepEqual(stationDocks([s]), docks);
   }
 });
+
+test('start-area bike row clears the driving lane and Third Street crossing', async () => {
+  const { prepareCourse } = await import('../game/simulation/course.ts');
+  const { createRoute } = await import('../game/simulation/route-math.ts');
+  const route = createRoute(course);
+  const prepared = prepareCourse(course);
+  const station = prepared.bikeStations.find((s) => s.name === 'South Park St at 3rd St');
+  for (const dock of stationDocks([station])) {
+    const nearest = route.nearest(dock.x, dock.z);
+    assert.ok(nearest.best > 5.7, 'bike center stays in the parking strip');
+    assert.ok(nearest.along > 14, 'dock row stays beyond the crossing');
+    // The longest bike/bollard reach is 1.24m, leaving the central 8.4m clear.
+    assert.ok(nearest.best - 1.24 > 4.2);
+  }
+  assert.equal(station.capacity, 29);
+  assert.notDeepEqual(
+    station.position,
+    course.bikeStations.find((s) => s.id === station.id).position,
+  );
+});
