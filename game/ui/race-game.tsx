@@ -2,6 +2,13 @@
 import { RACE_LAPS } from '../simulation/race-laps';
 import { useEffect, useRef, useState } from 'react';
 import type { HUD, MapData } from '../engine';
+import { CHARACTERS, DEFAULT_CHARACTER, type CharacterId } from '../characters/roster.ts';
+import { CharacterPreview } from './character-preview';
+import {
+  CHARACTER_PERFORMANCE,
+  ACCELERATION_BANDS,
+  accelerationRating,
+} from '../characters/performance.ts';
 const fmt = (s: number) =>
   `${Math.floor(s / 60)
     .toString()
@@ -10,6 +17,16 @@ export default function RaceGame() {
   const canvas = useRef<HTMLCanvasElement>(null),
     mini = useRef<HTMLCanvasElement>(null),
     engine = useRef<ReturnType<typeof import('../engine').makeGame> | null>(null);
+  const [character, setCharacter] = useState<CharacterId>(DEFAULT_CHARACTER);
+  const characterRef = useRef(character);
+  characterRef.current = character;
+  const selected = CHARACTERS.find((c) => c.id === character)!;
+  const chooseCharacter = (id: CharacterId) => {
+    if (engine.current?.selectCharacter(id)) {
+      characterRef.current = id;
+      setCharacter(id);
+    }
+  };
   const [error, setError] = useState(''),
     [hud, setHud] = useState<HUD>({
       mode: 'loading',
@@ -57,6 +74,7 @@ export default function RaceGame() {
             setHud,
             facades,
             config.googleMapsKey,
+            characterRef.current,
           );
         } catch {
           setError('3D graphics could not start. Try a browser with WebGL enabled.');
@@ -78,7 +96,7 @@ export default function RaceGame() {
                   if (!input || typeof input !== 'object' || Object.keys(input).length)
                     throw Error('Expected an empty object');
                   if (!engine.current) throw Error('Game is not ready');
-                  engine.current.start();
+                  engine.current.start(characterRef.current);
                   return engine.current.getState();
                 },
               },
@@ -96,6 +114,7 @@ export default function RaceGame() {
       cancelled = true;
       lifecycle.abort();
       engine.current?.dispose();
+      engine.current = null;
     };
   }, []);
   const ready = hud.mode === 'ready' || hud.mode === 'loading';
@@ -154,13 +173,13 @@ export default function RaceGame() {
           </div>
         )}
         {(ready || hud.mode === 'paused' || hud.mode === 'finished' || error) && (
-          <div className="start-card">
+          <div className={`start-card${ready || hud.mode === 'finished' ? ' character-card' : ''}`}>
             <span className="sticker">
               {hud.mode === 'finished'
                 ? 'CHECKERED FLAG'
                 : hud.mode === 'paused'
                   ? 'PIT STOP'
-                  : 'REAL CITY. KART RULES.'}
+                  : 'CHOOSE YOUR RACER'}
             </span>
             <h1>
               {hud.mode === 'finished' ? (
@@ -174,11 +193,7 @@ export default function RaceGame() {
                   <br />a breather.
                 </>
               ) : (
-                <>
-                  South Park
-                  <br />
-                  to the waterfront.
-                </>
+                selected.name
               )}
             </h1>
             <p>
@@ -187,8 +202,47 @@ export default function RaceGame() {
                   ? `Finished in ${fmt(hud.time)}. Ready for another race?`
                   : hud.mode === 'paused'
                     ? 'The race is paused. Your rivals can wait.'
-                    : 'Race from South Park along the Embarcadero roadway and King, then return on 3rd. Either side of South Park is open. Follow the green checkpoint rings; Shift accelerates faster.')}
+                    : selected.description)}
             </p>
+            {(ready || hud.mode === 'finished') && !error && (
+              <>
+                <CharacterPreview character={character} />
+                <fieldset className="character-options" disabled={hud.mode === 'loading'}>
+                  <legend>Choose a character</legend>
+                  {CHARACTERS.map((racer) => (
+                    <label key={racer.id} className={character === racer.id ? 'selected' : ''}>
+                      <input
+                        type="radio"
+                        name="character"
+                        value={racer.id}
+                        checked={character === racer.id}
+                        onChange={() => chooseCharacter(racer.id)}
+                      />
+                      <span className="character-color" style={{ background: racer.color }} />
+                      <span>
+                        <strong>{racer.name}</strong>
+                        <small>{racer.title}</small>
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+                <div className="character-stats" aria-label={`${selected.name} acceleration`}>
+                  <p>{CHARACTER_PERFORMANCE[character].feel}</p>
+                  {ACCELERATION_BANDS.map((band) => (
+                    <div className="character-stat" key={band.mph}>
+                      <span>{band.label}</span>
+                      <meter
+                        min={0}
+                        max={100}
+                        value={accelerationRating(character, band.mph)}
+                        aria-label={`${band.label} acceleration relative to the strongest racer at this speed`}
+                      />
+                    </div>
+                  ))}
+                  <small>Acceleration compared at each speed</small>
+                </div>
+              </>
+            )}
             <div className="race-spec">
               <div>
                 <b>
@@ -207,7 +261,7 @@ export default function RaceGame() {
               className="go"
               disabled={hud.mode === 'loading' || !!error || imageryLoading || !!hud.sceneryError}
               onClick={() =>
-                hud.mode === 'paused' ? engine.current?.pause() : engine.current?.start()
+                hud.mode === 'paused' ? engine.current?.pause() : engine.current?.start(character)
               }
             >
               {hud.mode === 'loading'
@@ -218,7 +272,7 @@ export default function RaceGame() {
                     ? 'Back to the race →'
                     : hud.mode === 'finished'
                       ? 'Race again →'
-                      : 'Let’s race →'}
+                      : `Race as ${selected.name} →`}
             </button>
             <div className="start-help">
               <span>↑ / W &nbsp; ACCELERATE</span>
@@ -229,8 +283,8 @@ export default function RaceGame() {
           </div>
         )}
         {hud.mode === 'countdown' && (
-          <div className="countdown" aria-live="assertive">
-            {hud.count}
+          <div className="sr-only" aria-live="assertive">
+            {hud.count > 2 ? 'Ready' : 'Set'}: {hud.count}
           </div>
         )}
         {hud.drift && (

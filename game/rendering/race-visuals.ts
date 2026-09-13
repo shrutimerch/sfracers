@@ -1,9 +1,17 @@
 import * as T from 'three';
-import { KART_SCALE } from '../simulation/race-laps';
+import { createStartMarshal } from './start-marshal.ts';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { createRacer } from '../characters/racer.ts';
+import {
+  CHARACTERS,
+  DEFAULT_CHARACTER,
+  raceRoster,
+  type CharacterId,
+} from '../characters/roster.ts';
 import type { RaceWorld } from './world';
 import type { RaceRoute } from '../simulation/route-math';
 export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
-  const { scene, cube, material, officeTextures } = world;
+  const { scene, cube, officeTextures } = world;
   const { total, at } = route;
   const guideMaterial = new T.MeshBasicMaterial({ color: '#c6ff53', side: T.DoubleSide });
   const arrowShape = new T.Shape();
@@ -20,46 +28,6 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
     arrow.position.set(p.x, 0.16, p.z);
     arrow.rotation.y = -p.a;
     scene.add(arrow);
-  }
-  function kart(color: string) {
-    const group = new T.Group();
-    cube(group, 0, 0.55, 0, 3.4, 0.55, 1.65, color);
-    cube(group, 1.15, 0.9, 0, 1, 0.4, 1.45, color);
-    cube(group, -0.85, 0.95, 0, 0.35, 1.1, 1.2, '#263544');
-    cube(group, -1.5, 1.2, 0, 0.3, 0.15, 2.3, color);
-    for (const x of [-1, 1])
-      for (const z of [-1, 1]) {
-        const wheel = new T.Mesh(new T.CylinderGeometry(0.48, 0.48, 0.4, 12), material('#202a36'));
-        wheel.rotation.x = Math.PI / 2;
-        wheel.position.set(x, 0.48, z);
-        group.add(wheel);
-        const hub = new T.Mesh(new T.CylinderGeometry(0.24, 0.24, 0.43, 12), material('#e2e4db'));
-        hub.rotation.x = Math.PI / 2;
-        hub.position.copy(wheel.position);
-        group.add(hub);
-      }
-    const body = new T.Mesh(new T.CapsuleGeometry(0.35, 0.4, 4, 8), material(color));
-    body.position.set(-0.3, 1.35, 0);
-    group.add(body);
-    const helmet = new T.Mesh(new T.SphereGeometry(0.48, 16, 12), material('#fff2d2'));
-    helmet.position.set(-0.22, 1.98, 0);
-    group.add(helmet);
-    cube(group, 0.18, 1.99, 0, 0.12, 0.23, 0.65, '#263d56');
-    const shadow = new T.Mesh(
-      new T.CircleGeometry(2.2, 20),
-      new T.MeshBasicMaterial({
-        color: '#243340',
-        transparent: true,
-        opacity: 0.2,
-        depthWrite: false,
-      }),
-    );
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.position.y = 0.1;
-    group.add(shadow);
-    group.scale.setScalar(KART_SCALE);
-    scene.add(group);
-    return group;
   }
   // Start/finish gantry across the route's shared lap boundary.
   const finish = at(0),
@@ -109,8 +77,46 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
         0.7,
         (row + col) % 2 ? '#fff7df' : '#25333c',
       );
-  const player = kart('#ff643b');
-  const rivalMeshes = ['#a47cff', '#ffcf41', '#36cad0'].map(kart);
+  // A small reflection studio gives the kart paint readable highlights without
+  // changing the city's lighting or materials.
+  const generator = new T.PMREMGenerator(world.renderer);
+  const room = new RoomEnvironment();
+  const environment = generator.fromScene(room, 0.04);
+  room.dispose();
+  generator.dispose();
+  const models = new Map(
+    CHARACTERS.map((character) => [character.id, createRacer(character.id, environment.texture)]),
+  );
+  const slots = Array.from({ length: 4 }, () => new T.Group());
+  slots.forEach((slot) => scene.add(slot));
+  const [player, ...rivalMeshes] = slots;
+  let roster = raceRoster(DEFAULT_CHARACTER);
+  const selectCharacter = (id: CharacterId) => {
+    roster = raceRoster(id);
+    slots.forEach((slot) => slot.clear());
+    roster.forEach((character, index) => slots[index].add(models.get(character)!.root));
+  };
+  selectCharacter(DEFAULT_CHARACTER);
+  const animateRacers = (
+    dt: number,
+    speed: number,
+    steer: number,
+    drifting: boolean,
+    elapsed: number,
+    rivalSpeeds: number[],
+  ) => {
+    roster.forEach((character, index) =>
+      models
+        .get(character)!
+        .update(
+          dt,
+          index === 0 ? speed : rivalSpeeds[index - 1],
+          index === 0 ? steer : 0,
+          index === 0 && drifting,
+          elapsed,
+        ),
+    );
+  };
   const ring = new T.Mesh(
     new T.TorusGeometry(6, 0.18, 8, 36),
     new T.MeshBasicMaterial({ color: '#baff55', transparent: true, opacity: 0.8 }),
@@ -124,5 +130,15 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
     pads.push(m);
   }
 
-  return { player, rivalMeshes, ring, pads };
+  const startMarshal = createStartMarshal(scene, at(9));
+  return {
+    startMarshal,
+    player,
+    rivalMeshes,
+    ring,
+    pads,
+    selectCharacter,
+    animateRacers,
+    disposeRacerEnvironment: () => environment.dispose(),
+  };
 }

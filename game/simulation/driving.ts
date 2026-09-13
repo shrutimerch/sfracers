@@ -1,12 +1,17 @@
+import { characterAcceleration } from '../characters/performance.ts';
+import type { CharacterId } from '../characters/roster.ts';
 export function advanceSpeed(
   speed: number,
   gas: boolean,
   brake: boolean,
   boosting: boolean,
   dt: number,
+  character?: CharacterId,
 ) {
   // Speeds are metres/second. Throttle pull halves near 56 mph, but never hits a speed cap.
-  const throttlePull = (boosting ? 20 : 11) / (1 + (Math.max(0, speed) / 25) ** 2);
+  const throttlePull = character
+    ? characterAcceleration(character, speed, boosting)
+    : (boosting ? 20 : 11) / (1 + (Math.max(0, speed) / 25) ** 2);
   const acceleration = brake ? -48 : gas ? throttlePull : -3.8;
   return Math.max(brake ? -8 : 0, speed + acceleration * dt);
 }

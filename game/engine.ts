@@ -1,3 +1,5 @@
+import { DEFAULT_CHARACTER, type CharacterId } from './characters/roster.ts';
+import { createCharacterSelection } from './characters/selection.ts';
 import { devShortcutDistance } from './simulation/dev-shortcuts';
 import { RACE_LAPS, lapDistance } from './simulation/race-laps';
 import { prepareCourse } from './simulation/course';
@@ -20,6 +22,7 @@ export function makeGame(
   update: (h: HUD) => void,
   facades: Facades,
   googleKey = '',
+  initialCharacter: CharacterId = DEFAULT_CHARACTER,
 ) {
   const d = prepareCourse(data);
   const world = createWorld(canvas, d, facades),
@@ -36,7 +39,16 @@ export function makeGame(
   const sim = createRaceSimulation(d, inspection, !!googleKey, shortcut !== null),
     { route, checks, rivals } = sim,
     { total, at } = route;
-  const { player, rivalMeshes, ring, pads } = createRaceVisuals(world, route);
+  const {
+    player,
+    rivalMeshes,
+    ring,
+    pads,
+    selectCharacter,
+    animateRacers,
+    startMarshal,
+    disposeRacerEnvironment,
+  } = createRaceVisuals(world, route);
   const drawMinimap = createMinimap(mini, d, route),
     drawCamera = createRaceCamera(camera, renderer, scene);
   scenery.visible = !googleKey;
@@ -59,10 +71,12 @@ export function makeGame(
     roadHeight = 0;
     for (const pad of pads) pad.position.y = 0.13;
   };
-  const start = () => {
-    if (google && (!google.ready || google.error)) return;
-    sim.start();
+  const characterSelection = createCharacterSelection(sim, selectCharacter, initialCharacter);
+  const start = (character?: CharacterId) => {
+    if (google && (!google.ready || google.error)) return false;
+    return characterSelection.start(character);
   };
+  let animationTime = 0;
   function frame(now: number) {
     if (disposed) return;
     raf = requestAnimationFrame(frame);
@@ -101,6 +115,19 @@ export function makeGame(
       rivalMeshes[i].position.set(p.x, roadHeight, p.z);
       rivalMeshes[i].rotation.y = -p.a;
     });
+    const steer =
+      (sim.keys.d || sim.keys.arrowright ? 1 : 0) - (sim.keys.a || sim.keys.arrowleft ? 1 : 0);
+    const moving = mode === 'racing' || mode === 'inspection';
+    if (mode !== 'paused') animationTime += dt;
+    animateRacers(
+      mode === 'paused' ? 0 : dt,
+      speed,
+      steer,
+      drifting,
+      animationTime,
+      rivals.map((r) => (moving && r.s < total * RACE_LAPS ? r.speed : 0)),
+    );
+    startMarshal.update(mode, count, time, animationTime, roadHeight);
     const next = at(checks[Math.min(cp, checks.length - 1)]);
     ring.position.set(next.x, roadHeight + 5.8, next.z);
     ring.rotation.set(0, Math.PI / 2 - next.a, 0);
@@ -143,6 +170,7 @@ export function makeGame(
   raf = requestAnimationFrame(frame);
   return {
     useModeled,
+    selectCharacter: characterSelection.selectCharacter,
     start,
     pause: sim.pause,
     recover: sim.recover,
@@ -150,7 +178,7 @@ export function makeGame(
     setKey: sim.setKey,
     getState: () => {
       const { mode, time, progress, lap } = sim.state;
-      return { mode, time, progress, lap: lap + 1 };
+      return { mode, time, progress, lap: lap + 1, character: sim.state.character };
     },
     dispose: () => {
       disposed = true;
@@ -159,6 +187,7 @@ export function makeGame(
       world.disposeTextures();
       unbindInput();
       disposeScene(scene);
+      disposeRacerEnvironment();
       officeTextures.forEach((t) => t.dispose());
       Object.values(facades).forEach((t) => t.dispose());
       renderer.dispose();

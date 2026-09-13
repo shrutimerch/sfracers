@@ -1,6 +1,12 @@
 import type { RaceSimulation } from './simulation/simulation';
 export function bindRaceInput(sim: RaceSimulation, toggleCamera: () => void) {
   const down = (e: KeyboardEvent) => {
+    // Native form controls keep their arrow/space keyboard behavior in the garage.
+    if (
+      e.target instanceof HTMLElement &&
+      e.target.closest('input, select, textarea, [contenteditable="true"]')
+    )
+      return;
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Shift'].includes(e.key))
       e.preventDefault();
     sim.setKey(e.key.toLowerCase(), true);

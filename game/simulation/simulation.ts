@@ -1,3 +1,9 @@
+import {
+  DEFAULT_CHARACTER,
+  isCharacterId,
+  raceRoster,
+  type CharacterId,
+} from '../characters/roster.ts';
 import { resolveTrafficCollision, type TrafficObstacle } from './traffic-collision.ts';
 import { RACE_LAPS, completeCheckpoint, lapDistance } from './race-laps.ts';
 import { advanceSpeed, drivingSurface, raceChecks } from './driving.ts';
@@ -15,7 +21,15 @@ export function createRaceSimulation(
   inspection = Math.max(0, Math.min(total - 1, inspection));
   const checks = raceChecks(total, d.course?.sections),
     surfaceAt = drivingSurface(d.roads, d.paths);
-  const rivals = [0, 1, 2].map((i) => ({ s: 12 + i * 8, speed: 28 + i * 1.5 }));
+  let character: CharacterId = DEFAULT_CHARACTER;
+  const rivals = raceRoster(character)
+    .slice(1)
+    .map((id, i) => ({
+      character: id,
+      s: 12 + i * 8,
+      speed: 0,
+      cruiseSpeed: 28 + i * 1.5,
+    }));
   const pads: ReturnType<typeof at>[] = [];
   for (let s = 160; s < total; s += 290) pads.push(at(s));
   let mode = inspection > 0 ? 'inspection' : 'ready',
@@ -53,7 +67,10 @@ export function createRaceSimulation(
     boostTimer = 0;
     driftCharge = 0;
     Object.keys(keys).forEach((k) => delete keys[k]);
-    rivals.forEach((r, i) => (r.s = 12 + i * 8));
+    rivals.forEach((r, i) => {
+      r.s = 12 + i * 8;
+      r.speed = 0;
+    });
   };
   let pausedFrom = mode;
   const pause = () => {
@@ -93,7 +110,7 @@ export function createRaceSimulation(
       const boosting = (keys.shift && boost > 0 && speed > 2) || boostTimer > 0;
       boostTimer = Math.max(0, boostTimer - dt);
       boost = Math.max(0, Math.min(100, boost + (keys.shift && speed > 2 ? -24 : 8) * dt));
-      speed = advanceSpeed(speed, !!gas, !!brake, boosting, dt);
+      speed = advanceSpeed(speed, !!gas, !!brake, boosting, dt, character);
       angle +=
         turn *
         dt *
@@ -151,6 +168,10 @@ export function createRaceSimulation(
           Math.min(checks[cp], lap !== previousLap ? 0 : n.along),
         );
       for (const r of rivals) {
+        r.speed = Math.min(
+          r.cruiseSpeed,
+          advanceSpeed(r.speed, true, false, false, dt, r.character),
+        );
         r.s = Math.min(total * RACE_LAPS, r.s + r.speed * dt);
         const p = at(lapDistance(r.s, total));
         if (Math.hypot(p.x - x, p.z - z) < 1.65 && Math.abs(speed) > 5) {
@@ -181,11 +202,22 @@ export function createRaceSimulation(
       Object.keys(keys).forEach((k) => delete keys[k]);
       if (mode === 'racing' || mode === 'countdown' || mode === 'inspection') pause();
     },
+    selectCharacter(id: CharacterId) {
+      if (!isCharacterId(id) || !['ready', 'finished'].includes(mode)) return false;
+      character = id;
+      raceRoster(id)
+        .slice(1)
+        .forEach((rival, i) => {
+          rivals[i].character = rival;
+        });
+      return true;
+    },
     setPhotographic(value: boolean) {
       photographic = value;
     },
     get state() {
       return {
+        character,
         mode,
         x,
         z,
