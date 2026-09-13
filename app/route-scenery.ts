@@ -28,6 +28,8 @@ export function buildRouteScenery(scene:T.Scene,d:MapData,facades:Facades){
   const cx=b.points.reduce((n,v)=>n+v[0],0)/b.points.length,cz=b.points.reduce((n,v)=>n+v[1],0)/b.points.length;
   for(let i=1;i<b.points.length;i++){const a=b.points[i-1],q=b.points[i],l=Math.hypot(q[0]-a[0],q[1]-a[1]);if(l<4)continue;const angle=Math.atan2(q[1]-a[1],q[0]-a[0]),mx=(a[0]+q[0])/2,mz=(a[1]+q[1])/2;if(routeDistance(mx,mz)>95)continue;let nx=-Math.sin(angle),nz=Math.cos(angle);if((mx-cx)*nx+(mz-cz)*nz<0){nx=-nx;nz=-nz;}
    const detail=(u:number,y:number,w:number,h:number,m:T.Material,depth=.16,offset=.15)=>box(a[0]+Math.cos(angle)*u+nx*offset,y,a[1]+Math.sin(angle)*u+nz*offset,w,h,depth,m,angle);
+   if([124903637,148547436].includes(b.id??0)){detail(l/2,3.2,l*.9,.18,dark,1.35,.7);}
+   if(b.id===125401316){detail(l/2,b.height+.1,l+.5,.4,mat('#a57556'),1.1);}
    detail(l/2,b.height-.2,l,.4,trim,.5);detail(l/2,3.8,l,.35,trim,.35);
    const bays=Math.max(1,Math.round(l/(p.bay||3.6))),step=l/bays,fh=b.height/p.floors;
    for(let f=0;f<p.floors;f++)for(let j=0;j<bays;j++){const u=(j+.5)*step,y=(f+.5)*fh,w=step*(b.id===112927451?.22:p.grid?.78:.5),h=fh*.65;detail(u,y,w+.22,h+.22,trim);detail(u,y,w,h,glass,.12,.26);const divisions=p.grid?4:2;for(let k=1;k<divisions;k++){detail(u-w/2+w*k/divisions,y,.065,h,frame,.12,.35);detail(u,y-h/2+h*k/divisions,w,.055,frame,.12,.35);}if(p.grid)detail((j+1)*step,b.height/2,.23,b.height,trim,.3);}
@@ -44,6 +46,14 @@ export function buildRouteScenery(scene:T.Scene,d:MapData,facades:Facades){
   // Open steel landings and alternating stair flights, rather than flat facade texture.
   const u=length*.64;for(let floor=1;floor<5;floor++){const y=5+floor*3.5;front(u,y,4,.14,dark,1.25,.8);front(u,y+.75,4,.07,dark,.08,1.4);for(let k=-2;k<=2;k+=.5)front(u+k,y+.4,.04,.8,dark,.08,1.4);if(floor<4)for(let k=0;k<12;k++)front(u-1.7+k*.29,y+k*3.5/12,.34,.07,dark,.65,1.05);}
  }
+ // De Boom boarding island shelter seen in April 2022 Street View. Dimensions are modeled.
+ const shelterRoof=mat('#9e403d'),shelterGlass=new T.MeshStandardMaterial({color:'#aec3c2',transparent:true,opacity:.35,roughness:.3,side:T.DoubleSide});
+ const sa=Math.PI/4,sx=202.4,sz=420.3;
+ box(sx,.22,sz,5.8,.28,2.3,pale,sa);box(sx,2.8,sz,4.4,.17,1.65,shelterRoof,sa);
+ for(const u of [-1.9,1.9])for(const v of [-.65,.65])box(sx+Math.cos(sa)*u-Math.sin(sa)*v,1.5,sz+Math.sin(sa)*u+Math.cos(sa)*v,.09,2.6,.09,rail);
+ box(sx-Math.sin(sa)*.65,1.6,sz+Math.cos(sa)*.65,3.7,2,.045,shelterGlass,sa);box(sx,.65,sz,2.7,.08,.45,dark,sa);
+ // Paired blue waterfront lanterns flank Brannan's mapped Embarcadero junction.
+ for(const [x,z] of [[590,126],[609,155]]){rod(new T.Vector3(x,.1,z),new T.Vector3(x,7.5,z),.12,blue);box(x,.35,z,.55,.65,.55,blue);for(const side of [-1,1]){rod(new T.Vector3(x,7.3,z),new T.Vector3(x+side*1.2,7.5,z),.06,blue);const g=new T.SphereGeometry(.25,10,8);g.scale(1,1.35,1);g.translate(x+side*1.2,7.15,z);add(g,pale);}}
  // The Brannan: opening and paths follow OSM; beds and elevations approximate the supplied May 2025 photo.
  const courtStone=mat('#d3cfc0'),courtPave=mat('#b6b5af'),hedge=mat('#405b29'),soil=mat('#655c44');
  const courtOutline:Point[]=[[365.17,366.68],[392.07,339.69],[409.64,357.59],[417.47,358.36],[407.66,368.01],[386.72,388.59]];
@@ -93,7 +103,7 @@ export function buildRouteScenery(scene:T.Scene,d:MapData,facades:Facades){
  for(const track of survey.rails){line(track.points,2.2,pale,.09);for(let i=1;i<track.points.length;i++){const a=track.points[i-1],b=track.points[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]),angle=Math.atan2(b[1]-a[1],b[0]-a[0]);for(const side of [-1,1]){const nx=-Math.sin(angle)*.718*side,nz=Math.cos(angle)*.718*side;line([[a[0]+nx,a[1]+nz],[b[0]+nx,b[1]+nz]],.065,rail,.12);}for(let u=.6;u<len;u+=1.2)box(a[0]+Math.cos(angle)*u,.115,a[1]+Math.sin(angle)*u,.13,.02,1.85,dark,angle);}}
  // Observed lane types, fitted to the game's simplified road widths; not surveyed lane boundaries.
  let along=0;const green=mat('#628c62'),red=mat('#a6534f');
- for(let i=1;i<d.route.length;i++){const a=d.route[i-1],b=d.route[i],l=Math.hypot(b[0]-a[0],b[1]-a[1]),section=d.course?.sections.findLast(s=>s.start<=along+.1)?.name;along+=l;if(section!=='3rd Street')continue;const angle=Math.atan2(b[1]-a[1],b[0]-a[0]),offset=4.8,nx=-Math.sin(angle)*offset,nz=Math.cos(angle)*offset;line([[a[0]+nx,a[1]+nz],[b[0]+nx,b[1]+nz]],3,red,.102);}
+ for(let i=1;i<d.route.length;i++){const a=d.route[i-1],b=d.route[i],l=Math.hypot(b[0]-a[0],b[1]-a[1]),section=d.course?.sections.findLast(s=>s.start<=along+.1)?.name;along+=l;if(section!=='3rd Street'||(a[1]+b[1])/2>790)continue;const angle=Math.atan2(b[1]-a[1],b[0]-a[0]),offset=4.8,nx=-Math.sin(angle)*offset,nz=Math.cos(angle)*offset;line([[a[0]+nx,a[1]+nz],[b[0]+nx,b[1]+nz]],3,red,.102);}
  for(const [m,gs] of groups){if(!gs.length)continue;const g=mergeGeometries(gs);if(!g)throw new Error('Route scenery geometry could not be merged');const mesh=new T.Mesh(g,m);mesh.castShadow=true;mesh.receiveShadow=true;scene.add(mesh);gs.forEach(g=>g.dispose());}
  return ()=>groundGrass.texture.dispose();
 }

@@ -1,0 +1,142 @@
+[
+  {
+    "intersection": "Third / South Park",
+    "latitude": 37.7807099,
+    "longitude": -122.3950877,
+    "heading": 45,
+    "imageryDate": "May 2025",
+    "observations": "Open Shell canopy; pale framed glass corner; bike dock southeast, nose-in parking northwest.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7807099,-122.3950877&heading=45&pitch=0&fov=90"
+  },
+  {
+    "intersection": "South Park / Jack London Alley",
+    "latitude": 37.7816961,
+    "longitude": -122.3941151,
+    "heading": 315,
+    "imageryDate": "January 2025",
+    "observations": "Cream cafe base and gray upper facade with arched trim west; red-brown modern glass facade east; zebra alley crossing.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7816961,-122.3941151&heading=315&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Second / South Park",
+    "latitude": 37.7824725,
+    "longitude": -122.3928758,
+    "heading": 225,
+    "imageryDate": "May 2025",
+    "observations": "White arched-window warehouse south; brick industrial warehouse north; planted curb corners and zebra markings.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7824725,-122.3928758&heading=225&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Second / De Boom",
+    "latitude": 37.7822848,
+    "longitude": -122.3926156,
+    "heading": 45,
+    "imageryDate": "April 2022",
+    "observations": "Red-roofed transparent bus shelter on boarding island; green cycle lane bypass; tan industrial facade across street.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7822848,-122.3926156&heading=45&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Second / Brannan",
+    "latitude": 37.7818617,
+    "longitude": -122.3920889,
+    "heading": 45,
+    "imageryDate": "May 2025",
+    "observations": "Tan low industrial corner opposite red-base storage warehouse, overhead wires, zebra crosswalks.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7818617,-122.3920889&heading=45&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Brannan / Colin P. Kelly",
+    "latitude": 37.7824712,
+    "longitude": -122.391314,
+    "heading": 135,
+    "imageryDate": "May 2025",
+    "observations": "Gray warehouse and pale apartment base flank alley; zebra crossing.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7824712,-122.391314&heading=135&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Brannan / Delancey",
+    "latitude": 37.7835225,
+    "longitude": -122.3899633,
+    "heading": 44,
+    "imageryDate": "May 2025",
+    "observations": "White stepped apartments northwest, terracotta tile-roof apartments southeast, double yellow and zebra crossings.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7835225,-122.3899633&heading=44&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Brannan / Embarcadero",
+    "latitude": 37.7847486,
+    "longitude": -122.3881985,
+    "heading": 90,
+    "imageryDate": "May 2025",
+    "observations": "Paired blue ornamental lamps, transit rails and overhead wires; low pale pier facade.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7847486,-122.3881985&heading=90&pitch=0&fov=90"
+  },
+  {
+    "intersection": "King / Townsend promenade exit",
+    "latitude": 37.7816964,
+    "longitude": -122.3884383,
+    "heading": 190,
+    "imageryDate": "May 2025",
+    "observations": "Brown and pale apartments, green curbside bike lane, palms, blue lamps and waterfront sculpture.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7816964,-122.3884383&heading=190&pitch=0&fov=90"
+  },
+  {
+    "intersection": "King / Second",
+    "latitude": 37.7799221,
+    "longitude": -122.3896767,
+    "heading": 225,
+    "imageryDate": "May 2025",
+    "observations": "Brick stadium with steel upper frame; median transit railings; low cream restaurant opposite.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7799221,-122.3896767&heading=225&pitch=0&fov=90"
+  },
+  {
+    "intersection": "King / Third",
+    "latitude": 37.7781777,
+    "longitude": -122.3919448,
+    "heading": 315,
+    "imageryDate": "January 2025",
+    "observations": "Glass tower west; low cream retail east; green protected bike lane on Third.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7781777,-122.3919448&heading=315&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Third / Townsend",
+    "latitude": 37.7788654,
+    "longitude": -122.3927775,
+    "heading": 315,
+    "imageryDate": "May 2025",
+    "observations": "Terracotta and silver apartment corner west; low ochre red-trim retail east; red transit lane begins beyond junction.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7788654,-122.3927775&heading=315&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Third / Brannan",
+    "latitude": 37.780095,
+    "longitude": -122.3943175,
+    "heading": 315,
+    "imageryDate": "May 2025",
+    "observations": "Pale yellow tall-window facade east; white low corner with black awnings west.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.780095,-122.3943175&heading=315&pitch=0&fov=90"
+  },
+  {
+    "intersection": "Third / Varney",
+    "latitude": 37.7803497,
+    "longitude": -122.3946365,
+    "heading": 45,
+    "imageryDate": "May 2025",
+    "observations": "Narrow alley between Shell forecourt and yellow tall-window building; opposite brown three-floor residential facade.",
+    "screenshotCaptured": true,
+    "url": "https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=37.7803497,-122.3946365&heading=45&pitch=0&fov=90"
+  }
+]

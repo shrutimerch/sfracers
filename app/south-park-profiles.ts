@@ -2,6 +2,7 @@
 // Footprints retain OSM geometry. Heights and window proportions are visual estimates.
 export type FacadeProfile={color:string;trim:string;frames:string;floors:number;height:number;bays?:number;style?:'industrial'|'brick'|'siding'|'wood'|'split';arches?:boolean;ground?:string;awning?:boolean};
 export const southParkProfiles:Record<string,FacadeProfile>={
+ '102':{color:'#aaa99c',trim:'#bec1b5',frames:'#617779',floors:3,height:10,bays:3,arches:true,ground:'#d6d0ab',awning:true},
  '1':{color:'#cbd0c9',trim:'#d8dbd0',frames:'#35494a',floors:3,height:18,bays:6,style:'industrial',arches:true},
  '2':{color:'#bc9470',trim:'#b3a18b',frames:'#465354',floors:3,height:12,style:'industrial'},
  '21':{color:'#d3cfb9',trim:'#b7b6a7',frames:'#25483e',floors:2,height:9,arches:true,style:'brick'},
