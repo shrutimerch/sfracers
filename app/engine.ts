@@ -1,5 +1,5 @@
 import {buildRoadMarkings} from './road-markings';
-import {isEastParkEntrance} from './south-park-parking';
+import {isEastParkEntrance,isWestParkEntrance} from './south-park-parking';
 import {buildRouteScenery} from './route-scenery';
 import {hasRouteProfile} from './route-profiles';
 import {buildTrafficControls,type TrafficNode} from './traffic-controls';
@@ -23,7 +23,7 @@ export async function loadFacades():Promise<Facades>{
 }
 export function makeGame(canvas:HTMLCanvasElement,mini:HTMLCanvasElement,d:MapData,update:(h:HUD)=>void,facades:Facades,googleKey=''){
 // Widen the photographed entrance to fit nose-in parking and a clear center aisle.
-d={...d,roads:d.roads.map(r=>isEastParkEntrance(r)?{...r,width:14.8}:r)};
+d={...d,roads:d.roads.map(r=>(isEastParkEntrance(r)||isWestParkEntrance(r))?{...r,width:14.8}:r)};
 const renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor('#becbcf');renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 const scene=new T.Scene();scene.fog=new T.Fog('#becbcf',450,1800);const camera=new T.PerspectiveCamera(65,1,.15,2800);scene.add(new T.HemisphereLight('#e3e8e7','#707267',1.65));const sun=new T.DirectionalLight('#fff3dc',2.0);sun.position.set(-160,240,-80);sun.position.set(-70,160,370);sun.target.position.set(90,0,490);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-155,right:155,top:155,bottom:-155,near:1,far:600});sun.shadow.normalBias=.08;scene.add(sun,sun.target);
 const material=(color:T.ColorRepresentation)=>new T.MeshStandardMaterial({color,roughness:.85});const ground=new T.Mesh(new T.PlaneGeometry(6500,6500),material('#abaea5'));ground.rotation.x=-Math.PI/2;ground.position.y=-.2;scene.add(ground);

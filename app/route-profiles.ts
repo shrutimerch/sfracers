@@ -6,6 +6,7 @@ export const routeProfiles:Record<number,RouteProfile>={
  148551352:{color:'#c3bdab',trim:'#d8d3c4',frames:'#829b9c',floors:16,bay:4.5}, // The Brannan courtyard east tower
  112927451:{color:'#956e5b',trim:'#805d4f',frames:'#414b43',floors:5,brick:true,bay:7}, // Warehouse at Second and Brannan, supplied May 2025 view
  112927456:{color:'#717c77',trim:'#8f9890',frames:'#34423e',floors:3,bay:4.3}, // Adjacent gray warehouse
+ 124884339:{color:'#b9c3b4',trim:'#d2d8c9',frames:'#9aaca9',floors:3,grid:true,bay:4}, // Third/South Park glass-fronted corner
  112758589:{color:'#976b55',trim:'#c3bcb0',frames:'#333d3d',floors:6,brick:true}, // 300 Brannan
  112775864:{color:'#d0d0c7',trim:'#dfded3',frames:'#626e6c',floors:6,grid:true,bay:5}, // 274 Brannan
  104599982:{color:'#dfded1',trim:'#eeeee1',frames:'#46585c',floors:2,grid:true,bay:6}, // Pier 38

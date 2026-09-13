@@ -100,7 +100,7 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  for(const u of [-75,75]){const p=local(u,0);rod(p.clone().setY(.15),p.clone().setY(3.1),.055,steel);label('SOUTH PARK',p.x,2.8,p.z,2.8,-.68);const q=local(u+4,1);box(q.x,.65,q.z,.5,1,.5,steel);}
  // Address-specific building footprints with actual depth: frames, mullions, lintels and storefronts.
  const palette=['#a79e8b','#bdbbae','#596366','#b5ad94','#866451','#c3c2b9','#727878'];
- for(const original of d.buildings.filter(b=>isLocal(b)&&!hasRouteProfile(b))){
+ for(const original of d.buildings.filter(b=>isLocal(b)&&!hasRouteProfile(b)&&b.id!==124889461)){
   const profile=original.street==='South Park'?southParkProfiles[original.address||'']:undefined;const b=profile?{...original,height:profile.height}:original;
   const windowGlass=b.street==='South Park'&&b.address==='1'?mat('#7f918c',.32):glass;
   const id=b.id||0,paint=mat(profile?.color||palette[id%palette.length]);const geom=buildingGeometry(b);add(geom.walls,paint);add(geom.roof,dark);
@@ -108,10 +108,11 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
   const facing=b.points.slice(1).map((p,i)=>{const a=b.points[i],mid=new T.Vector2((a[0]+p[0])/2,(a[1]+p[1])/2);return {a,b:p,mid,len:Math.hypot(p[0]-a[0],p[1]-a[1]),score:mid.distanceTo(parkCenter)};}).filter(e=>e.len>4).sort((a,b)=>a.score-b.score).slice(0,b.street==='South Park'&&b.address==='1'?99:2);
   for(const wall of facing){const {a,b:bb,len,mid}=wall;const angle=Math.atan2(bb[1]-a[1],bb[0]-a[0]);let nx=-Math.sin(angle),nz=Math.cos(angle);if((mid.x-center.x)*nx+(mid.y-center.y)*nz<0){nx=-nx;nz=-nz;}
    const detail=(u:number,y:number,w:number,h:number,depth:number,m:T.Material,offset=.08)=>box(a[0]+Math.cos(angle)*u+nx*offset,y,a[1]+Math.sin(angle)*u+nz*offset,w,h,depth,m,angle);
+   if(id===124889463&&len>20)continue;
    const trim=mat(profile?.trim||(id%3===0?'#d1cbbc':'#8c8e85'));const frameMat=profile?mat(profile.frames):dark;detail(len/2,b.height-.12,len+.25,.3,.38,trim);detail(len/2,b.address==='1'?8:3.5,len,.18,.23,trim);
    const bays=(b.street==='South Park'&&b.address==='1'?Math.max(1,Math.round(len/5.5)):profile?.bays)||Math.max(1,Math.floor(len/(profile?.style==='industrial'?4.2:3.1))),spacing=len/bays,floors=profile?.floors||Math.max(1,Math.round(b.height/3.3));
    if(profile?.ground)detail(len/2,1.8,len,3.6,.065,mat(profile.ground),.055);
-   for(let floor=0;floor<floors;floor++)for(let j=0;j<bays;j++){const u=(j+.5)*spacing,y=b.street==='South Park'&&b.address==='1'?(floor===0?2.7:9.8+(floor-1)*4.1):floor===0?1.8:(profile?.arches?6.2:4.9)+(floor-1)*(b.height-(profile?.arches?7.8:5.5))/Math.max(1,floors-1);if(y+1>b.height-.4)continue;const w=spacing*(profile?.style==='industrial'?.84:floor===0?.8:.57),h=b.street==='South Park'&&b.address==='1'?(floor===0?4.2:2.9):floor===0?2.6:profile?.style==='industrial'?2.3:1.85;
+   for(let floor=0;floor<floors;floor++)for(let j=0;j<bays;j++){const u=(j+.5)*spacing,y=b.street==='South Park'&&b.address==='1'?(floor===0?2.7:9.8+(floor-1)*4.1):floor===0?1.8:(profile?.arches?6.2:4.9)+(floor-1)*(b.height-(profile?.arches?7.8:5.5))/Math.max(1,floors-1);if(y+1>b.height-.4)continue;const w=spacing*(id===124889463?.9:profile?.style==='industrial'?.84:floor===0?.8:.57),h=b.street==='South Park'&&b.address==='1'?(floor===0?4.2:2.9):floor===0?2.6:id===124889463?2.8:profile?.style==='industrial'?2.3:1.85;
     detail(u,y,w+.2,h+.22,.17,trim);detail(u,y,w,h,.08,windowGlass,.2);detail(u,y,.065,h,.11,frameMat,.26);detail(u,y+.12,w,.065,.12,frameMat,.26);detail(u,y-h/2-.13,w+.32,.15,.38,trim,.25);
     if(profile?.style==='industrial'){for(let k=1;k<4;k++)detail(u-w/2+w*k/4,y,.035,h,.12,frameMat,.29);for(let k=1;k<4;k++)detail(u,y-h/2+h*k/4,w,.035,.12,frameMat,.29);}
     if(profile?.arches&&floor===0){const arcY=y+h/2;const pts:T.Vector3[]=[];for(let k=0;k<=20;k++){const t=Math.PI*k/20,uu=u+Math.cos(t)*w/2;pts.push(new T.Vector3(a[0]+Math.cos(angle)*uu+nx*.28,arcY+Math.sin(t)*w/2,a[1]+Math.sin(angle)*uu+nz*.28));}add(new T.TubeGeometry(new T.CatmullRomCurve3(pts),20,.07,5,false),frameMat);const shape=new T.Shape();shape.absarc(0,0,w/2,0,Math.PI,false);shape.lineTo(w/2,0);const g=new T.ShapeGeometry(shape,16);g.rotateY(Math.atan2(nx,nz));g.translate(a[0]+Math.cos(angle)*u+nx*.2,arcY,a[1]+Math.sin(angle)*u+nz*.2);add(g,windowGlass);if(b.address==='1'){const center=new T.Vector3(a[0]+Math.cos(angle)*u+nx*.28,arcY,a[1]+Math.sin(angle)*u+nz*.28);for(const k of [3,6,10,14,17])rod(center,pts[k],.035,frameMat);}}
@@ -130,6 +131,15 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  let carIndex=0;for(const car of parkParking(d.roads)){const {x,z,angle:ang}=car,body=mat(['#dadbd5','#343b42','#afb3b1','#243c4a','#6e3431'][carIndex++%5]);box(x,.65,z,4.2,.75,1.75,body,ang);box(x-Math.cos(ang)*.22,1.18,z-Math.sin(ang)*.22,2.2,.62,1.5,glass,ang);box(x-Math.cos(ang)*.22,1.53,z-Math.sin(ang)*.22,2.2,.06,1.53,body,ang);
   for(const dx of [-1.25,1.25])for(const dz of [-.84,.84]){const q=new T.Vector3(x+Math.cos(ang)*dx-Math.sin(ang)*dz,.42,z+Math.sin(ang)*dx+Math.cos(ang)*dz);ellipsoid(q.x,q.y,q.z,.32,.32,.26,dark);}
   for(const side of [-1,1]){box(x+Math.cos(ang)*2.11-Math.sin(ang)*side*.58,.75,z+Math.sin(ang)*2.11+Math.cos(ang)*side*.58,.035,.18,.3,concrete,ang);box(x-Math.cos(ang)*2.11-Math.sin(ang)*side*.58,.75,z-Math.sin(ang)*2.11+Math.cos(ang)*side*.58,.035,.18,.3,mat('#963f35'),ang);}
+ }
+ // Shell corner in the supplied May 2025 view: the mapped central footprint is a canopy, not a solid building.
+ const fuelRoof=d.buildings.find(b=>b.id===124889461);
+ if(fuelRoof){const white=mat('#e0dfd3'),yellow=mat('#e9bd35'),red=mat('#b84135');
+  const forecourt:Point[]=[[5,585],[22.72,572.5],[48.34,598.06],[39.19,607.22],[29,617]];slab(forecourt,concrete,.12);
+  slab(fuelRoof.points,white,4.7);strip(fuelRoof.points,.25,yellow,4.58);strip(fuelRoof.points,.25,red,4.38);
+  for(const [x,z] of [[26,589],[29,598]]){box(x,2.3,z,.24,4.6,.24,white);box(x,.14,z,3,.22,1.1,concrete,-.78);for(const u of [-.85,.85]){const px=x+u*.71,pz=z-u*.71;box(px,.95,pz,.6,1.6,.5,white,-.78);box(px,1.3,pz,.62,.48,.52,dark,-.78);box(px,.38,pz,.62,.4,.52,red,-.78);}}
+  // Brand and services sign; historical fuel prices are deliberately omitted.
+  const c=document.createElement('canvas');c.width=256;c.height=512;const ctx=c.getContext('2d')!;ctx.fillStyle='#eeeede';ctx.fillRect(0,0,256,512);ctx.fillStyle='#bd342f';ctx.font='bold 45px sans-serif';ctx.textAlign='center';ctx.fillText('Shell',128,83);ctx.fillStyle='#e9bd35';ctx.fillRect(18,110,220,17);ctx.fillStyle='#344a58';ctx.font='26px sans-serif';for(const [i,t] of ['Food Mart','ATM','24 Hours'].entries())ctx.fillText(t,128,215+i*90);const texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;textures.push(texture);const face=new T.MeshBasicMaterial({map:texture,side:T.DoubleSide});const g=new T.PlaneGeometry(1.4,4.5);g.rotateY(-Math.PI/4);g.translate(7.9,3.5,586.1);const sign=new T.Mesh(g,face);scene.add(sign);box(8,3.5,586,1.5,4.6,.16,white,Math.PI/4);rod(new T.Vector3(8,0,586),new T.Vector3(8,6,586),.08,steel);
  }
  // Blue bike-share row visible on the northwest side of the user's entrance photo.
  const bikeBlue=mat('#2778b9'),tire=mat('#242b2d'),silver=mat('#b4babc');
