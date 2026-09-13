@@ -109,3 +109,29 @@ test('dense human crowd uses rounded instanced parts and animates knees and elbo
   );
   for (const batch of batches) assert.ok(batch.instanceMatrix.array.every(Number.isFinite));
 });
+
+test('cars stay opaque and solid at route ends near the driver', () => {
+  const data = JSON.parse(readFileSync(new URL('../public/race-course.json', import.meta.url)));
+  const road = data.roads
+    .filter((r) => /Embarcadero|King Street/.test(r.name))
+    .find((r) => motionPath(r.points).length > 100);
+  const path = motionPath(road.points);
+  const end = path.at(path.length, 0.75);
+  const city = buildCityMotion(new T.Scene(), data);
+  city.update(1000, end);
+  const obstacle = city.obstacles[0];
+  assert.ok(Math.hypot(obstacle.x - end.x, obstacle.z - end.z) < 0.001);
+  city.update(1, end);
+  assert.ok(Math.hypot(obstacle.x - end.x, obstacle.z - end.z) < 0.001);
+  for (const car of city.root.children.filter((o) => o.name === 'Ambient car'))
+    car.traverse((part) => {
+      if (part instanceof T.Mesh) {
+        assert.equal(part.material.opacity, 1);
+        assert.equal(part.material.transparent, false);
+      }
+    });
+  city.update(1, { x: 100000, z: 100000 });
+  assert.notEqual(obstacle.x, end.x);
+  assert.equal(obstacle.previousX, obstacle.x);
+  assert.equal(obstacle.previousZ, obstacle.z);
+});

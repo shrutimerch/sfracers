@@ -1,5 +1,7 @@
+import { buildParkDogs } from './park-dogs.ts';
 import * as T from 'three';
 import survey from './data/waterfront-geometry.ts';
+import type { TrafficObstacle } from '../simulation/traffic-collision';
 import type { MapData, Point } from '../types';
 
 // Arc-length sampling keeps speed independent of the spacing of surveyed points.
@@ -208,24 +210,7 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
         }
       }
     });
-  // Separate vehicle materials let endpoint fades preserve the models' physical size.
-  const vehicleMaterials = new Map<T.Group, T.MeshStandardMaterial[]>();
-  for (const actor of actors.filter((a) => !a.walking)) {
-    const copies = new Map<T.MeshStandardMaterial, T.MeshStandardMaterial>();
-    actor.group.traverse((object) => {
-      if (!(object instanceof T.Mesh)) return;
-      const source = object.material as T.MeshStandardMaterial;
-      if (!copies.has(source)) copies.set(source, source.clone());
-      object.material = copies.get(source)!;
-    });
-    vehicleMaterials.set(actor.group, [...copies.values()]);
-  }
-  // Original materials used only by vehicles are no longer attached to the scene.
-  const used = new Set<T.Material>();
-  root.traverse((object) => {
-    if (object instanceof T.Mesh) used.add(object.material as T.Material);
-  });
-  for (const material of materials.values()) if (!used.has(material)) material.dispose();
+  const parkDogs = buildParkDogs(root, data, actors.find((actor) => actor.walking)!.group);
   // Batch the crowd by geometry and material so more people do not add a draw call per limb.
   const crowdParts = new Map<T.BufferGeometry, Map<T.Material, T.Mesh[]>>();
   for (const actor of actors.filter((a) => a.walking)) {
@@ -252,34 +237,52 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
     }
   const inverseRoot = new T.Matrix4(),
     instanceMatrix = new T.Matrix4();
+  const cars = actors.filter((actor) => actor.group.name === 'Ambient car');
+  const obstacles: TrafficObstacle[] = cars.map(() => ({
+    x: 0,
+    z: 0,
+    previousX: 0,
+    previousZ: 0,
+    angle: 0,
+    halfLength: 2.2,
+    halfWidth: 1.01,
+  }));
   let elapsed = 0;
-  function update(dt: number) {
+  function update(dt: number, observer?: { x: number; z: number }) {
     elapsed += dt;
     for (const actor of actors) {
       const { group, path, speed, walking } = actor;
+      const previousX = group.position.x,
+        previousZ = group.position.z;
+      let recycled = false;
       actor.distance += dt * speed * actor.direction;
       if (walking) {
         if (actor.distance > path.length || actor.distance < 0) {
           actor.direction *= -1;
           actor.distance = Math.max(0, Math.min(path.length, actor.distance));
         }
-      } else if (actor.distance > path.length) actor.distance %= path.length;
+      } else if (actor.distance > path.length) {
+        const beginning = path.at(0, actor.offset),
+          end = path.at(path.length, actor.offset);
+        const nearby =
+          observer &&
+          (Math.hypot(observer.x - end.x, observer.z - end.z) < 120 ||
+            Math.hypot(observer.x - beginning.x, observer.z - beginning.z) < 120);
+        actor.distance = nearby ? path.length : actor.distance % path.length;
+        recycled = !nearby;
+      }
       const p = path.at(actor.distance, actor.offset);
       group.position.set(p.x, walking ? 0.14 : 0.12, p.z);
       group.rotation.y = -p.angle + (actor.direction < 0 ? Math.PI : 0);
-      // Fade vehicles at the survey boundary rather than teleporting visibly.
-      const fade = walking
-        ? 1
-        : Math.min(1, actor.distance / 18, (path.length - actor.distance) / 18);
-      for (const material of vehicleMaterials.get(group) ?? []) {
-        const transparent = fade < 1;
-        if (material.transparent !== transparent) {
-          material.transparent = transparent;
-          material.needsUpdate = true;
-        }
-        material.opacity = Math.max(0, fade);
-        material.depthWrite = !transparent;
-      }
+      const carIndex = cars.indexOf(actor);
+      if (carIndex >= 0)
+        Object.assign(obstacles[carIndex], {
+          x: p.x,
+          z: p.z,
+          angle: p.angle,
+          previousX: recycled ? p.x : previousX,
+          previousZ: recycled ? p.z : previousZ,
+        });
       actor.limbs.forEach((limb, i) => {
         const phase =
           elapsed * speed * 5 + actor.path.length * speed + (i === 0 || i === 3 ? 0 : Math.PI);
@@ -290,6 +293,7 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
           joint.rotation.z = i % 2 ? 0.18 + (swing + 1) * 0.12 : -Math.max(0, -swing) * 0.65;
       });
     }
+    parkDogs.update(dt);
     root.updateMatrixWorld(true);
     inverseRoot.copy(root.matrixWorld).invert();
     for (const { mesh, parts } of crowdBatches) {
@@ -301,10 +305,18 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
     }
   }
   update(0);
+  obstacles.forEach((car) => {
+    car.previousX = car.x;
+    car.previousZ = car.z;
+  });
   return {
     update,
+    obstacles,
+    parkDogs,
     root,
     counts: {
+      dogs: parkDogs.dogs.length,
+      dogOwners: parkDogs.owners.length,
       streetcars: survey.rails.length,
       cars: actors.filter((a) => !a.walking).length - survey.rails.length,
       pedestrians: actors.filter((a) => a.walking).length,

@@ -1,3 +1,4 @@
+import { resolveTrafficCollision, type TrafficObstacle } from './traffic-collision.ts';
 import { RACE_LAPS, completeCheckpoint, lapDistance } from './race-laps.ts';
 import { advanceSpeed, drivingSurface, raceChecks } from './driving.ts';
 import { createRoute } from './route-math.ts';
@@ -69,7 +70,7 @@ export function createRaceSimulation(
     speed = 0;
   };
 
-  function step(dt: number, canRace = true) {
+  function step(dt: number, canRace = true, traffic: TrafficObstacle[] = []) {
     if (mode === 'countdown') {
       count -= dt;
       if (count <= 0) {
@@ -99,6 +100,7 @@ export function createRaceSimulation(
         (drifting ? 1.7 : 1.22) *
         Math.min(1, Math.abs(speed) / 7) *
         (speed < 0 ? -1 : 1);
+      const previousPosition = { x, z };
       const travelAngle = angle - (drifting ? turn * 0.22 : 0);
       x += Math.cos(travelAngle) * speed * dt;
       z += Math.sin(travelAngle) * speed * dt;
@@ -117,6 +119,17 @@ export function createRaceSimulation(
           x = surface.x;
           z = surface.z;
           speed *= Math.exp(-3 * dt);
+        }
+      }
+      if (!photographic && traffic.length) {
+        const contact = resolveTrafficCollision(previousPosition, { x, z }, angle, traffic);
+        x = contact.x;
+        z = contact.z;
+        if (contact.hit) {
+          speed = 0;
+          boostTimer = 0;
+          drifting = false;
+          driftCharge = 0;
         }
       }
       if (mode === 'inspection') return;

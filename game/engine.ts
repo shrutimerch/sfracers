@@ -79,7 +79,12 @@ export function makeGame(
       camera.updateProjectionMatrix();
     }
     // The optional imagery mode stays at this boundary; simulation remains independent of it.
-    sim.step(dt, (!google || google.ready) && !google?.error);
+    if (sim.state.mode !== 'paused' && scenery.visible) world.cityMotion.update(dt, sim.state);
+    sim.step(
+      dt,
+      (!google || google.ready) && !google?.error,
+      scenery.visible ? world.cityMotion.obstacles : [],
+    );
     const state = sim.state,
       { mode, x, z, angle, speed, time, boost, cp, lap, count, drifting, progress, street } = state;
     if (google) {
@@ -87,7 +92,6 @@ export function makeGame(
       if (height !== null) roadHeight = height;
       for (const pad of pads) pad.position.y = roadHeight + 0.13;
     }
-    if (mode !== 'paused' && scenery.visible) world.cityMotion.update(dt);
     player.position.set(x, roadHeight + (drifting ? Math.sin(now / 50) * 0.03 : 0), z);
     player.rotation.y = -angle;
     player.rotation.x = drifting ? Math.sin(now / 100) * 0.025 : 0;
