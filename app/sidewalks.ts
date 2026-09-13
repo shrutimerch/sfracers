@@ -7,7 +7,7 @@ export function buildSidewalks(scene:T.Scene,d:MapData){
  const groups=new Map<T.Material,T.BufferGeometry[]>();
  const mat=(color:string)=>new T.MeshStandardMaterial({color,roughness:.95,side:T.DoubleSide});
  const concrete=['#c3bfb3','#bcb9af','#cac6ba','#c0bdb4'].map(mat),curb=mat('#aaa79e'),joint=mat('#696c67');
- const add=(g:T.BufferGeometry,m:T.Material)=>{const bucket=groups.get(m)||[];bucket.push(g);groups.set(m,bucket);};
+ const add=(g:T.BufferGeometry,m:T.Material)=>{const normalized=g.index?g.toNonIndexed():g;if(normalized!==g)g.dispose();normalized.deleteAttribute('uv');const bucket=groups.get(m)||[];bucket.push(normalized);groups.set(m,bucket);};
  const box=(x:number,y:number,z:number,l:number,h:number,w:number,m:T.Material,a=0)=>{const g=new T.BoxGeometry(l,h,w);g.rotateY(-a);g.translate(x,y,z);add(g,m);};
  const quad=(a:Point,b:Point,c:Point,e:Point,ya:number,yb:number,m:T.Material)=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([a[0],ya,a[1],b[0],yb,b[1],c[0],ya,c[1],b[0],yb,b[1],e[0],yb,e[1],c[0],ya,c[1]],3));g.computeVertexNormals();add(g,m);};
  const distanceTo=(p:Point,a:Point,b:Point)=>{const dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p[0]-a[0]-dx*t,p[1]-a[1]-dz*t);};
