@@ -45,7 +45,7 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  // The park boundary and paths sit over the road's inner edge, following actual survey points.
  texturedSlab(park,grass,.16);strip(park,.32,edge,.25);
  for(const path of d.parkDetails?.paths||[]){
-  if(path.crossing){const a=path.points[0],b=path.points.at(-1)!,len=Math.hypot(b[0]-a[0],b[1]-a[1]),ang=Math.atan2(b[1]-a[1],b[0]-a[0]);for(let s=.5;s<len;s+=1.35)box(a[0]+Math.cos(ang)*s,.25,a[1]+Math.sin(ang)*s,.65,.025,2.7,concrete,ang);continue;}
+  if(path.crossing)continue; // Painted crossings now come from the shared OSM marking layer.
   if(path.id===549848273){
    // Rounded transverse concrete fingers are the renovation's distinctive path language.
    const curve=new T.CatmullRomCurve3(path.points.map(([x,z])=>new T.Vector3(x,0,z)));const len=curve.getLength();
@@ -102,18 +102,19 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  const palette=['#a79e8b','#bdbbae','#596366','#b5ad94','#866451','#c3c2b9','#727878'];
  for(const original of d.buildings.filter(b=>isLocal(b)&&!hasRouteProfile(b))){
   const profile=original.street==='South Park'?southParkProfiles[original.address||'']:undefined;const b=profile?{...original,height:profile.height}:original;
+  const windowGlass=b.street==='South Park'&&b.address==='1'?mat('#7f918c',.32):glass;
   const id=b.id||0,paint=mat(profile?.color||palette[id%palette.length]);const geom=buildingGeometry(b);add(geom.walls,paint);add(geom.roof,dark);
   const center=b.points.reduce((p,v)=>p.add(new T.Vector2(v[0],v[1])),new T.Vector2()).divideScalar(b.points.length);
-  const facing=b.points.slice(1).map((p,i)=>{const a=b.points[i],mid=new T.Vector2((a[0]+p[0])/2,(a[1]+p[1])/2);return {a,b:p,mid,len:Math.hypot(p[0]-a[0],p[1]-a[1]),score:mid.distanceTo(parkCenter)};}).filter(e=>e.len>4).sort((a,b)=>a.score-b.score).slice(0,2);
+  const facing=b.points.slice(1).map((p,i)=>{const a=b.points[i],mid=new T.Vector2((a[0]+p[0])/2,(a[1]+p[1])/2);return {a,b:p,mid,len:Math.hypot(p[0]-a[0],p[1]-a[1]),score:mid.distanceTo(parkCenter)};}).filter(e=>e.len>4).sort((a,b)=>a.score-b.score).slice(0,b.street==='South Park'&&b.address==='1'?99:2);
   for(const wall of facing){const {a,b:bb,len,mid}=wall;const angle=Math.atan2(bb[1]-a[1],bb[0]-a[0]);let nx=-Math.sin(angle),nz=Math.cos(angle);if((mid.x-center.x)*nx+(mid.y-center.y)*nz<0){nx=-nx;nz=-nz;}
    const detail=(u:number,y:number,w:number,h:number,depth:number,m:T.Material,offset=.08)=>box(a[0]+Math.cos(angle)*u+nx*offset,y,a[1]+Math.sin(angle)*u+nz*offset,w,h,depth,m,angle);
-   const trim=mat(profile?.trim||(id%3===0?'#d1cbbc':'#8c8e85'));const frameMat=profile?mat(profile.frames):dark;detail(len/2,b.height-.12,len+.25,.3,.38,trim);detail(len/2,3.5,len,.18,.23,trim);
-   const bays=profile?.bays||Math.max(1,Math.floor(len/(profile?.style==='industrial'?4.2:3.1))),spacing=len/bays,floors=profile?.floors||Math.max(1,Math.round(b.height/3.3));
+   const trim=mat(profile?.trim||(id%3===0?'#d1cbbc':'#8c8e85'));const frameMat=profile?mat(profile.frames):dark;detail(len/2,b.height-.12,len+.25,.3,.38,trim);detail(len/2,b.address==='1'?8:3.5,len,.18,.23,trim);
+   const bays=(b.street==='South Park'&&b.address==='1'?Math.max(1,Math.round(len/5.5)):profile?.bays)||Math.max(1,Math.floor(len/(profile?.style==='industrial'?4.2:3.1))),spacing=len/bays,floors=profile?.floors||Math.max(1,Math.round(b.height/3.3));
    if(profile?.ground)detail(len/2,1.8,len,3.6,.065,mat(profile.ground),.055);
-   for(let floor=0;floor<floors;floor++)for(let j=0;j<bays;j++){const u=(j+.5)*spacing,y=floor===0?1.8:(profile?.arches?6.2:4.9)+(floor-1)*(b.height-(profile?.arches?7.8:5.5))/Math.max(1,floors-1);if(y+1>b.height-.4)continue;const w=spacing*(profile?.style==='industrial'?.84:floor===0?.8:.57),h=floor===0?2.6:profile?.style==='industrial'?2.3:1.85;
-    detail(u,y,w+.2,h+.22,.17,trim);detail(u,y,w,h,.08,glass,.2);detail(u,y,.065,h,.11,frameMat,.26);detail(u,y+.12,w,.065,.12,frameMat,.26);detail(u,y-h/2-.13,w+.32,.15,.38,trim,.25);
+   for(let floor=0;floor<floors;floor++)for(let j=0;j<bays;j++){const u=(j+.5)*spacing,y=b.street==='South Park'&&b.address==='1'?(floor===0?2.7:9.8+(floor-1)*4.1):floor===0?1.8:(profile?.arches?6.2:4.9)+(floor-1)*(b.height-(profile?.arches?7.8:5.5))/Math.max(1,floors-1);if(y+1>b.height-.4)continue;const w=spacing*(profile?.style==='industrial'?.84:floor===0?.8:.57),h=b.street==='South Park'&&b.address==='1'?(floor===0?4.2:2.9):floor===0?2.6:profile?.style==='industrial'?2.3:1.85;
+    detail(u,y,w+.2,h+.22,.17,trim);detail(u,y,w,h,.08,windowGlass,.2);detail(u,y,.065,h,.11,frameMat,.26);detail(u,y+.12,w,.065,.12,frameMat,.26);detail(u,y-h/2-.13,w+.32,.15,.38,trim,.25);
     if(profile?.style==='industrial'){for(let k=1;k<4;k++)detail(u-w/2+w*k/4,y,.035,h,.12,frameMat,.29);for(let k=1;k<4;k++)detail(u,y-h/2+h*k/4,w,.035,.12,frameMat,.29);}
-    if(profile?.arches&&floor===0){const arcY=y+h/2;const pts:T.Vector3[]=[];for(let k=0;k<=20;k++){const t=Math.PI*k/20,uu=u+Math.cos(t)*w/2;pts.push(new T.Vector3(a[0]+Math.cos(angle)*uu+nx*.28,arcY+Math.sin(t)*w/2,a[1]+Math.sin(angle)*uu+nz*.28));}add(new T.TubeGeometry(new T.CatmullRomCurve3(pts),20,.07,5,false),frameMat);const shape=new T.Shape();shape.absarc(0,0,w/2,0,Math.PI,false);shape.lineTo(w/2,0);const g=new T.ShapeGeometry(shape,16);g.rotateY(Math.atan2(nx,nz));g.translate(a[0]+Math.cos(angle)*u+nx*.2,arcY,a[1]+Math.sin(angle)*u+nz*.2);add(g,glass);}
+    if(profile?.arches&&floor===0){const arcY=y+h/2;const pts:T.Vector3[]=[];for(let k=0;k<=20;k++){const t=Math.PI*k/20,uu=u+Math.cos(t)*w/2;pts.push(new T.Vector3(a[0]+Math.cos(angle)*uu+nx*.28,arcY+Math.sin(t)*w/2,a[1]+Math.sin(angle)*uu+nz*.28));}add(new T.TubeGeometry(new T.CatmullRomCurve3(pts),20,.07,5,false),frameMat);const shape=new T.Shape();shape.absarc(0,0,w/2,0,Math.PI,false);shape.lineTo(w/2,0);const g=new T.ShapeGeometry(shape,16);g.rotateY(Math.atan2(nx,nz));g.translate(a[0]+Math.cos(angle)*u+nx*.2,arcY,a[1]+Math.sin(angle)*u+nz*.2);add(g,windowGlass);if(b.address==='1'){const center=new T.Vector3(a[0]+Math.cos(angle)*u+nx*.28,arcY,a[1]+Math.sin(angle)*u+nz*.28);for(const k of [3,6,10,14,17])rod(center,pts[k],.035,frameMat);}}
    
    }
    if(b.street==='South Park'&&wall===facing[0]){label(b.address||'SOUTH PARK',mid.x+nx*.35,3.12,mid.y+nz*.35,Math.min(2.4,len*.4),Math.atan2(nx,nz)*-1,'#393f3e');}
