@@ -35,36 +35,36 @@ game/
     config/          Observed placements and facade profiles
     data/            Generated geometry datasets
   imagery/           Optional photographic adapter and helpers
-  ui/                React race interface
+  ui/                Modeled and photographic React race interfaces
 public/              Runtime map JSON and image assets
 reference/           Source observations and retained public data
 scripts/             Data preparation
 tests/               Regression tests
 ```
 
-Keep framework route files in `app/`; game modules belong in `game/`. Data generators write to `game/scenery/data/`.
+Keep framework route files in `app/`; game modules belong in `game/`. Both `/` and `/kart` delegate their game interfaces to `game/ui/`. Data generators write to `game/scenery/data/`.
 
 ## Where changes belong
 
-| Concern                                                           | File                                                              |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------- |
-| Browser lifecycle and renderer/simulation coordination            | `game/engine.ts`                                                  |
-| Map, HUD and texture types                                        | `game/types.ts`                                                   |
-| Racing state, movement, boost, collisions, checkpoints            | `game/simulation/simulation.ts`                                   |
-| Route distances, position sampling and nearest segment            | `game/simulation/route-math.ts`                                   |
-| Entrance width adjustments to imported maps                       | `game/simulation/course.ts`                                       |
-| Lap count and kart scale                                          | `game/simulation/race-laps.ts`                                    |
-| Acceleration and drivable surface rules                           | `game/simulation/driving.ts`                                      |
-| World, lighting and base street/building assembly                 | `game/rendering/world.ts`                                         |
-| Karts, finish banner, route arrows and boost pads                 | `game/rendering/race-visuals.ts`                                  |
-| Keyboard lifecycle, camera, minimap                               | `game/input.ts`, `camera.ts`, `minimap.ts`                        |
-| Texture loading and shared GPU-resource disposal                  | `game/rendering/facades.ts`, `dispose.ts`                         |
-| Main race interface                                               | `game/ui/race-game.tsx`                                           |
-| South Park and waterfront modeled scenery                         | `game/scenery/south-park.ts`, `route-scenery.ts`                  |
-| Building-specific facade appearance                               | `game/scenery/config/south-park-profiles.ts`, `route-profiles.ts` |
-| Photo-based courtyard, shelter, lamp and lane placement overrides | `game/scenery/config/scenery-locations.ts`                        |
-| Crosswalks and bike lanes                                         | `game/scenery/road-markings.ts`, `road-marking-rules.ts`          |
-| Public map source and reference provenance                        | `reference/README.md`                                             |
+| Concern                                                           | File                                                                     |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| Browser lifecycle and renderer/simulation coordination            | `game/engine.ts`                                                         |
+| Map, HUD and texture types                                        | `game/types.ts`                                                          |
+| Racing state, movement, boost, collisions, checkpoints            | `game/simulation/simulation.ts`                                          |
+| Route distances, position sampling and nearest segment            | `game/simulation/route-math.ts`                                          |
+| Entrance width adjustments to imported maps                       | `game/simulation/course.ts`                                              |
+| Lap count and kart scale                                          | `game/simulation/race-laps.ts`                                           |
+| Acceleration and drivable surface rules                           | `game/simulation/driving.ts`                                             |
+| World, lighting and base street/building assembly                 | `game/rendering/world.ts`                                                |
+| Karts, finish banner, route arrows and boost pads                 | `game/rendering/race-visuals.ts`                                         |
+| Keyboard lifecycle, camera, minimap                               | `game/input.ts`, `game/rendering/camera.ts`, `game/rendering/minimap.ts` |
+| Texture loading and shared GPU-resource disposal                  | `game/rendering/facades.ts`, `dispose.ts`                                |
+| Main race interface                                               | `game/ui/race-game.tsx`                                                  |
+| South Park and waterfront modeled scenery                         | `game/scenery/south-park.ts`, `route-scenery.ts`                         |
+| Building-specific facade appearance                               | `game/scenery/config/south-park-profiles.ts`, `route-profiles.ts`        |
+| Photo-based courtyard, shelter, lamp and lane placement overrides | `game/scenery/config/scenery-locations.ts`                               |
+| Crosswalks and bike lanes                                         | `game/scenery/road-markings.ts`, `road-marking-rules.ts`                 |
+| Public map source and reference provenance                        | `reference/README.md`                                                    |
 
 ## Data flow
 
@@ -89,7 +89,7 @@ The main `/` route uses modeled scenery. The existing `/kart` route and optional
 
 ## Formatting and lint choices
 
-The repository's formatter handles application code and tests. Narrow lint overrides preserve deliberate existing behavior: full-document game navigation (to release the WebGL scene), direct route-map images, custom accessible HUD status/meter elements, and a generated geometry export. Other correctness and typing rules remain enabled.
+The repository's formatter handles application code and tests. Narrow lint overrides preserve deliberate existing behavior: full-document game navigation (to release the WebGL scene), custom accessible HUD status/meter elements, and a generated geometry export. Other correctness and typing rules remain enabled.
 
 ## Publishing
 

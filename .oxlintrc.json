@@ -48,22 +48,15 @@
     {
       "files": [
         "game/ui/race-game.tsx",
-        "app/kart/page.tsx",
-        "app/about/page.tsx",
-        "app/route/page.tsx"
+        "game/ui/photographic-race-game.tsx",
+        "app/about/page.tsx"
       ],
       "rules": {
         "nextjs/no-html-link-for-pages": "off"
       }
     },
     {
-      "files": ["app/route/page.tsx"],
-      "rules": {
-        "nextjs/no-img-element": "off"
-      }
-    },
-    {
-      "files": ["game/ui/race-game.tsx", "app/kart/page.tsx"],
+      "files": ["game/ui/race-game.tsx", "game/ui/photographic-race-game.tsx"],
       "rules": {
         "jsx-a11y/prefer-tag-over-role": "off"
       }
