@@ -156,7 +156,12 @@ export function buildCityMotion(scene: T.Scene, data: MapData, sidewalks: Sidewa
   cyclingStrips(data)
     .filter((strip) => Math.hypot(strip.b[0] - strip.a[0], strip.b[1] - strip.a[1]) > 35)
     .forEach((strip, i) => {
-      const actor = add([strip.a, strip.b], 3.5 + (i % 3) * 0.6, 0.2 + (i % 4) * 0.18, 0);
+      const actor = add(
+        strip.direction < 0 ? [strip.b, strip.a] : [strip.a, strip.b],
+        3.5 + (i % 3) * 0.6,
+        0.2 + (i % 4) * 0.18,
+        0,
+      );
       actor.group.name = 'Cyclist';
       cyclists.set(actor, buildCyclist(actor.group, i));
     });

@@ -18,7 +18,7 @@ Use your dev server's address, for example `http://localhost:3000/5`.
 WASD/arrows drive, V switches cameras, Escape pauses, and R returns to the
 shortcut's starting spot. These paths return 404 in production.
 
-A browser-based Three.js racing game on mapped San Francisco streets. The waterfront circuit uses two laps. React handles the interface; a standalone simulation handles gameplay.
+A browser-based Three.js racing game on mapped San Francisco streets. The waterfront circuit uses one lap. React handles the interface; a standalone simulation handles gameplay.
 
 ## Develop and verify
 

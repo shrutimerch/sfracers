@@ -15,7 +15,7 @@ export function createRaceSimulation(
   inspection = Math.max(0, Math.min(total - 1, inspection));
   const checks = raceChecks(total, d.course?.sections),
     surfaceAt = drivingSurface(d.roads, d.paths);
-  const rivals = [0, 1, 2].map((i) => ({ s: 12 + i * 8, speed: 23 + i * 1.2 }));
+  const rivals = [0, 1, 2].map((i) => ({ s: 12 + i * 8, speed: 28 + i * 1.5 }));
   const pads: ReturnType<typeof at>[] = [];
   for (let s = 160; s < total; s += 290) pads.push(at(s));
   let mode = inspection > 0 ? 'inspection' : 'ready',

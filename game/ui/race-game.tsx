@@ -1,4 +1,5 @@
 'use client';
+import { RACE_LAPS } from '../simulation/race-laps';
 import { useEffect, useRef, useState } from 'react';
 import type { HUD, MapData } from '../engine';
 const fmt = (s: number) =>
@@ -148,7 +149,7 @@ export default function RaceGame() {
               / 4<br />
               POSITION
               <br />
-              LAP {hud.lap} / 2
+              LAP {hud.lap} / {RACE_LAPS}
             </span>
           </div>
         )}

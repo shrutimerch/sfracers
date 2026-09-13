@@ -8,19 +8,17 @@ const loadCourse = (name) =>
   JSON.parse(readFileSync(new URL(`../public/${name}.json`, import.meta.url)));
 
 for (const name of ['race-course']) {
-  test(`${name}: drive both complete laps with real steering, pause, recover, finish, and restart`, () => {
+  test(`${name}: drive one complete lap with real steering, pause, recover, finish, and restart`, () => {
     const sim = createRaceSimulation(prepareCourse(loadCourse(name)));
     sim.start();
     const visited = new Set();
     let paused = false;
     let recovered = false;
-    let firstLapTime = 0;
     // A conservative test driver uses the same throttle, brake and steering API as a player.
     // It never teleports the kart, advances checkpoints directly, or edits race state.
     for (let frame = 0; frame < 45000 && sim.state.mode !== 'finished'; frame++) {
       const state = sim.state;
       visited.add(`${state.lap}:${state.cp}`);
-      if (state.lap === 1 && !firstLapTime) firstLapTime = state.time;
       if (!paused && state.time > 10) {
         sim.pause();
         const snapshot = sim.state;
@@ -34,9 +32,9 @@ for (const name of ['race-course']) {
         sim.pause();
         paused = true;
       }
-      if (!recovered && state.lap === 1 && state.cp > 1) {
+      if (!recovered && state.cp > 1) {
         sim.recover();
-        assert.equal(sim.state.lap, 1);
+        assert.equal(sim.state.lap, 0);
         assert.equal(sim.state.cp, state.cp);
         assert.equal(sim.state.speed, 0);
         recovered = true;
@@ -56,13 +54,13 @@ for (const name of ['race-course']) {
       sim.step(1 / 30);
     }
     assert.equal(sim.state.mode, 'finished');
-    assert.equal(sim.state.lap, 1);
-    assert.ok(firstLapTime > 0 && sim.state.time > firstLapTime);
-    for (let lap = 0; lap < 2; lap++) {
+    assert.equal(sim.state.lap, 0);
+    assert.ok(sim.state.time > 0);
+    for (let lap = 0; lap < 1; lap++) {
       for (let cp = 0; cp < sim.checks.length; cp++) assert.ok(visited.has(`${lap}:${cp}`));
     }
     assert.ok(paused && recovered);
-    assert.ok(sim.rivals.every((r) => r.s === sim.route.total * 2));
+    assert.ok(sim.rivals.every((r) => r.s === sim.route.total));
     assert.equal(sim.state.speed, 0);
     const finishTime = sim.state.time;
     sim.step(1 / 30);

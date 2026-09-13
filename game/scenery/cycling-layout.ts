@@ -2,11 +2,21 @@ import { embarcaderoBikeCenter } from './config/embarcadero-layout.ts';
 import data from './data/road-marking-data.ts';
 import { bicycleSides, bicycleAppearance, type Tags } from './road-marking-rules.ts';
 import type { MapData, Point } from '../types';
-type CyclingStrip = { a: Point; b: Point; halfWidth: number };
+type CyclingStrip = { a: Point; b: Point; halfWidth: number; direction: number };
 
 export function cyclingStrips(_d: MapData): CyclingStrip[] {
   const strips: CyclingStrip[] = data.cycleways.flatMap((track) =>
-    track.points.slice(1).map((b, i) => ({ a: track.points[i], b, halfWidth: 1.15 })),
+    track.points
+      .slice(1)
+      .map((b, i) => ({
+        a: track.points[i],
+        b,
+        halfWidth: 1.15,
+        direction:
+          (track.tags as Tags)['oneway:bicycle'] === '-1' || (track.tags as Tags).oneway === '-1'
+            ? -1
+            : 1,
+      })),
   );
   for (const feature of data.bikeRoads)
     for (const side of bicycleSides(feature.tags as Tags)) {
@@ -21,6 +31,7 @@ export function cyclingStrips(_d: MapData): CyclingStrip[] {
         ];
         const appearance = bicycleAppearance(feature.tags as Tags, side.side, side.kind);
         strips.push({
+          direction: bicycleDirection(feature.tags as Tags, side.side),
           a: shift(a),
           b: shift(b),
           halfWidth: appearance.protected || appearance.buffered ? 1.5 : 0.95,
@@ -44,4 +55,16 @@ function bikeOffset(
           ? 3.5
           : 5.55)
   );
+}
+
+// Road coordinates follow the mapped way; left-hand lanes on two-way roads run back along it.
+export function bicycleDirection(tags: Tags, side: number) {
+  const lane = side < 0 ? 'left' : 'right';
+  const explicit = tags[`cycleway:${lane}:oneway`] ?? tags['oneway:bicycle'];
+  if (explicit === '-1') return -1;
+  if (explicit === 'yes' || explicit === '1') return 1;
+  if ((tags[`cycleway:${lane}`] ?? tags.cycleway)?.startsWith('opposite_')) return -1;
+  if (tags.oneway === '-1') return -1;
+  if (tags.oneway === 'yes' || tags.oneway === '1') return 1;
+  return side;
 }

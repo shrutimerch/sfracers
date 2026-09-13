@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as T from 'three';
 import { buildCityMotion } from '../game/scenery/city-motion.ts';
-import { cyclingStrips } from '../game/scenery/cycling-layout.ts';
+import { bicycleDirection, cyclingStrips } from '../game/scenery/cycling-layout.ts';
 import { createRaceSimulation } from '../game/simulation/simulation.ts';
 import { resolveTrafficCollision } from '../game/simulation/traffic-collision.ts';
 
@@ -26,6 +26,11 @@ test('cyclists follow painted paths and update solid collision footprints', () =
     const obstacle = city.obstacles.find((o) => o.x === c.position.x && o.z === c.position.z);
     assert.ok(obstacle);
     assert.equal(obstacle.previousX, initial[i].x);
+    assert.ok(
+      (c.position.x - initial[i].x) * dx * s.direction +
+        (c.position.z - initial[i].z) * dz * s.direction >
+        0,
+    );
     assert.equal(obstacle.halfWidth, 0.36);
   });
 });
@@ -71,4 +76,12 @@ test('hitting a cyclist stops the car, prevents tunneling, and permits reversing
   sim.setKey('s', true);
   for (let i = 0; i < 120; i++) sim.step(1 / 60, true, [bike]);
   assert.ok(sim.state.x < stopped - 1);
+});
+
+test('cyclists obey lane direction rather than map point order', () => {
+  assert.equal(bicycleDirection({}, -1), -1);
+  assert.equal(bicycleDirection({}, 1), 1);
+  assert.equal(bicycleDirection({ oneway: 'yes' }, -1), 1);
+  assert.equal(bicycleDirection({ 'cycleway:left:oneway': '-1', oneway: 'yes' }, -1), -1);
+  assert.equal(bicycleDirection({ cycleway: 'opposite_lane', oneway: 'yes' }, -1), -1);
 });
