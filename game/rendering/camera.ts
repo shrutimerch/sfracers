@@ -1,6 +1,6 @@
 import * as T from 'three';
-import type { RaceSimulation } from './simulation';
-import type { createGoogleScenery } from '../google-scenery';
+import type { RaceSimulation } from '../simulation/simulation';
+import type { createGoogleScenery } from '../imagery/google-scenery';
 export function createRaceCamera(
   camera: T.PerspectiveCamera,
   renderer: T.WebGLRenderer,

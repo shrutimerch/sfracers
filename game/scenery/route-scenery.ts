@@ -1,13 +1,13 @@
-import { SCENERY_LOCATIONS, ROAD_APPEARANCE } from './scenery-locations';
-import { courtyardPaths } from './brannan-courtyard-data';
-import { palmGeometry } from './palm-geometry';
-import { parkGrass } from './park-ground';
+import { SCENERY_LOCATIONS, ROAD_APPEARANCE } from './config/scenery-locations';
+import { courtyardPaths } from './data/brannan-courtyard-data';
+import { palmGeometry } from './geometry/palm-geometry';
+import { parkGrass } from './geometry/park-ground';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { buildingGeometry } from './building-geometry';
-import { routeProfiles } from './route-profiles';
-import survey from './waterfront-geometry';
-import type { MapData, Facades, Point } from './game/types';
+import { buildingGeometry } from './geometry/building-geometry';
+import { routeProfiles } from './config/route-profiles';
+import survey from './data/waterfront-geometry';
+import type { MapData, Facades, Point } from '../types';
 
 // Mapped positions; modeled detail sizes are estimates from reference/waterfront-streetview.json.
 export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) {

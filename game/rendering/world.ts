@@ -1,14 +1,14 @@
-import { hasBrannanDoubleYellow } from '../scenery-locations';
+import { hasBrannanDoubleYellow } from '../scenery/config/scenery-locations';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import { buildingGeometry, type FacadeKind } from '../building-geometry';
-import { buildRouteScenery } from '../route-scenery';
-import { hasRouteProfile } from '../route-profiles';
-import { buildSouthPark, isLocal } from '../south-park';
-import { buildSidewalks } from '../sidewalks';
-import { buildRoadMarkings } from '../road-markings';
-import { buildTrafficControls } from '../traffic-controls';
-import type { MapData, Facades, Point } from './types';
+import { buildingGeometry, type FacadeKind } from '../scenery/geometry/building-geometry';
+import { buildRouteScenery } from '../scenery/route-scenery';
+import { hasRouteProfile } from '../scenery/config/route-profiles';
+import { buildSouthPark, isLocal } from '../scenery/south-park';
+import { buildSidewalks } from '../scenery/sidewalks';
+import { buildRoadMarkings } from '../scenery/road-markings';
+import { buildTrafficControls } from '../scenery/traffic-controls';
+import type { MapData, Facades, Point } from '../types';
 const distance = (a: Point, b: Point) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Facades) {
   const renderer = new T.WebGLRenderer({

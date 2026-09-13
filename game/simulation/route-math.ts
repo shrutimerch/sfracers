@@ -1,4 +1,4 @@
-import type { MapData, Point } from './types';
+import type { MapData, Point } from '../types';
 const distance = (a: Point, b: Point) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 export function createRoute(d: MapData) {
   const lengths = [0];

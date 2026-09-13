@@ -23,5 +23,5 @@ d['lawns']=[{'id':e['id'],'points':points(e)} for e in details if e.get('tags',{
 d['playgrounds']=[{'id':e['id'],'points':points(e)} for e in details if e.get('tags',{}).get('leisure')=='playground']
 art=json.loads((root/'reference'/'south-beach-art-osm.json').read_text())['elements'][0]
 b=art['bounds'];d['art']=[{'id':art['id'],'point':point({'lat':(b['minlat']+b['maxlat'])/2,'lon':(b['minlon']+b['maxlon'])/2})}]
-(root/'app'/'waterfront-geometry.ts').write_text('// Generated from retained OpenStreetMap data by scripts/build-waterfront-scenery.py.\nconst data='+json.dumps(d,separators=(',',':'))+';\nexport default data;\n')
+(root/'game'/'scenery'/'data'/'waterfront-geometry.ts').write_text('// Generated from retained OpenStreetMap data by scripts/build-waterfront-scenery.py.\nconst data='+json.dumps(d,separators=(',',':'))+';\nexport default data;\n')
 print({k:len(v) for k,v in d.items()})

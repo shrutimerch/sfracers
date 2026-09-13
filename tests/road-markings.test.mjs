@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { crossingStyle, bicycleSides } from '../app/road-marking-rules.ts';
-import data from '../app/road-marking-data.ts';
+import { crossingStyle, bicycleSides } from '../game/scenery/road-marking-rules.ts';
+import data from '../game/scenery/data/road-marking-data.ts';
 test('unknown and explicitly unmarked crossings do not acquire painted crosswalks', () => {
   assert.equal(crossingStyle({ 'crossing:markings': 'no' }), null);
   assert.equal(crossingStyle({}), null);

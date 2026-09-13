@@ -11,7 +11,7 @@ The play structure was corrected using OpenStreetMap way 549848249 (playground=s
 
 `waterfront-streetview.json` records 12 inspected views across Second, Brannan, the actual Bay Trail promenade, King and Third, including a ballpark-facing view. Google may snap requested coordinates to nearby imagery; the visible label is recorded separately. The additional initial Second/Brannan corner view was also inspected but is not included in this 12-view list. No Street View photos are shipped as textures.
 
-`waterfront-parks-osm.json`, `waterfront-trees-osm.json`, `waterfront-lamps-osm.json`, `waterfront-rail-osm.json`, and `oracle-park-full-osm.json` retain source geometry. `scripts/build-waterfront-scenery.py` projects those sources into `app/waterfront-geometry.ts`. Palm status comes only from `leaf_type=palm`. Heights, foliage, lamp designs, inset lawns, facade bays, lane widths and stadium elevations are approximate; the stadium outline is a perimeter, not a surveyed wall footprint. Unmatched buildings still use the earlier generic materials. No claim of photogrammetry or complete street-by-street surveying.
+`waterfront-parks-osm.json`, `waterfront-trees-osm.json`, `waterfront-lamps-osm.json`, `waterfront-rail-osm.json`, and `oracle-park-full-osm.json` retain source geometry. `scripts/build-waterfront-scenery.py` projects those sources into `game/scenery/data/waterfront-geometry.ts`. Palm status comes only from `leaf_type=palm`. Heights, foliage, lamp designs, inset lawns, facade bays, lane widths and stadium elevations are approximate; the stadium outline is a perimeter, not a surveyed wall footprint. Unmatched buildings still use the earlier generic materials. No claim of photogrammetry or complete street-by-street surveying.
 
 
 ### Park refinement

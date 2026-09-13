@@ -1,6 +1,6 @@
-import { lapDistance } from '../race-laps';
-import type { MapData } from './types';
-import type { RaceRoute } from './route-math';
+import { lapDistance } from '../simulation/race-laps';
+import type { MapData } from '../types';
+import type { RaceRoute } from '../simulation/route-math';
 export function createMinimap(mini: HTMLCanvasElement, d: MapData, route: RaceRoute) {
   const { at, total } = route;
   return function draw(x: number, z: number, rivals: { s: number }[]) {

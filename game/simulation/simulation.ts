@@ -1,7 +1,7 @@
-import { RACE_LAPS, completeCheckpoint, lapDistance } from '../race-laps.ts';
-import { advanceSpeed, drivingSurface, raceChecks } from '../driving.ts';
+import { RACE_LAPS, completeCheckpoint, lapDistance } from './race-laps.ts';
+import { advanceSpeed, drivingSurface, raceChecks } from './driving.ts';
 import { createRoute } from './route-math.ts';
-import type { MapData } from './types';
+import type { MapData } from '../types';
 // Pure racing state: no DOM, Three.js objects, network access, or animation scheduling.
 export function createRaceSimulation(d: MapData, inspection = 0, photographic = false) {
   const route = createRoute(d),

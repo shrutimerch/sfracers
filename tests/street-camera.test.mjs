@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import * as T from 'three';
-import { streetSurface, createStreetCamera } from '../app/street-camera.ts';
+import { streetSurface, createStreetCamera } from '../game/imagery/street-camera.ts';
 const object = new T.Object3D();
 const hit = (height, normal) => ({
   object,

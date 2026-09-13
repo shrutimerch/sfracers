@@ -1,6 +1,6 @@
 import * as T from 'three';
-import type { FacadeKind } from '../building-geometry';
-import type { Facades } from './types';
+import type { FacadeKind } from '../scenery/geometry/building-geometry';
+import type { Facades } from '../types';
 export async function loadFacades(): Promise<Facades> {
   const loader = new T.TextureLoader();
   const names: FacadeKind[] = ['brick', 'masonry', 'glass'];

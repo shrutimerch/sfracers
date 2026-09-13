@@ -11,7 +11,7 @@
     "format": "oxfmt",
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "typecheck": "tsc --noEmit",
-    "format:check": "oxfmt --check app tests"
+    "format:check": "oxfmt --check app game tests"
   },
   "dependencies": {
     "3d-tiles-renderer": "^0.5.2",

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { Vector3 } from 'three';
-import { earthToGame } from '../app/google-coordinates.ts';
+import { earthToGame } from '../game/imagery/google-coordinates.ts';
 const ecef = (lat, lon, height = 0) => {
   lat *= Math.PI / 180;
   lon *= Math.PI / 180;

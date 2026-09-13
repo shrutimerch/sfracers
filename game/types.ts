@@ -1,6 +1,6 @@
 import type * as T from 'three';
-import type { TrafficNode } from '../traffic-controls';
-import type { Building, FacadeKind } from '../building-geometry';
+import type { TrafficNode } from './scenery/traffic-controls';
+import type { Building, FacadeKind } from './scenery/geometry/building-geometry';
 export type Point = number[];
 export type MapData = {
   trafficControls?: TrafficNode[];

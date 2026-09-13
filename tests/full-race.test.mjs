@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { prepareCourse } from '../app/game/course.ts';
-import { createRaceSimulation } from '../app/game/simulation.ts';
+import { prepareCourse } from '../game/simulation/course.ts';
+import { createRaceSimulation } from '../game/simulation/simulation.ts';
 
 const loadCourse = (name) =>
   JSON.parse(readFileSync(new URL(`../public/${name}.json`, import.meta.url)));

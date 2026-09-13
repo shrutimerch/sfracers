@@ -2,9 +2,9 @@
   "printWidth": 100,
   "singleQuote": true,
   "ignorePatterns": [
-    "app/brannan-courtyard-data.ts",
-    "app/road-marking-data.ts",
-    "app/waterfront-geometry.ts",
-    "app/playground-geometry.ts"
+    "game/scenery/data/brannan-courtyard-data.ts",
+    "game/scenery/data/road-marking-data.ts",
+    "game/scenery/data/waterfront-geometry.ts",
+    "game/scenery/data/playground-geometry.ts"
   ]
 }

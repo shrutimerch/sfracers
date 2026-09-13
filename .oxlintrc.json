@@ -47,7 +47,7 @@
   "overrides": [
     {
       "files": [
-        "app/race-game.tsx",
+        "game/ui/race-game.tsx",
         "app/kart/page.tsx",
         "app/about/page.tsx",
         "app/route/page.tsx"
@@ -63,13 +63,13 @@
       }
     },
     {
-      "files": ["app/race-game.tsx", "app/kart/page.tsx"],
+      "files": ["game/ui/race-game.tsx", "app/kart/page.tsx"],
       "rules": {
         "jsx-a11y/prefer-tag-over-role": "off"
       }
     },
     {
-      "files": ["app/playground-geometry.ts"],
+      "files": ["game/scenery/data/playground-geometry.ts"],
       "rules": {
         "import/no-anonymous-default-export": "off"
       }

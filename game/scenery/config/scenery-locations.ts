@@ -1,4 +1,4 @@
-import type { Point } from './game/types';
+import type { Point } from '../../types';
 
 // Photo-derived placement overrides, in the same local meter coordinates as the OSM map.
 // These are modeled estimates, not additional surveyed map features. See reference/README.md.

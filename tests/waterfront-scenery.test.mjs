@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import data from '../app/waterfront-geometry.ts';
-import { routeProfiles } from '../app/route-profiles.ts';
+import data from '../game/scenery/data/waterfront-geometry.ts';
+import { routeProfiles } from '../game/scenery/config/route-profiles.ts';
 const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url)));
 const project = (p) => [(p.lon + 122.395) * 87900, (37.786 - p.lat) * 111200];
 test('waterfront trees and lamps retain actual OSM positions and palm classifications', () => {

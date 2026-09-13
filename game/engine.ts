@@ -1,17 +1,17 @@
-import { RACE_LAPS, lapDistance } from './race-laps';
-import { prepareCourse } from './game/course';
-import { createGoogleScenery } from './google-scenery';
-import { createWorld } from './game/world';
-import { createRaceSimulation } from './game/simulation';
-import { createRaceVisuals } from './game/race-visuals';
-import { createRaceCamera } from './game/camera';
-import { createMinimap } from './game/minimap';
-import { bindRaceInput } from './game/input';
-import { disposeScene } from './game/dispose';
-import type { MapData, HUD, Facades } from './game/types';
+import { RACE_LAPS, lapDistance } from './simulation/race-laps';
+import { prepareCourse } from './simulation/course';
+import { createGoogleScenery } from './imagery/google-scenery';
+import { createWorld } from './rendering/world';
+import { createRaceSimulation } from './simulation/simulation';
+import { createRaceVisuals } from './rendering/race-visuals';
+import { createRaceCamera } from './rendering/camera';
+import { createMinimap } from './rendering/minimap';
+import { bindRaceInput } from './input';
+import { disposeScene } from './rendering/dispose';
+import type { MapData, HUD, Facades } from './types';
 // Preserve the existing engine API for both the main game and the legacy /kart route.
-export type { MapData, HUD, Facades, Point } from './game/types';
-export { loadFacades } from './game/facades';
+export type { MapData, HUD, Facades, Point } from './types';
+export { loadFacades } from './rendering/facades';
 export function makeGame(
   canvas: HTMLCanvasElement,
   mini: HTMLCanvasElement,

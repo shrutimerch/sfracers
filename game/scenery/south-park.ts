@@ -1,14 +1,14 @@
-import { SCENERY_LOCATIONS } from './scenery-locations';
+import { SCENERY_LOCATIONS } from './config/scenery-locations';
 import { parkParking, parkBikeDock } from './south-park-parking';
-import { parkGrass } from './park-ground';
-import { hasRouteProfile } from './route-profiles';
-import playgroundSource from './playground-geometry';
-import { southParkProfiles } from './south-park-profiles';
+import { parkGrass } from './geometry/park-ground';
+import { hasRouteProfile } from './config/route-profiles';
+import playgroundSource from './data/playground-geometry';
+import { southParkProfiles } from './config/south-park-profiles';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { MapData, Point } from './game/types';
-import type { Building } from './building-geometry';
-import { buildingGeometry } from './building-geometry';
+import type { MapData, Point } from '../types';
+import type { Building } from './geometry/building-geometry';
+import { buildingGeometry } from './geometry/building-geometry';
 
 // Surveyed OSM geometry; architectural and planting details are reference-based approximations.
 export const parkCenter = new T.Vector2(90, 490);

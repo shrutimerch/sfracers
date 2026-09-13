@@ -1,5 +1,5 @@
 import * as T from 'three';
-import type { MapData } from './game/types';
+import type { MapData } from '../types';
 export type TrafficNode = {
   id: number;
   lat: number;

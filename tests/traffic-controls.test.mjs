@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { mappedControls } from '../app/traffic-controls.ts';
+import { mappedControls } from '../game/scenery/traffic-controls.ts';
 const raw = JSON.parse(
   readFileSync(new URL('../public/traffic-controls-osm.json', import.meta.url)),
 );

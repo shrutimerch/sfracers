@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { readFileSync, statSync } from 'node:fs';
-import { buildingGeometry } from '../app/building-geometry.ts';
+import { buildingGeometry } from '../game/scenery/geometry/building-geometry.ts';
 const data = JSON.parse(readFileSync(new URL('../public/streets.json', import.meta.url), 'utf8'));
 test('all facade types have a shipped PNG texture', () => {
   const kinds = new Set(data.buildings.map((b) => b.facade));

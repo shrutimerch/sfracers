@@ -1,5 +1,5 @@
-import { isEastParkEntrance, isWestParkEntrance } from '../south-park-parking.ts';
-import type { MapData } from './types';
+import { isEastParkEntrance, isWestParkEntrance } from '../scenery/south-park-parking.ts';
+import type { MapData } from '../types';
 // Preserve imported data; wider entrance surfaces accommodate the reference-based parking bays.
 export function prepareCourse(data: MapData): MapData {
   return {

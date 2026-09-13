@@ -1,4 +1,4 @@
-import type { RaceSimulation } from './simulation';
+import type { RaceSimulation } from './simulation/simulation';
 export function bindRaceInput(sim: RaceSimulation, toggleCamera: () => void) {
   const down = (e: KeyboardEvent) => {
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' ', 'Shift'].includes(e.key))

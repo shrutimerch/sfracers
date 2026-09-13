@@ -1,6 +1,6 @@
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import type { MapData, Point } from './game/types';
+import type { MapData, Point } from '../types';
 
 // A first detailed streetscape pass: real centerlines, representative SF concrete and fixtures.
 export function buildSidewalks(scene: T.Scene, d: MapData) {

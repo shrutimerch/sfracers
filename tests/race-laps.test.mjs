@@ -1,6 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { completeCheckpoint, lapDistance, RACE_LAPS, KART_SCALE } from '../app/race-laps.ts';
+import {
+  completeCheckpoint,
+  lapDistance,
+  RACE_LAPS,
+  KART_SCALE,
+} from '../game/simulation/race-laps.ts';
 test('all checkpoints are required again after the first lap; only the second finishes', () => {
   let state = { cp: 0, lap: 0, finished: false };
   for (let i = 0; i < 4; i++) state = completeCheckpoint(state.cp, state.lap, 4);

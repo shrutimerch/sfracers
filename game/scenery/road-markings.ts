@@ -1,9 +1,9 @@
-import { hasBrannanDoubleYellow, hasObservedGreenLane } from './scenery-locations';
+import { hasBrannanDoubleYellow, hasObservedGreenLane } from './config/scenery-locations';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
-import data from './road-marking-data';
+import data from './data/road-marking-data';
 import { crossingStyle, bicycleSides, type Tags } from './road-marking-rules';
-import type { MapData, Point } from './game/types';
+import type { MapData, Point } from '../types';
 // Actual OSM geometry and tags. Paint widths/road-side offsets are fitted to the game's 14m road surface.
 export function buildRoadMarkings(scene: T.Scene, d: MapData) {
   const groups = new Map<T.Material, T.BufferGeometry[]>();

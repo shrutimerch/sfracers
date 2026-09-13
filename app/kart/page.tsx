@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import type { HUD, MapData } from '../engine';
+import type { HUD, MapData } from '../../game/engine';
 const fmt = (s: number) =>
   `${Math.floor(s / 60)
     .toString()
@@ -8,7 +8,7 @@ const fmt = (s: number) =>
 export default function Home() {
   const canvas = useRef<HTMLCanvasElement>(null),
     mini = useRef<HTMLCanvasElement>(null),
-    engine = useRef<ReturnType<typeof import('../engine').makeGame> | null>(null);
+    engine = useRef<ReturnType<typeof import('../../game/engine').makeGame> | null>(null);
   const [error, setError] = useState(''),
     [hud, setHud] = useState<HUD>({
       mode: 'loading',
@@ -32,7 +32,7 @@ export default function Home() {
           r.ok ? (r.json() as Promise<{ googleMapsKey: string }>) : { googleMapsKey: '' },
         )
         .catch(() => ({ googleMapsKey: '' })),
-      import('../engine'),
+      import('../../game/engine'),
       fetch('/streets.json').then((r) => {
         if (!r.ok) throw Error('Could not load the street map. Please reload.');
         return r.json() as Promise<MapData>;

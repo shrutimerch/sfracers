@@ -1,7 +1,7 @@
 import * as T from 'three';
-import { KART_SCALE } from '../race-laps';
+import { KART_SCALE } from '../simulation/race-laps';
 import type { RaceWorld } from './world';
-import type { RaceRoute } from './route-math';
+import type { RaceRoute } from '../simulation/route-math';
 export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
   const { scene, cube, material, officeTextures } = world;
   const { total, at } = route;

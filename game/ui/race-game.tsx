@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import type { HUD, MapData } from './engine';
+import type { HUD, MapData } from '../engine';
 const fmt = (s: number) =>
   `${Math.floor(s / 60)
     .toString()
@@ -8,7 +8,7 @@ const fmt = (s: number) =>
 export default function RaceGame() {
   const canvas = useRef<HTMLCanvasElement>(null),
     mini = useRef<HTMLCanvasElement>(null),
-    engine = useRef<ReturnType<typeof import('./engine').makeGame> | null>(null);
+    engine = useRef<ReturnType<typeof import('../engine').makeGame> | null>(null);
   const [error, setError] = useState(''),
     [hud, setHud] = useState<HUD>({
       mode: 'loading',
@@ -28,7 +28,7 @@ export default function RaceGame() {
     const lifecycle = new AbortController();
     Promise.all([
       Promise.resolve({ googleMapsKey: '' }),
-      import('./engine'),
+      import('../engine'),
       fetch('/race-course.json').then((r) => {
         if (!r.ok) throw Error('Could not load the street map. Please reload.');
         return r.json() as Promise<MapData>;
