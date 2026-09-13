@@ -55,3 +55,14 @@ test('promenade follows downloaded pedestrian geometry, separate from traffic la
   assert.ok(path.points.some((p) => p[0] === 617.92 && p[1] === 343.81));
   assert.ok(!d.course.sections.some((s) => s.name === 'The Embarcadero'));
 });
+
+test('King follows the park-side carriageway without crossing Muni at the promenade exit', () => {
+  assert.deepEqual(d.paths[0].points.at(-1), [602.99, 482.15]);
+  const start = d.route.findIndex((p) => p[0] === 602.99 && p[1] === 482.15);
+  const end = d.route.findIndex((p) => p[0] === 290.8 && p[1] === 892.27);
+  assert.ok(start > 0 && end > start);
+  const king = d.route.slice(start, end + 1);
+  assert.ok(king.some((p) => p[0] === 596.76 && p[1] === 529.33));
+  assert.ok(king.some((p) => p[0] === 484.9 && p[1] === 693.43));
+  assert.ok(!king.some((p) => p[0] === 576.77 && p[1] === 478.56));
+});

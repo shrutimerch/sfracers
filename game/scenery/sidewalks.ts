@@ -146,7 +146,7 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
       };
       const steps = Math.ceil(len / 1.8);
       for (let j = 0; j < steps; j++)
-        for (const side of [-1, 1]) {
+        for (const side of road.name === 'King Street' ? [1] : [-1, 1]) {
           const t0 = j / steps,
             t1 = (j + 1) / steps,
             tm = (t0 + t1) / 2,

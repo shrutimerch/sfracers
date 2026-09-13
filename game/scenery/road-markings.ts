@@ -248,7 +248,9 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
           b = feature.points[i],
           len = Math.hypot(b[0] - a[0], b[1] - a[1]),
           angle = Math.atan2(b[1] - a[1], b[0] - a[0]),
-          offset = side.side * (side.kind === 'shared_lane' ? 3.5 : 5.55),
+          offset =
+            side.side *
+            (tags.name === 'King Street' ? 3.7 : side.kind === 'shared_lane' ? 3.5 : 5.55),
           nx = -Math.sin(angle) * offset,
           nz = Math.cos(angle) * offset,
           p = [(a[0] + b[0]) / 2 + nx, (a[1] + b[1]) / 2 + nz];
@@ -266,7 +268,8 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
           ],
           observedGreen = hasObservedGreenLane(tags.name, p);
         if (side.kind !== 'shared_lane') {
-          if (observedGreen) lines(points, 1.65, green, 0, 0.105, true);
+          if (observedGreen && tags.name !== 'King Street')
+            lines(points, 1.65, green, 0, 0.105, true);
           lines(points, 0.1, white, -0.9 * side.side, 0.14, true);
           if (side.kind === 'track') lines(points, 0.1, white, -1.45 * side.side, 0.14, true);
         }

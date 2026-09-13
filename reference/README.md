@@ -33,3 +33,16 @@ Camera label 551 3rd St, looking northeast into South Park. OSM footprint 124889
 ### Complete waterfront intersection pass
 `intersection-streetview.json` records 14 junctions, requested Street View camera coordinates, headings, visible imagery dates, and observations. Screenshots were captured and visually inspected in Google Maps during this session (including alleys and the promenade exit). A second Delancey capture replaced a 2015 panorama with a nearby May 2025 view; Varney was inspected in both directions. Coverage was checked against shared map nodes and geometric road crossings. This pass covers the waterfront circuit, not the longer VC alternative.
 Changes include corner facade colors/window patterns, De Boom's red shelter, paired Brannan waterfront lamps, double yellow farther along Brannan, green cycle paint where seen on King/Third, and shortening Third's red transit paint to north of Townsend. Source footprints and tagged bicycle facilities remain authoritative; fixture placements, facade elevations and small architectural details are approximations from the screenshots. Cycleway markings still stop at intersections per the requested game treatment, even where a source photo shows green crossing blocks. No temporary construction barriers, historical advertising or photographed fuel prices are added.
+
+## Oracle Park entrance reference
+
+`game/scenery/oracle-park.ts` uses the user-supplied Street View screenshot labeled 85 King St, May 2025, for the Second Street Gate: red brick, pale stone base and coping, tall dark window grids, corner clock tower, Oracle Park entrance lettering, and exposed steelwork. The OSM perimeter remains the location source; tower dimensions, clock time, banner artwork, and facade elevations are modeled approximations. The banner is a simplified Giants graphic, not a reproduction of the photographed advertisement.
+
+King Street update (September 2026): the supplied May 2025 Street View at 85 King St
+is the visual reference for the park-side carriageway. The course joins it at
+[602.99, 482.15] and stays on that mapped carriageway until Third Street; it no
+longer crosses the Muni median at the promenade exit. Each King carriageway is
+modeled as 9.6 m wide, with a narrow curbside bicycle lane, white lane divisions,
+intermittent green conflict-area paint, and a low green metal railing at the
+transit median. South Beach Park's street edge has red flowering beds. Widths,
+railing dimensions and planting detail are photo-based estimates, not a survey.

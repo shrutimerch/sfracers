@@ -7,6 +7,7 @@ import { hasRouteProfile } from '../scenery/config/route-profiles';
 import { buildSouthPark, isLocal } from '../scenery/south-park';
 import { buildSidewalks } from '../scenery/sidewalks';
 import { buildRoadMarkings } from '../scenery/road-markings';
+import { buildCityMotion } from '../scenery/city-motion';
 import { buildTrafficControls } from '../scenery/traffic-controls';
 import type { MapData, Facades, Point } from '../types';
 const distance = (a: Point, b: Point) => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -105,18 +106,10 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
     scene.add(mesh);
     return mesh;
   }
-  ribbons(
-    d.roads.filter((r) => r.name !== 'South Park').map((r) => r.points),
-    20,
-    '#b8b9b1',
-    0.015,
-  );
-  ribbons(
-    d.roads.filter((r) => r.name !== 'South Park').map((r) => r.points),
-    14,
-    '#686c68',
-    0.055,
-  );
+  for (const road of d.roads.filter((r) => r.name !== 'South Park')) {
+    ribbons([road.points], (road.width ?? 14) + 6, '#b8b9b1', 0.015);
+    ribbons([road.points], road.width ?? 14, '#686c68', 0.055);
+  }
   for (const r of d.roads.filter((r) => r.name === 'South Park'))
     ribbons([r.points], (r.width ?? 9.8) + 3.7, '#b8b9b1', 0.015);
   // Promenade is a separate paved racing surface, not an asphalt traffic lane.
@@ -138,7 +131,9 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   // Road markings are aligned with the downloaded centerlines.
   const stripes: T.Matrix4[] = [];
   const temp = new T.Object3D();
-  for (const road of d.roads.filter((r) => r.name !== 'South Park' && r.name !== '2nd Street')) {
+  for (const road of d.roads.filter(
+    (r) => r.name !== 'South Park' && r.name !== '2nd Street' && r.name !== 'King Street',
+  )) {
     for (let i = 1; i < road.points.length; i++) {
       const a = road.points[i - 1],
         b = road.points[i],
@@ -274,6 +269,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   const disposeMarkings = buildRoadMarkings(scene, d);
   const disposeTraffic = buildTrafficControls(scene, d);
 
+  const cityMotion = buildCityMotion(scene, d);
   const scenery = new T.Group();
   // Reparenting removes children from scene; iterate a snapshot, not the live array.
   for (const o of scene.children.slice())
@@ -285,6 +281,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
     camera,
     scenery,
     officeTextures,
+    cityMotion,
     cube,
     material,
     disposeTextures() {

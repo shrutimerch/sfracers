@@ -6,10 +6,10 @@ raw={w['id']:w for w in json.loads(Path('public/waterfront-paths-osm.json').read
 def projected(wid):return [[round((g['lon']+122.395)*87900,2),round((37.786-g['lat'])*111200,2)] for g in raw[wid]['geometry']]
 entry=list(reversed(projected(162324920)))
 walk=list(reversed(projected(196662101)));walk=walk[walk.index([632.55,141.86]):]
-exit=projected(740061019);exit=exit[:exit.index([576.77,478.56])+1]
+exit=projected(740061019);exit=exit[:exit.index([602.99,482.15])+1]
 promenade=entry+walk[1:]+exit[1:]
 d['paths']=[{'name':'Waterfront Promenade','points':promenade,'width':10,'sourceWayIds':[162324920,196662101,740061019]}]
-legs=[('South Park',(-7.71,588.26),(186.72,392.26)),('2nd Street',(186.72,392.26),(255.89,460.18)),('Brannan Street',(255.89,460.18),(624.42,141.02)),('Waterfront Promenade',(624.42,141.02),(576.77,478.56)),('King Street',(576.77,478.56),(268.55,869.84)),('3rd Street',(268.55,869.84),(-7.71,588.26))]
+legs=[('South Park',(-7.71,588.26),(186.72,392.26)),('2nd Street',(186.72,392.26),(255.89,460.18)),('Brannan Street',(255.89,460.18),(624.42,141.02)),('Waterfront Promenade',(624.42,141.02),(602.99,482.15)),('King Street',(602.99,482.15),(290.8,892.27)),('3rd Street',(290.8,892.27),(-7.71,588.26))]
 route=[];sections=[];length=0
 for name,start,end in legs:
  graph={}

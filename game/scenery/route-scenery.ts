@@ -1,3 +1,4 @@
+import { buildOraclePark } from './oracle-park';
 import { SCENERY_LOCATIONS, ROAD_APPEARANCE } from './config/scenery-locations';
 import { courtyardPaths } from './data/brannan-courtyard-data';
 import { palmGeometry } from './geometry/palm-geometry';
@@ -351,61 +352,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     }
   }
   cb(10, 3, 1.35, 3.3, 1.2, 0.38, courtStone);
-  // Oracle Park's mapped perimeter locates its facade; elevations and bay spacing are visual estimates.
-  const stadiumBrick = mat('#985b49'),
-    stadiumGlass = mat('#40575b');
-  for (const stadium of survey.stadium) {
-    for (let i = 1; i < stadium.points.length; i++) {
-      const a = stadium.points[i - 1],
-        b = stadium.points[i],
-        mx = (a[0] + b[0]) / 2,
-        mz = (a[1] + b[1]) / 2;
-      if (routeDistance(mx, mz) > 90) continue;
-      const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-      if (len < 3) continue;
-      const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
-      box(mx, 10, mz, len, 20, 2, stadiumBrick, angle);
-      box(mx, 15, mz, len, 0.65, 2.3, pale, angle);
-      box(mx, 20, mz, len, 0.7, 2.5, pale, angle);
-      const bays = Math.max(1, Math.round(len / 7)),
-        step = len / bays;
-      for (let j = 0; j < bays; j++) {
-        const u = (j + 0.5) * step,
-          x = a[0] + Math.cos(angle) * u,
-          z = a[1] + Math.sin(angle) * u;
-        box(x, 9, z, step * 0.57, 12, 2.12, stadiumGlass, angle);
-        for (let k = 0; k < 6; k++) box(x, 3 + k * 2, z, step * 0.58, 0.09, 2.2, dark, angle);
-        box(x, 9, z, 0.12, 12, 2.25, dark, angle);
-        box(
-          a[0] + Math.cos(angle) * j * step,
-          10,
-          a[1] + Math.sin(angle) * j * step,
-          0.5,
-          20,
-          2.4,
-          pale,
-          angle,
-        );
-      }
-      // Open steel upper tier, kept open rather than filling the whole stadium with a solid block.
-      box(mx, 25, mz, len, 0.25, 2, dark, angle);
-      for (let u = 0; u < len; u += 8) {
-        const x = a[0] + Math.cos(angle) * u,
-          z = a[1] + Math.sin(angle) * u;
-        rod(new T.Vector3(x, 20, z), new T.Vector3(x, 30, z), 0.15, dark);
-        rod(
-          new T.Vector3(x, 20, z),
-          new T.Vector3(
-            x + Math.cos(angle) * Math.min(8, len - u),
-            30,
-            z + Math.sin(angle) * Math.min(8, len - u),
-          ),
-          0.09,
-          dark,
-        );
-      }
-    }
-  }
+  const disposeOraclePark = buildOraclePark(scene, survey.stadium, facades, routeDistance);
   const inPolygon = (p: Point, pts: Point[]) => {
     let inside = false;
     for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
@@ -565,19 +512,76 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       }
     }
   }
-  const flowering = mat('#75644f');
-  for (let i = 1; i < southBeach.points.length; i++) {
+  // Low red flowering beds along South Beach Park's King Street frontage (photo estimate).
+  const flowering = ['#b92332', '#d6323e', '#a51f2d'].map(mat);
+  for (let i = 1; i < 13; i++) {
     const a = southBeach.points[i - 1],
-      b = southBeach.points[i],
-      len = Math.hypot(b[0] - a[0], b[1] - a[1]);
-    if (routeDistance((a[0] + b[0]) / 2, (a[1] + b[1]) / 2) > 35) continue;
-    for (let u = 0.6; u < len; u += 1.1) {
-      const x = a[0] + ((b[0] - a[0]) * u) / len,
-        z = a[1] + ((b[1] - a[1]) * u) / len,
-        g = new T.SphereGeometry(1, 10, 7);
-      g.scale(0.72, 0.45, 0.7);
-      g.translate(x, beachHeight(x, z) + 0.4, z);
-      add(g, flowering);
+      b = southBeach.points[i];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    const nx = -(b[1] - a[1]) / len,
+      nz = (b[0] - a[0]) / len;
+    for (let u = 0.3; u < len; u += 0.75) {
+      for (let row = 0; row < 3; row++) {
+        const x = a[0] + ((b[0] - a[0]) * u) / len + nx * (0.7 + row * 0.65);
+        const z = a[1] + ((b[1] - a[1]) * u) / len + nz * (0.7 + row * 0.65);
+        const h = beachHeight(x, z);
+        const shrub = new T.IcosahedronGeometry(1, 1);
+        shrub.scale(0.55, 0.32, 0.5);
+        shrub.translate(x, h + 0.27, z);
+        add(shrub, leaf);
+        for (let j = 0; j < 5; j++) {
+          const bloom = new T.IcosahedronGeometry(0.15, 0);
+          bloom.scale(1.2, 0.6, 1);
+          bloom.translate(
+            x + Math.cos(j * 2.4) * 0.32,
+            h + 0.5 + (j % 2) * 0.09,
+            z + Math.sin(j * 2.4) * 0.3,
+          );
+          add(bloom, flowering[(i + j + row) % flowering.length]);
+        }
+      }
+    }
+  }
+  // Each King centerline is one carriageway. The green railing borders the Muni median,
+  // while the outside curb carries a narrow bike lane with green junction blocks.
+  const barrierGreen = mat('#326c61'),
+    laneWhite = mat('#e4e2d8'),
+    bikeGreen = mat('#79ac48');
+  const nearCrossStreet = (x: number, z: number) =>
+    d.roads.some(
+      (r) => r.name !== 'King Street' && r.points.some((p) => Math.hypot(p[0] - x, p[1] - z) < 12),
+    );
+  for (const road of d.roads.filter((r) => r.name === 'King Street')) {
+    for (let i = 1; i < road.points.length; i++) {
+      const a = road.points[i - 1],
+        b = road.points[i];
+      const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      const at = (u: number, offset: number) => [
+        a[0] + Math.cos(angle) * u - Math.sin(angle) * offset,
+        a[1] + Math.sin(angle) * u + Math.cos(angle) * offset,
+      ];
+      for (let u = 0; u < length; u += 2.5) {
+        const span = Math.min(2.5, length - u),
+          p = at(u + span / 2, -5.05);
+        if (nearCrossStreet(p[0], p[1])) continue;
+        box(p[0], 0.16, p[1], span, 0.22, 0.35, pale, angle);
+        for (const h of [0.4, 0.76, 1.1])
+          box(p[0], h, p[1], span, 0.055, 0.055, barrierGreen, angle);
+        const post = at(u, -5.05);
+        box(post[0], 0.64, post[1], 0.09, 1.18, 0.09, barrierGreen, angle);
+      }
+      for (let u = 1; u < length; u += 8) {
+        const p = at(u, -0.8);
+        if (!nearCrossStreet(p[0], p[1]))
+          box(p[0], 0.09, p[1], Math.min(3, length - u), 0.015, 0.13, laneWhite, angle);
+      }
+      // Photo shows intermittent green rectangles where turning vehicles cross the bike lane.
+      for (let u = 1; u < length; u += 5) {
+        const p = at(u, 3.7);
+        if (nearCrossStreet(p[0], p[1]))
+          box(p[0], 0.11, p[1], Math.min(2.7, length - u), 0.018, 1.65, bikeGreen, angle);
+      }
     }
   }
   for (const art of survey.art) {
@@ -694,5 +698,8 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     scene.add(mesh);
     gs.forEach((g) => g.dispose());
   }
-  return () => groundGrass.texture.dispose();
+  return () => {
+    groundGrass.texture.dispose();
+    disposeOraclePark();
+  };
 }
