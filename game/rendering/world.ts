@@ -1,3 +1,5 @@
+import { EMBARCADERO_LAYOUT } from '../scenery/config/embarcadero-layout';
+import { buildEmbarcaderoStreetscape } from '../scenery/embarcadero-streetscape';
 import { createBayWater } from '../scenery/bay-water';
 import { DELANCEY_PATIO_ID } from '../scenery/delancey-street';
 import { HARBOR_BUILDING_IDS } from '../scenery/harbor-buildings';
@@ -146,7 +148,12 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
       for (let t = 4; t < len; t += 15) {
         const stripeX = a[0] + ((b[0] - a[0]) * t) / len;
         if (road.name === 'Brannan Street' && hasBrannanDoubleYellow(stripeX)) continue;
-        temp.position.set(a[0] + ((b[0] - a[0]) * t) / len, 0.08, a[1] + ((b[1] - a[1]) * t) / len);
+        const divider = road.name === 'The Embarcadero' ? EMBARCADERO_LAYOUT.divider : 0;
+        temp.position.set(
+          a[0] + ((b[0] - a[0]) * t) / len - ((b[1] - a[1]) / len) * divider,
+          0.08,
+          a[1] + ((b[1] - a[1]) * t) / len + ((b[0] - a[0]) / len) * divider,
+        );
         temp.rotation.set(0, -Math.atan2(b[1] - a[1], b[0] - a[0]), 0);
         temp.scale.set(Math.min(4, len - t), 0.015, 0.17);
         temp.updateMatrix();
@@ -274,6 +281,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   const disposeBikeStations = buildBikeStations(scene, d.bikeStations || []);
 
   const cityMotion = buildCityMotion(scene, d);
+  const curbside = buildEmbarcaderoStreetscape(scene, d);
   const scenery = new T.Group();
   // Reparenting removes children from scene; iterate a snapshot, not the live array.
   for (const o of scene.children.slice())
@@ -286,6 +294,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
     scenery,
     officeTextures,
     cityMotion,
+    trafficObstacles: [...cityMotion.obstacles, ...curbside.obstacles],
     cube,
     material,
     disposeTextures() {

@@ -83,7 +83,7 @@ export function makeGame(
     sim.step(
       dt,
       (!google || google.ready) && !google?.error,
-      scenery.visible ? world.cityMotion.obstacles : [],
+      scenery.visible ? world.trafficObstacles : [],
     );
     const state = sim.state,
       { mode, x, z, angle, speed, time, boost, cp, lap, count, drifting, progress, street } = state;

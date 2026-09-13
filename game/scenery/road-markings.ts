@@ -1,3 +1,4 @@
+import { EMBARCADERO_LAYOUT } from './config/embarcadero-layout';
 import { hasBrannanDoubleYellow, hasObservedGreenLane } from './config/scenery-locations';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -283,11 +284,13 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
           angle = Math.atan2(b[1] - a[1], b[0] - a[0]),
           offset =
             side.side *
-            (tags.name === 'King Street' || tags.name === 'The Embarcadero'
-              ? 3.7
-              : side.kind === 'shared_lane'
-                ? 3.5
-                : 5.55),
+            (tags.name === 'The Embarcadero'
+              ? EMBARCADERO_LAYOUT.bikeCenter
+              : tags.name === 'King Street'
+                ? 3.7
+                : side.kind === 'shared_lane'
+                  ? 3.5
+                  : 5.55),
           nx = -Math.sin(angle) * offset,
           nz = Math.cos(angle) * offset,
           p = [(a[0] + b[0]) / 2 + nx, (a[1] + b[1]) / 2 + nz];
@@ -308,6 +311,10 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
           if (observedGreen && (appearance.green === true || tags.name !== 'King Street'))
             lines(points, 1.65, green, 0, 0.105, true);
           lines(points, 0.1, white, -0.9 * side.side, 0.14, true);
+          if (tags.name === 'The Embarcadero')
+            lines(points, 0.1, white, 0.9 * side.side, 0.14, true);
+          if (tags.name === 'The Embarcadero' && b[1] > a[1])
+            lines(points, 0.1, white, 1.6 * side.side, 0.14, true);
           if (appearance.buffered || appearance.protected) {
             lines(points, 0.1, white, -1.45 * side.side, 0.14, true);
             for (let u = 2; u < len - 2; u += 4) {

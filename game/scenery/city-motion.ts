@@ -133,7 +133,12 @@ export function buildCityMotion(scene: T.Scene, data: MapData) {
     .filter((r) => motionPath(r.points).length > 100)
     .slice(0, 8)
     .forEach((road, i) => {
-      const { group } = add(road.points, 6 + (i % 3), 0.2 + (i % 3) * 0.25, carLaneOffset);
+      const { group } = add(
+        road.points,
+        6 + (i % 3),
+        0.2 + (i % 3) * 0.25,
+        road.name === 'The Embarcadero' ? -0.1 : carLaneOffset,
+      );
       group.name = 'Ambient car';
       box(group, ['#345c78', '#e1d7bc', '#ad493e', '#53645c'][i % 4], 0, 0.7, 0, 4.3, 0.85, 1.85);
       box(group, '#344852', -0.2, 1.32, 0, 2.3, 0.65, 1.65);

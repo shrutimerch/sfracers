@@ -1,3 +1,4 @@
+import { EMBARCADERO_LAYOUT } from './config/embarcadero-layout.ts';
 import data from './data/road-marking-data.ts';
 import { bicycleSides, bicycleAppearance, type Tags } from './road-marking-rules.ts';
 import type { MapData, Point } from '../types';
@@ -32,10 +33,12 @@ export function cyclingStrips(_d: MapData): CyclingStrip[] {
 function bikeOffset(feature: { tags: Tags }, side: { side: number; kind: string }) {
   return (
     side.side *
-    (feature.tags.name === 'King Street' || feature.tags.name === 'The Embarcadero'
-      ? 3.7
-      : side.kind === 'shared_lane'
-        ? 3.5
-        : 5.55)
+    (feature.tags.name === 'The Embarcadero'
+      ? EMBARCADERO_LAYOUT.bikeCenter
+      : feature.tags.name === 'King Street'
+        ? 3.7
+        : side.kind === 'shared_lane'
+          ? 3.5
+          : 5.55)
   );
 }

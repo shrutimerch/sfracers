@@ -1,5 +1,6 @@
 import { isEastParkEntrance, isWestParkEntrance } from '../scenery/south-park-parking.ts';
 import type { MapData } from '../types';
+import { EMBARCADERO_LAYOUT, hasEmbarcaderoParking } from '../scenery/config/embarcadero-layout.ts';
 // Preserve imported data; wider entrance surfaces accommodate the reference-based parking bays.
 export function prepareCourse(data: MapData): MapData {
   return {
@@ -7,9 +8,11 @@ export function prepareCourse(data: MapData): MapData {
     roads: data.roads.map((r) =>
       isEastParkEntrance(r) || isWestParkEntrance(r)
         ? { ...r, width: 14.8 }
-        : r.name === 'King Street' || r.name === 'The Embarcadero'
-          ? { ...r, width: 9.6 }
-          : r,
+        : hasEmbarcaderoParking(r)
+          ? { ...r, width: EMBARCADERO_LAYOUT.roadWidth }
+          : r.name === 'King Street' || r.name === 'The Embarcadero'
+            ? { ...r, width: 9.6 }
+            : r,
     ),
   };
 }

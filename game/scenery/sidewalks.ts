@@ -1,7 +1,7 @@
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { MapData, Point } from '../types';
-import { buildSidewalkScooters, type ScooterPlacement } from './sidewalk-scooters';
+import { buildSidewalkScooters, type ScooterPlacement } from './sidewalk-scooters.ts';
 
 // A first detailed streetscape pass: real centerlines, representative SF concrete and fixtures.
 export function buildSidewalks(scene: T.Scene, d: MapData) {
@@ -100,9 +100,14 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
   const scooters: ScooterPlacement[] = [];
   for (const road of d.roads) {
     if (
-      !['South Park', '2nd Street', 'Brannan Street', 'King Street', '3rd Street'].includes(
-        road.name,
-      )
+      ![
+        'South Park',
+        '2nd Street',
+        'Brannan Street',
+        'King Street',
+        '3rd Street',
+        'The Embarcadero',
+      ].includes(road.name)
     )
       continue;
     const pts = road.points,
@@ -148,13 +153,20 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
       };
       const steps = Math.ceil(len / 1.8);
       for (let j = 0; j < steps; j++)
-        for (const side of road.name === 'King Street' ? [1] : [-1, 1]) {
+        for (const side of road.name === 'King Street' || road.name === 'The Embarcadero'
+          ? [1]
+          : [-1, 1]) {
           const t0 = j / steps,
             t1 = (j + 1) / steps,
             tm = (t0 + t1) / 2,
             center = at(tm, side * (half + width / 2));
           if (
-            !d.route.slice(1).some((p, i) => distanceTo(center, d.route[i], p) < 28) &&
+            !d.route
+              .slice(1)
+              .some(
+                (p, i) =>
+                  distanceTo(center, d.route[i], p) < (road.name === 'The Embarcadero' ? 50 : 28),
+              ) &&
             Math.hypot(center[0] - 90, center[1] - 490) > 155
           )
             continue;
