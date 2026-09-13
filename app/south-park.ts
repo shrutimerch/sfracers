@@ -1,3 +1,4 @@
+import {parkParking} from './south-park-parking';
 import {parkGrass} from './park-ground';
 import {hasRouteProfile} from './route-profiles';
 import playgroundSource from './playground-geometry';
@@ -31,7 +32,7 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  const texturedSlab=(pts:Point[],m:T.Material,y:number)=>{const shape=new T.Shape(pts.map(([x,z])=>new T.Vector2(x,-z)));const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);g.translate(0,y,0);const uv=g.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)/9,uv.getY(i)/9);add(g,m);};
  const park=d.parks![0];texturedSlab(park,grass,.13);strip(park,.34,edge,.22);
  // South Park's residential carriageway is much narrower than the surrounding arterials.
- for(const road of d.roads.filter(r=>r.name==='South Park'))strip(road.points,9.8,asphalt,.065);
+ for(const road of d.roads.filter(r=>r.name==='South Park'))strip(road.points,road.width??9.8,asphalt,.065);
  // Pale staggered unit paving is visible at both entrance necks in survey views 1 and 6.
  const pavers=['#a8a38f','#b1ab97','#b8b29f','#a9a690'].map(mat);
  for(const road of d.roads.filter(r=>r.name==='South Park'&&r.points.length<8)){
@@ -124,9 +125,10 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
    if(b.address==='164'){const fins=mat('#784536');for(let u=.15;u<len;u+=.42)detail(u,b.height/2,.12,b.height,.5,fins,.4);}
   }
  }
- // Parked cars occupy the outside curb; the clear racing line stays on the road.
- const route=d.route;let travelled=0;
- for(let i=1;i<route.length;i++){const a=route[i-1],b=route[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]),ang=Math.atan2(b[1]-a[1],b[0]-a[0]);for(let s=4;s<len-3;s+=9){travelled++;if(travelled%3===0||Math.hypot(a[0]-90,a[1]-490)>125)continue;const mid=new T.Vector2(a[0]+Math.cos(ang)*s,a[1]+Math.sin(ang)*s);let nx=-Math.sin(ang),nz=Math.cos(ang);if((mid.x-90)*nx+(mid.y-490)*nz<0){nx=-nx;nz=-nz;}const x=mid.x+nx*3.5,z=mid.y+nz*3.5,body=mat(['#dadbd5','#343b42','#afb3b1','#243c4a','#6e3431'][travelled%5]);box(x,.65,z,4.2,.75,1.75,body,ang);box(x,1.18,z,2.2,.62,1.5,glass,ang);box(x,1.53,z,2.2,.06,1.53,body,ang);for(const dx of [-1.25,1.25])for(const dz of [-.84,.84]){const q=new T.Vector3(x+Math.cos(ang)*dx-Math.sin(ang)*dz,.42,z+Math.sin(ang)*dx+Math.cos(ang)*dz);ellipsoid(q.x,q.y,q.z,.32,.32,.26,dark);}}
+ // Parking follows South Park itself, independent of which race route is selected.
+ let carIndex=0;for(const car of parkParking(d.roads)){const {x,z,angle:ang}=car,body=mat(['#dadbd5','#343b42','#afb3b1','#243c4a','#6e3431'][carIndex++%5]);box(x,.65,z,4.2,.75,1.75,body,ang);box(x-Math.cos(ang)*.22,1.18,z-Math.sin(ang)*.22,2.2,.62,1.5,glass,ang);box(x-Math.cos(ang)*.22,1.53,z-Math.sin(ang)*.22,2.2,.06,1.53,body,ang);
+  for(const dx of [-1.25,1.25])for(const dz of [-.84,.84]){const q=new T.Vector3(x+Math.cos(ang)*dx-Math.sin(ang)*dz,.42,z+Math.sin(ang)*dx+Math.cos(ang)*dz);ellipsoid(q.x,q.y,q.z,.32,.32,.26,dark);}
+  for(const side of [-1,1]){box(x+Math.cos(ang)*2.11-Math.sin(ang)*side*.58,.75,z+Math.sin(ang)*2.11+Math.cos(ang)*side*.58,.035,.18,.3,concrete,ang);box(x-Math.cos(ang)*2.11-Math.sin(ang)*side*.58,.75,z-Math.sin(ang)*2.11+Math.cos(ang)*side*.58,.035,.18,.3,mat('#963f35'),ang);}
  }
  for(const [m,geoms] of groups){if(!geoms.length)continue;const g=mergeGeometries(geoms,false);const mesh=new T.Mesh(g,m);mesh.castShadow=m!==grass&&m!==asphalt&&m!==gravel;mesh.receiveShadow=true;scene.add(mesh);geoms.forEach(g=>g.dispose());}
  return ()=>textures.forEach(t=>t.dispose());

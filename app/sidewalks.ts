@@ -11,12 +11,12 @@ export function buildSidewalks(scene:T.Scene,d:MapData){
  const box=(x:number,y:number,z:number,l:number,h:number,w:number,m:T.Material,a=0)=>{const g=new T.BoxGeometry(l,h,w);g.rotateY(-a);g.translate(x,y,z);add(g,m);};
  const quad=(a:Point,b:Point,c:Point,e:Point,ya:number,yb:number,m:T.Material)=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([a[0],ya,a[1],b[0],yb,b[1],c[0],ya,c[1],b[0],yb,b[1],e[0],yb,e[1],c[0],ya,c[1]],3));g.computeVertexNormals();add(g,m);};
  const distanceTo=(p:Point,a:Point,b:Point)=>{const dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dz)/(dx*dx+dz*dz||1)));return Math.hypot(p[0]-a[0]-dx*t,p[1]-a[1]-dz*t);};
- const all=d.roads.flatMap(r=>r.points.slice(1).map((b,i)=>({name:r.name,a:r.points[i],b,half:r.name==='South Park'?4.9:7})));
+ const all=d.roads.flatMap(r=>r.points.slice(1).map((b,i)=>({name:r.name,a:r.points[i],b,half:(r.width??(r.name==='South Park'?9.8:14))/2})));
  const park=d.parks?.[0]||[];
  const inPark=(p:Point)=>{let inside=false;for(let i=0,j=park.length-1;i<park.length;j=i++){const a=park[i],b=park[j];if((a[1]>p[1])!==(b[1]>p[1])&&p[0]<(b[0]-a[0])*(p[1]-a[1])/(b[1]-a[1])+a[0])inside=!inside;}return inside;};
  let count=0;
  for(const road of d.roads){if(!['South Park','2nd Street','Brannan Street','King Street','3rd Street'].includes(road.name))continue;
-  const pts=road.points,half=road.name==='South Park'?4.9:7,width=road.name==='South Park'?1.9:3;
+  const pts=road.points,half=(road.width??(road.name==='South Park'?9.8:14))/2,width=road.name==='South Park'?1.9:3;
   const others=all.filter(s=>s.name!==road.name);
   const clearance=(p:Point)=>{let value=100;for(const s of others){if(Math.min(s.a[0],s.b[0])-15>p[0]||Math.max(s.a[0],s.b[0])+15<p[0]||Math.min(s.a[1],s.b[1])-15>p[1]||Math.max(s.a[1],s.b[1])+15<p[1])continue;value=Math.min(value,distanceTo(p,s.a,s.b)-s.half);}return value;};
   const normal=(i:number)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)],len=Math.hypot(b[0]-a[0],b[1]-a[1])||1;return [-(b[1]-a[1])/len,(b[0]-a[0])/len];};

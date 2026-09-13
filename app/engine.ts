@@ -1,3 +1,4 @@
+import {isEastParkEntrance} from './south-park-parking';
 import {buildRouteScenery} from './route-scenery';
 import {hasRouteProfile} from './route-profiles';
 import {buildTrafficControls,type TrafficNode} from './traffic-controls';
@@ -9,7 +10,7 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {buildingGeometry,type Building,type FacadeKind} from './building-geometry';
 export type Point=number[];
-export type MapData={trafficControls?:TrafficNode[];course?:{landmarks?:{name:string;address:string;position:Point;height:number}[];name:string;length:number;sections:{name:string;start:number;length:number}[]};paths?:{name:string;points:Point[];width:number}[];roads:{name:string;points:Point[]}[];route:Point[];buildings:Building[];coast?:Point[][];parks?:Point[][];parkDetails?:{trees:Point[];paths:{id:number;points:Point[];crossing:boolean;sidewalk:boolean}[]}};
+export type MapData={trafficControls?:TrafficNode[];course?:{landmarks?:{name:string;address:string;position:Point;height:number}[];name:string;length:number;sections:{name:string;start:number;length:number}[]};paths?:{name:string;points:Point[];width:number}[];roads:{name:string;points:Point[];width?:number}[];route:Point[];buildings:Building[];coast?:Point[][];parks?:Point[][];parkDetails?:{trees:Point[];paths:{id:number;points:Point[];crossing:boolean;sidewalk:boolean}[]}};
 export type HUD={mode:string;speed:number;time:number;boost:number;progress:number;street:string;position:number;count:number;drift:boolean;camera:string;scenery?:string;sceneryError?:string;credits?:string};
 const distance=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
 export type Facades=Record<FacadeKind,T.Texture>;
@@ -20,12 +21,14 @@ export async function loadFacades():Promise<Facades>{
  return Object.fromEntries(entries) as Facades;
 }
 export function makeGame(canvas:HTMLCanvasElement,mini:HTMLCanvasElement,d:MapData,update:(h:HUD)=>void,facades:Facades,googleKey=''){
+// Widen the photographed entrance to fit nose-in parking and a clear center aisle.
+d={...d,roads:d.roads.map(r=>isEastParkEntrance(r)?{...r,width:14.8}:r)};
 const renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor('#becbcf');renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
 const scene=new T.Scene();scene.fog=new T.Fog('#becbcf',450,1800);const camera=new T.PerspectiveCamera(65,1,.15,2800);scene.add(new T.HemisphereLight('#e3e8e7','#707267',1.65));const sun=new T.DirectionalLight('#fff3dc',2.0);sun.position.set(-160,240,-80);sun.position.set(-70,160,370);sun.target.position.set(90,0,490);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-155,right:155,top:155,bottom:-155,near:1,far:600});sun.shadow.normalBias=.08;scene.add(sun,sun.target);
 const material=(color:T.ColorRepresentation)=>new T.MeshStandardMaterial({color,roughness:.85});const ground=new T.Mesh(new T.PlaneGeometry(6500,6500),material('#abaea5'));ground.rotation.x=-Math.PI/2;ground.position.y=-.2;scene.add(ground);
 const boxGeo=new T.BoxGeometry(1,1,1);const cube=(parent:T.Object3D,x:number,y:number,z:number,sx:number,sy:number,sz:number,color:T.ColorRepresentation)=>{const m=new T.Mesh(boxGeo,material(color));m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m;};
 function ribbons(lines:Point[][],width:number,color:string,y:number){const vertices:number[]=[];for(const points of lines)for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],len=distance(a,b);if(!len)continue;const nx=-(b[1]-a[1])/len*width/2,nz=(b[0]-a[0])/len*width/2;vertices.push(a[0]+nx,y,a[1]+nz,b[0]+nx,y,b[1]+nz,a[0]-nx,y,a[1]-nz,b[0]+nx,y,b[1]+nz,b[0]-nx,y,b[1]-nz,a[0]-nx,y,a[1]-nz);}const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();const mat=material(color);mat.side=T.DoubleSide;const mesh=new T.Mesh(geo,mat);scene.add(mesh);return mesh;}
-ribbons(d.roads.filter(r=>r.name!=='South Park').map(r=>r.points),20,'#b8b9b1',.015);ribbons(d.roads.filter(r=>r.name!=='South Park').map(r=>r.points),14,'#686c68',.055);ribbons(d.roads.filter(r=>r.name==='South Park').map(r=>r.points),13.5,'#b8b9b1',.015);
+ribbons(d.roads.filter(r=>r.name!=='South Park').map(r=>r.points),20,'#b8b9b1',.015);ribbons(d.roads.filter(r=>r.name!=='South Park').map(r=>r.points),14,'#686c68',.055);for(const r of d.roads.filter(r=>r.name==='South Park'))ribbons([r.points],(r.width??9.8)+3.7,'#b8b9b1',.015);
 // Promenade is a separate paved racing surface, not an asphalt traffic lane.
 for(const path of d.paths||[]){ribbons([path.points],path.width+1,'#b6b1a2',.025);ribbons([path.points],path.width,'#a6a397',.075);for(let i=1;i<path.points.length;i++){const a=path.points[i-1],b=path.points[i],len=distance(a,b);for(let t=2;t<len;t+=4){const x=a[0]+(b[0]-a[0])*t/len,z=a[1]+(b[1]-a[1])*t/len;const seam=cube(scene,x,.08,z,.055,.008,path.width,'#777b74');seam.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0]);}}}
 // Road markings are aligned with the downloaded centerlines.
