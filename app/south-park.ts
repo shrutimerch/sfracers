@@ -27,7 +27,7 @@ export function buildSouthPark(scene:T.Scene,d:MapData){
  const texturedSlab=(pts:Point[],m:T.Material,y:number)=>{const shape=new T.Shape(pts.map(([x,z])=>new T.Vector2(x,-z)));const g=new T.ShapeGeometry(shape);g.rotateX(-Math.PI/2);g.translate(0,y,0);const uv=g.getAttribute('uv');for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)/9,uv.getY(i)/9);add(g,m);};
  const park=d.parks![0];texturedSlab(park,grass,.13);strip(park,.34,edge,.22);
  // South Park's residential carriageway is much narrower than the surrounding arterials.
- strip(d.route,9.8,asphalt,.065);
+ for(const road of d.roads.filter(r=>r.name==='South Park'))strip(road.points,9.8,asphalt,.065);
  // The park boundary and paths sit over the road's inner edge, following actual survey points.
  texturedSlab(park,grass,.16);strip(park,.32,edge,.25);
  for(const path of d.parkDetails?.paths||[]){
