@@ -11,6 +11,7 @@ export function startSignal(mode: string, count: number, time: number) {
 export function createStartMarshal(scene: T.Scene, start: { x: number; z: number; a: number }) {
   const root = new T.Group();
   root.name = 'Turtle on a cloud — race starter';
+  root.scale.setScalar(0.48);
   root.rotation.y = -start.a - Math.PI / 2;
   scene.add(root);
   const sphere = new T.SphereGeometry(1, 20, 14);
@@ -69,7 +70,7 @@ export function createStartMarshal(scene: T.Scene, start: { x: number; z: number
     root.position.set(
       start.x,
       groundHeight +
-        5.2 +
+        4.8 +
         Math.sin(elapsed * 2.5) * 0.12 +
         (signal === 2 ? Math.max(0, time - 1) * 3 : 0),
       start.z,

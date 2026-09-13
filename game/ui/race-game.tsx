@@ -219,9 +219,11 @@ export default function RaceGame() {
               <span>{['', 'st', 'nd', 'rd', 'th'][hud.position] || 'th'}</span>
             </div>
             <RaceStandings order={hud.standings ?? raceRoster(character)} player={character} />
-            <div className="lap-counter">
-              LAP <b>{hud.lap}</b>
-              <span> / {RACE_LAPS}</span>
+            <div className="lap-counter" aria-label={`Lap ${hud.lap} of ${RACE_LAPS}`}>
+              <span className="lap-label">LAP</span>
+              <b>{hud.lap}</b>
+              <span className="lap-slash">/</span>
+              <span className="lap-total">{RACE_LAPS}</span>
             </div>
           </>
         )}

@@ -1781,3 +1781,89 @@ footer a {
   font-size: 13px;
   color: #d5e8ee;
 }
+
+.arcade-game .lap-counter {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  left: 32px;
+  bottom: 36px;
+  transform: skewX(-10deg);
+  text-shadow: none;
+}
+.arcade-game .lap-counter b,
+.arcade-game .lap-counter span {
+  font-family: 'Super Mario 256', 'Luckiest Guy', sans-serif;
+  font-weight: 400;
+  line-height: 1.1;
+  background: linear-gradient(#e2ff64 8%, #a7ee32 40%, #64cc21 72%, #30a519 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 4px #090b08;
+  paint-order: stroke fill;
+  text-shadow: none;
+}
+.arcade-game .lap-counter .lap-label {
+  font-size: 38px;
+  margin-right: 5px;
+}
+.arcade-game .lap-counter .lap-slash {
+  font-size: 52px;
+}
+.arcade-game .lap-counter .lap-total {
+  font-size: 34px;
+  align-self: flex-end;
+  transform: rotate(9deg);
+}
+@media (max-width: 700px) {
+  .arcade-game .lap-counter { gap: 4px; left: 18px; bottom: 157px; }
+  .arcade-game .lap-counter .lap-label { font-size: 25px; }
+  .arcade-game .lap-counter .lap-slash { font-size: 34px; }
+  .arcade-game .lap-counter .lap-total { font-size: 23px; }
+  .arcade-game .lap-counter b,
+  .arcade-game .lap-counter span { -webkit-text-stroke-width: 3px; }
+}
+
+/* Large retro speed lettering without a background panel. */
+.arcade-game .speed b,
+.arcade-game .speed > span {
+  font-family: 'Super Mario 256', 'Luckiest Guy', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  color: #ffe33e;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 3px #090b08;
+  paint-order: stroke fill;
+  background: linear-gradient(to bottom, #fff45c 12%, #ffdd24 42%, #ffb514 68%, #ee8d08 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  border-radius: 8px;
+  text-shadow: none;
+  filter: none;
+  letter-spacing: 0;
+}
+.arcade-game .speed b {
+  font-size: 78px;
+  padding: 4px 10px;
+}
+.arcade-game .speed > span {
+  font-size: 24px;
+  line-height: 1.1;
+  padding: 3px 8px;
+  right: 8px;
+  bottom: -5px;
+  letter-spacing: 1.5px;
+}
+@media (max-width: 700px) {
+  .arcade-game .speed b {
+    font-size: 52px;
+    padding: 3px 7px;
+  }
+  .arcade-game .speed > span {
+    font-size: 18px;
+    bottom: -9px;
+    right: 5px;
+    padding: 2px 6px;
+  }
+}

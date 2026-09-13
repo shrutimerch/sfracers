@@ -17,6 +17,7 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
   const material = (color: string) =>
     new T.MeshStandardMaterial({ color, roughness: 0.98, side: T.DoubleSide });
   const white = material('#e0dfcb'),
+    postWhite = material('#fffdf5'),
     yellow = material('#e8b849'),
     green = material('#659955'),
     concrete = material('#b4b5ab');
@@ -262,13 +263,18 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
         const x = a[0] + Math.cos(angle) * u - Math.sin(angle) * offset;
         const z = a[1] + Math.sin(angle) * u + Math.cos(angle) * offset;
         if (!near([x, z]) || inJunction([x, z])) continue;
-        const height = posts ? 0.8 : planting ? 0.55 : 0.14;
+        const height = posts ? 0.95 : planting ? 0.55 : 0.14;
         const geometry = posts
-          ? new T.CylinderGeometry(0.045, 0.065, height, 6)
+          ? new T.CylinderGeometry(0.055, 0.075, height, 8)
           : new T.BoxGeometry(planting ? 1.2 : 1.5, height, planting ? 0.6 : 0.22);
         geometry.rotateY(-angle);
         geometry.translate(x, 0.1 + height / 2, z);
-        add(geometry, posts ? white : concrete);
+        add(geometry, posts ? postWhite : concrete);
+        if (posts) {
+          const base = new T.CylinderGeometry(0.15, 0.17, 0.06, 8);
+          base.translate(x, 0.13, z);
+          add(base, postWhite);
+        }
         if (planting) box(x, z, 1.1, 0.5, angle, green, height + 0.12);
       }
     }
@@ -323,7 +329,13 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
               if (!inJunction([x, z])) box(x, z, 0.65, 0.1, angle + Math.PI / 4, white);
             }
           }
-          if (appearance.protected) protection(points, -1.18 * side.side, appearance.separator);
+          if (appearance.protected)
+            protection(
+              points,
+              -1.18 * side.side,
+              // User-observed white flex posts on Second's protected bike lanes.
+              tags.name === '2nd Street' ? 'flex_post' : appearance.separator,
+            );
         }
         for (let u = 6; u < len; u += 24) {
           const x = a[0] + Math.cos(angle) * u + nx,

@@ -129,8 +129,8 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
 
   // Place the marshal on the grid-facing side of the gantry, clear of the banner.
   const startMarshal = createStartMarshal(scene, {
-    x: finish.x - Math.cos(finish.a) * 3,
-    z: finish.z - Math.sin(finish.a) * 3,
+    x: finish.x - Math.cos(finish.a) * 0.9,
+    z: finish.z - Math.sin(finish.a) * 0.9,
     a: finish.a,
   });
   return {
