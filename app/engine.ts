@@ -1,97 +1,156 @@
-import {RACE_LAPS,KART_SCALE,completeCheckpoint,lapDistance} from './race-laps';
-import {buildRoadMarkings} from './road-markings';
-import {isEastParkEntrance,isWestParkEntrance} from './south-park-parking';
-import {buildRouteScenery} from './route-scenery';
-import {hasRouteProfile} from './route-profiles';
-import {buildTrafficControls,type TrafficNode} from './traffic-controls';
-import {buildSidewalks} from './sidewalks';
-import {advanceSpeed,drivingSurface,raceChecks} from './driving';
-import {createGoogleScenery} from './google-scenery';
-import {buildSouthPark,isLocal} from './south-park';
-import * as T from 'three';
-import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import {buildingGeometry,type Building,type FacadeKind} from './building-geometry';
-export type Point=number[];
-export type MapData={trafficControls?:TrafficNode[];course?:{landmarks?:{name:string;address:string;position:Point;height:number}[];name:string;length:number;sections:{name:string;start:number;length:number}[]};paths?:{name:string;points:Point[];width:number}[];roads:{name:string;points:Point[];width?:number}[];route:Point[];buildings:Building[];coast?:Point[][];parks?:Point[][];parkDetails?:{trees:Point[];paths:{id:number;points:Point[];crossing:boolean;sidewalk:boolean}[]}};
-export type HUD={mode:string;lap:number;speed:number;time:number;boost:number;progress:number;street:string;position:number;count:number;drift:boolean;camera:string;scenery?:string;sceneryError?:string;credits?:string};
-const distance=(a:Point,b:Point)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
-export type Facades=Record<FacadeKind,T.Texture>;
-export async function loadFacades():Promise<Facades>{
- const loader=new T.TextureLoader();
- const names:FacadeKind[]=['brick','masonry','glass'];
- const entries=await Promise.all(names.map(async name=>{const texture=await loader.loadAsync(`/textures/${name}-facade.png`);texture.colorSpace=T.SRGBColorSpace;texture.wrapS=T.RepeatWrapping;texture.wrapT=T.RepeatWrapping;texture.minFilter=T.LinearMipmapLinearFilter;texture.magFilter=T.LinearFilter;return [name,texture] as const;}));
- return Object.fromEntries(entries) as Facades;
-}
-export function makeGame(canvas:HTMLCanvasElement,mini:HTMLCanvasElement,d:MapData,update:(h:HUD)=>void,facades:Facades,googleKey=''){
-// Widen the photographed entrance to fit nose-in parking and a clear center aisle.
-d={...d,roads:d.roads.map(r=>(isEastParkEntrance(r)||isWestParkEntrance(r))?{...r,width:14.8}:r)};
-const renderer=new T.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));renderer.setClearColor('#becbcf');renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
-const scene=new T.Scene();scene.fog=new T.Fog('#becbcf',450,1800);const camera=new T.PerspectiveCamera(65,1,.15,2800);scene.add(new T.HemisphereLight('#e3e8e7','#707267',1.65));const sun=new T.DirectionalLight('#fff3dc',2.0);sun.position.set(-160,240,-80);sun.position.set(-70,160,370);sun.target.position.set(90,0,490);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);Object.assign(sun.shadow.camera,{left:-155,right:155,top:155,bottom:-155,near:1,far:600});sun.shadow.normalBias=.08;scene.add(sun,sun.target);
-const material=(color:T.ColorRepresentation)=>new T.MeshStandardMaterial({color,roughness:.85});const ground=new T.Mesh(new T.PlaneGeometry(6500,6500),material('#abaea5'));ground.rotation.x=-Math.PI/2;ground.position.y=-.2;scene.add(ground);
-const boxGeo=new T.BoxGeometry(1,1,1);const cube=(parent:T.Object3D,x:number,y:number,z:number,sx:number,sy:number,sz:number,color:T.ColorRepresentation)=>{const m=new T.Mesh(boxGeo,material(color));m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m;};
-function ribbons(lines:Point[][],width:number,color:string,y:number){const vertices:number[]=[];for(const points of lines)for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],len=distance(a,b);if(!len)continue;const nx=-(b[1]-a[1])/len*width/2,nz=(b[0]-a[0])/len*width/2;vertices.push(a[0]+nx,y,a[1]+nz,b[0]+nx,y,b[1]+nz,a[0]-nx,y,a[1]-nz,b[0]+nx,y,b[1]+nz,b[0]-nx,y,b[1]-nz,a[0]-nx,y,a[1]-nz);}const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(vertices,3));geo.computeVertexNormals();const mat=material(color);mat.side=T.DoubleSide;const mesh=new T.Mesh(geo,mat);scene.add(mesh);return mesh;}
-ribbons(d.roads.filter(r=>r.name!=='South Park').map(r=>r.points),20,'#b8b9b1',.015);ribbons(d.roads.filter(r=>r.name!=='South Park').map(r=>r.points),14,'#686c68',.055);for(const r of d.roads.filter(r=>r.name==='South Park'))ribbons([r.points],(r.width??9.8)+3.7,'#b8b9b1',.015);
-// Promenade is a separate paved racing surface, not an asphalt traffic lane.
-for(const path of d.paths||[]){ribbons([path.points],path.width+1,'#b6b1a2',.025);ribbons([path.points],path.width,'#a6a397',.075);for(let i=1;i<path.points.length;i++){const a=path.points[i-1],b=path.points[i],len=distance(a,b);for(let t=2;t<len;t+=4){const x=a[0]+(b[0]-a[0])*t/len,z=a[1]+(b[1]-a[1])*t/len;const seam=cube(scene,x,.08,z,.055,.008,path.width,'#777b74');seam.rotation.y=-Math.atan2(b[1]-a[1],b[0]-a[0]);}}}
-// Road markings are aligned with the downloaded centerlines.
-const stripes:T.Matrix4[]=[];const temp=new T.Object3D();for(const road of d.roads.filter(r=>r.name!=='South Park'&&r.name!=='2nd Street')){for(let i=1;i<road.points.length;i++){const a=road.points[i-1],b=road.points[i],len=distance(a,b);for(let t=4;t<len;t+=15){const stripeX=a[0]+(b[0]-a[0])*t/len;if(road.name==='Brannan Street'&&stripeX>=250&&stripeX<=600)continue;temp.position.set(a[0]+(b[0]-a[0])*t/len,.08,a[1]+(b[1]-a[1])*t/len);temp.rotation.set(0,-Math.atan2(b[1]-a[1],b[0]-a[0]),0);temp.scale.set(Math.min(4,len-t),.015,.17);temp.updateMatrix();stripes.push(temp.matrix.clone());}}}const stripeMesh=new T.InstancedMesh(boxGeo,material('#f8eab7'),stripes.length);stripes.forEach((m,i)=>stripeMesh.setMatrixAt(i,m));scene.add(stripeMesh);
-// Textures use metres-per-window UVs, so tall walls repeat floors instead of stretching one photograph.
-const kinds:FacadeKind[]=['brick','masonry','glass'];
-const walls:Record<FacadeKind,T.BufferGeometry[]>={brick:[],masonry:[],glass:[]};const roofs:T.BufferGeometry[]=[];const ledges:T.Matrix4[]=[];
-for(const texture of Object.values(facades))texture.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());
-for(const building of d.buildings){
- if(building.points.length<4||isLocal(building)||hasRouteProfile(building)||building.id===443021970)continue;
- const kind=building.facade||'masonry';const geometry=buildingGeometry(building);walls[kind].push(geometry.walls);roofs.push(geometry.roof);
- for(let i=1;i<building.points.length;i++){
-  const a=building.points[i-1],b=building.points[i],len=distance(a,b);if(len<1)continue;
-  temp.position.set((a[0]+b[0])/2,building.height+.06,(a[1]+b[1])/2);temp.rotation.set(0,-Math.atan2(b[1]-a[1],b[0]-a[0]),0);temp.scale.set(len+.12,.26,.45);temp.updateMatrix();ledges.push(temp.matrix.clone());
- }
-}
-for(const kind of kinds){if(!walls[kind].length)continue;const merged=mergeGeometries(walls[kind]);const m=new T.MeshStandardMaterial({map:facades[kind],color:'#ffffff',roughness:kind==='glass'?.32:.87,metalness:kind==='glass'?.18:0,side:T.DoubleSide});scene.add(new T.Mesh(merged,m));walls[kind].forEach(g=>g.dispose());}
-if(roofs.length){const merged=mergeGeometries(roofs);scene.add(new T.Mesh(merged,new T.MeshStandardMaterial({color:'#8b8981',roughness:1,side:T.DoubleSide})));roofs.forEach(g=>g.dispose());}
-const cornices=new T.InstancedMesh(boxGeo,material('#a9a59a'),ledges.length);ledges.forEach((m,i)=>cornices.setMatrixAt(i,m));scene.add(cornices);
-if(d.coast?.length){for(const coast of d.coast){ribbons([coast],3,'#ddd1b0',.1);const waterShape=new T.Shape();const pts=[...coast,[3000,coast[coast.length-1][1]],[3000,coast[0][1]]];pts.forEach((p,i)=>i?waterShape.lineTo(p[0],-p[1]):waterShape.moveTo(p[0],-p[1]));const water=new T.Mesh(new T.ShapeGeometry(waterShape),new T.MeshStandardMaterial({color:'#32a8c4',roughness:.3,metalness:.25,side:T.DoubleSide}));water.rotation.x=-Math.PI/2;water.position.y=-.12;scene.add(water);}}
-// Office markers sit on mapped building frontages; these are race labels, not replica signage.
-const officeTextures:T.Texture[]=[];
-for(const office of d.course?.landmarks||[]){const c=document.createElement('canvas');c.width=768;c.height=192;const ctx=c.getContext('2d')!;ctx.fillStyle='#112b38';ctx.fillRect(0,0,768,192);ctx.fillStyle='#c4ff58';ctx.fillRect(0,0,12,192);ctx.font='bold 46px sans-serif';ctx.fillText(office.name,32,78);ctx.fillStyle='#ffffff';ctx.font='30px sans-serif';ctx.fillText(office.address,32,135);const texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;officeTextures.push(texture);const marker=new T.Sprite(new T.SpriteMaterial({map:texture,depthTest:true}));marker.position.set(office.position[0],Math.max(office.height,24),office.position[1]);marker.scale.set(29,7.25,1);scene.add(marker);cube(scene,office.position[0],office.height/2,office.position[1],.3,office.height,.3,'#c4ff58');}
-const disposeRoute=buildRouteScenery(scene,d,facades);
-const disposePark=buildSouthPark(scene,d);
-buildSidewalks(scene,d);
-const disposeMarkings=buildRoadMarkings(scene,d);
-const disposeTraffic=buildTrafficControls(scene,d);
-const scenery=new T.Group();for(const o of [...scene.children])if(o instanceof T.Mesh||o instanceof T.Group)scenery.add(o);scene.add(scenery);scenery.visible=!googleKey;let google=googleKey?createGoogleScenery(scene,camera,renderer,googleKey):null;let roadHeight=0;const useModeled=()=>{google?.dispose();google=null;scenery.visible=true;roadHeight=0;for(const pad of pads)pad.position.y=.13;};
-const lengths=[0];for(let i=1;i<d.route.length;i++)lengths.push(lengths[i-1]+distance(d.route[i-1],d.route[i]));const total=lengths[lengths.length-1];function at(s:number){s=Math.max(0,Math.min(total-.01,s));let i=1;while(lengths[i]<s)i++;const a=d.route[i-1],b=d.route[i],t=(s-lengths[i-1])/(lengths[i]-lengths[i-1]||1);return {x:a[0]+(b[0]-a[0])*t,z:a[1]+(b[1]-a[1])*t,a:Math.atan2(b[1]-a[1],b[0]-a[0])};}
-const checks=raceChecks(total,d.course?.sections);const surfaceAt=drivingSurface(d.roads,d.paths);
-const guideMaterial=new T.MeshBasicMaterial({color:'#c6ff53',side:T.DoubleSide});
-const arrowShape=new T.Shape();arrowShape.moveTo(2.3,0);arrowShape.lineTo(-1.5,1.25);arrowShape.lineTo(-.6,0);arrowShape.lineTo(-1.5,-1.25);arrowShape.closePath();const arrowGeometry=new T.ShapeGeometry(arrowShape);arrowGeometry.rotateX(-Math.PI/2);
-for(let s=12;s<total;s+=22){const p=at(s),arrow=new T.Mesh(arrowGeometry,guideMaterial);arrow.position.set(p.x,.16,p.z);arrow.rotation.y=-p.a;scene.add(arrow);}
-for(let i=0;i<10;i++){const p=at(2);const tile=cube(scene,p.x-Math.sin(p.a)*(i-4.5),.17,p.z+Math.cos(p.a)*(i-4.5),1,.04,1,i%2?'#172d38':'#ffffff');tile.rotation.y=-p.a;}
-function kart(color:string){const group=new T.Group();cube(group,0,.55,0,3.4,.55,1.65,color);cube(group,1.15,.9,0,1,.4,1.45,color);cube(group,-.85,.95,0,.35,1.1,1.2,'#263544');cube(group,-1.5,1.2,0,.3,.15,2.3,color);for(const x of [-1,1])for(const z of [-1,1]){const wheel=new T.Mesh(new T.CylinderGeometry(.48,.48,.4,12),material('#202a36'));wheel.rotation.x=Math.PI/2;wheel.position.set(x,.48,z);group.add(wheel);const hub=new T.Mesh(new T.CylinderGeometry(.24,.24,.43,12),material('#e2e4db'));hub.rotation.x=Math.PI/2;hub.position.copy(wheel.position);group.add(hub);}const body=new T.Mesh(new T.CapsuleGeometry(.35,.4,4,8),material(color));body.position.set(-.3,1.35,0);group.add(body);const helmet=new T.Mesh(new T.SphereGeometry(.48,16,12),material('#fff2d2'));helmet.position.set(-.22,1.98,0);group.add(helmet);cube(group,.18,1.99,0,.12,.23,.65,'#263d56');const shadow=new T.Mesh(new T.CircleGeometry(2.2,20),new T.MeshBasicMaterial({color:'#243340',transparent:true,opacity:.2,depthWrite:false}));shadow.rotation.x=-Math.PI/2;shadow.position.y=.1;group.add(shadow);group.scale.setScalar(KART_SCALE);scene.add(group);return group;}
-// Start/finish gantry across the route's shared lap boundary.
-const finish=at(0),gantry=new T.Group();gantry.position.set(finish.x,0,finish.z);gantry.rotation.y=-finish.a;scene.add(gantry);
-for(const side of [-1,1])cube(gantry,0,3.4,side*8,.3,6.8,.3,'#233743');
-cube(gantry,0,6.2,0,.3,1.25,16.3,'#182d39');
-const bannerCanvas=document.createElement('canvas');bannerCanvas.width=1024;bannerCanvas.height=128;const bc=bannerCanvas.getContext('2d')!;bc.fillStyle='#182d39';bc.fillRect(0,0,1024,128);bc.fillStyle='#fff7df';bc.font='bold 62px sans-serif';bc.textAlign='center';bc.fillText('START / FINISH',512,85);for(let row=0;row<4;row++)for(let col=0;col<4;col++)if((row+col)%2===0){bc.fillRect(col*32,row*32,32,32);bc.fillRect(896+col*32,row*32,32,32);}const bannerTexture=new T.CanvasTexture(bannerCanvas);bannerTexture.colorSpace=T.SRGBColorSpace;officeTextures.push(bannerTexture);
-for(const side of [-1,1]){const face=new T.Mesh(new T.PlaneGeometry(16,1.2),new T.MeshBasicMaterial({map:bannerTexture,side:T.DoubleSide}));face.rotation.y=side*Math.PI/2;face.position.set(side*.17,6.2,0);gantry.add(face);}
-for(let row=0;row<2;row++)for(let col=0;col<20;col++)cube(gantry,(row-.5)*.55,.18,(col-9.5)*.7,.55,.025,.7,(row+col)%2?'#fff7df':'#25333c');
-const player=kart('#ff643b');const rivals=['#a47cff','#ffcf41','#36cad0'].map((c,i)=>({mesh:kart(c),s:12+i*8,speed:23+i*1.2}));
-const ring=new T.Mesh(new T.TorusGeometry(6,.18,8,36),new T.MeshBasicMaterial({color:'#baff55',transparent:true,opacity:.8}));scene.add(ring);
-const pads:T.Mesh[]=[];for(let s=160;s<total;s+=290){const p=at(s);const m=cube(scene,p.x,.13,p.z,8,.12,5,'#2de5dd');m.rotation.y=-p.a;pads.push(m);}
-const inspection=process.env.NODE_ENV==='development'?Math.max(0,Math.min(total-1,Number(new URLSearchParams(window.location.search).get('inspect'))||0)):0;
-let mode=inspection>0?'inspection':'ready',x=at(inspection).x,z=at(inspection).z,angle=at(inspection).a,speed=0,time=0,boost=100,cp=0,lap=0,count=3,driftCharge=0,drifting=false,boostTimer=0,progress=0,street=d.course?.sections[0]?.name||'South Park',firstPerson=false,padCooldown=0;const keys:Record<string,boolean>={};let raf=0,last=0,hudTime=0,disposed=false;const camPos=new T.Vector3(),look=new T.Vector3(),cameraAnchor=new T.Vector3();
-const setKey=(key:string,value:boolean)=>{keys[key]=value;};const reset=()=>{if(google&&(!google.ready||google.error))return;mode='countdown';x=d.route[0][0];z=d.route[0][1];angle=at(0).a;speed=0;time=0;boost=100;cp=0;lap=0;count=3;progress=0;boostTimer=0;driftCharge=0;Object.keys(keys).forEach(k=>delete keys[k]);rivals.forEach((r,i)=>r.s=12+i*8);};const pause=()=>{if(mode==='racing'||mode==='countdown')mode='paused';else if(mode==='paused')mode=count>0?'countdown':'racing';};const recover=()=>{const p=at(cp===0?0:Math.max(0,checks[cp-1]-10));x=p.x;z=p.z;angle=p.a;speed=0;};const toggleCamera=()=>{firstPerson=!firstPerson;};
-function nearest(px:number,pz:number){let best=Infinity,nx=px,nz=pz,name='',along=0;for(const r of [{points:d.route,name:'South Park'}])for(let i=1;i<r.points.length;i++){const a=r.points[i-1],b=r.points[i];if(Math.min(a[0],b[0])-20>px||Math.max(a[0],b[0])+20<px||Math.min(a[1],b[1])-20>pz||Math.max(a[1],b[1])+20<pz)continue;const dx=b[0]-a[0],dz=b[1]-a[1],t=Math.max(0,Math.min(1,((px-a[0])*dx+(pz-a[1])*dz)/(dx*dx+dz*dz||1))),qx=a[0]+dx*t,qz=a[1]+dz*t,dd=Math.hypot(px-qx,pz-qz);if(dd<best){best=dd;nx=qx;nz=qz;along=lengths[i-1]+distance(a,b)*t;name=d.course?.sections.findLast(section=>section.start<=along)?.name||r.name;}}return {best,x:nx,z:nz,name,along};}
-const handleDown=(e:KeyboardEvent)=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' ','Shift'].includes(e.key))e.preventDefault();keys[e.key.toLowerCase()]=true;if(e.repeat)return;if(e.key==='Escape')pause();if(e.key.toLowerCase()==='r')recover();if(e.key.toLowerCase()==='v')toggleCamera();};const handleUp=(e:KeyboardEvent)=>{keys[e.key.toLowerCase()]=false;};const blur=()=>{Object.keys(keys).forEach(k=>delete keys[k]);if(mode==='racing'||mode==='countdown')mode='paused';};window.addEventListener('keydown',handleDown);window.addEventListener('keyup',handleUp);window.addEventListener('blur',blur);
-function miniMap(){const c=mini.getContext('2d');if(!c)return;const w=mini.width,h=mini.height;c.clearRect(0,0,w,h);c.fillStyle='#15374c';c.fillRect(0,0,w,h);const xs=d.route.map(p=>p[0]),zs=d.route.map(p=>p[1]),cx=(Math.min(...xs)+Math.max(...xs))/2,cz=(Math.min(...zs)+Math.max(...zs))/2;const scale=Math.min((w-22)/(Math.max(...xs)-Math.min(...xs)),(h-22)/(Math.max(...zs)-Math.min(...zs)));c.save();c.translate(w/2-cx*scale,h/2-cz*scale);c.scale(scale,scale);for(const r of [...d.roads,...(d.paths||[])]){c.beginPath();r.points.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.strokeStyle='#54798a';c.lineWidth=1/scale;c.stroke();}c.beginPath();d.route.forEach((p,i)=>i?c.lineTo(p[0],p[1]):c.moveTo(p[0],p[1]));c.strokeStyle='#baff55';c.lineWidth=3/scale;c.stroke();for(const r of rivals){const p=at(lapDistance(r.s,total));c.fillStyle='#fff';c.beginPath();c.arc(p.x,p.z,2.5/scale,0,7);c.fill();}c.fillStyle='#ff704d';c.beginPath();c.arc(x,z,3.5/scale,0,7);c.fill();c.restore();}
-function frame(now:number){if(disposed)return;raf=requestAnimationFrame(frame);const dt=Math.min((now-last)/1000||.016,.04);last=now;const width=canvas.clientWidth,height=canvas.clientHeight;if(canvas.width!==Math.floor(width*renderer.getPixelRatio())||canvas.height!==Math.floor(height*renderer.getPixelRatio())){renderer.setSize(width,height,false);camera.aspect=width/height;camera.updateProjectionMatrix();}
-if(mode==='countdown'){count-=dt;if(count<=0){count=0;mode='racing';}}
-if(mode==='racing'&&(!google||google.ready)&&!google?.error){time+=dt;const gas=keys.w||keys.arrowup,brake=keys.s||keys.arrowdown,turn=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);const wasDrifting=drifting;drifting=!!(keys[' ']&&turn&&speed>8);if(drifting)driftCharge=Math.min(2,driftCharge+dt);else if(wasDrifting){if(driftCharge>.6)boostTimer=1.1+driftCharge*.4;driftCharge=0;}const boosting=(keys.shift&&boost>0&&speed>2)||boostTimer>0;boostTimer=Math.max(0,boostTimer-dt);boost=Math.max(0,Math.min(100,boost+(keys.shift&&speed>2?-24:8)*dt));speed=advanceSpeed(speed,!!gas,!!brake,boosting,dt);angle+=turn*dt*(drifting?1.7:1.22)*Math.min(1,Math.abs(speed)/7)*(speed<0?-1:1);const travelAngle=angle-(drifting?turn*.22:0);x+=Math.cos(travelAngle)*speed*dt;z+=Math.sin(travelAngle)*speed*dt;const n=nearest(x,z);if(google){street=n.name||street;if(n.best>1.2&&Number.isFinite(n.best)){x=n.x+(x-n.x)*1.2/n.best;z=n.z+(z-n.z)*1.2/n.best;speed*=.95;}}else{const surface=surfaceAt(x,z);street=surface.name||street;if(surface.outside>0){x=surface.x;z=surface.z;speed*=Math.exp(-3*dt);}}const previousLap=lap;const next=at(checks[cp]);if(Math.hypot(x-next.x,z-next.z)<(cp===checks.length-1?6:24)){const advanced=completeCheckpoint(cp,lap,checks.length);cp=advanced.cp;lap=advanced.lap;if(advanced.finished){mode='finished';speed=0;}}progress=lap*total+Math.max(cp===0?0:checks[cp-1],Math.min(checks[cp],lap!==previousLap?0:n.along));for(const r of rivals){r.s=Math.min(total*RACE_LAPS,r.s+r.speed*dt);const p=at(lapDistance(r.s,total));if(Math.hypot(p.x-x,p.z-z)<1.65&&Math.abs(speed)>5){speed*=.8;x-=Math.sin(angle)*.72;z+=Math.cos(angle)*.72;}}padCooldown=Math.max(0,padCooldown-dt);if(padCooldown===0&&pads.some(p=>Math.hypot(p.position.x-x,p.position.z-z)<5)){boostTimer=1.8;padCooldown=2;}}
-if(google){const height=google.update(x,z,now);if(height!==null)roadHeight=height;for(const pad of pads)pad.position.y=roadHeight+.13;}
-player.position.set(x,roadHeight+(drifting?Math.sin(now/50)*.03:0),z);player.rotation.y=-angle;player.rotation.x=drifting?Math.sin(now/100)*.025:0;player.visible=!firstPerson;for(const r of rivals){const p=at(lapDistance(r.s,total));r.mesh.position.set(p.x,roadHeight,p.z);r.mesh.rotation.y=-p.a;}
-const next=at(checks[Math.min(cp,checks.length-1)]);ring.position.set(next.x,roadHeight+5.8,next.z);ring.rotation.set(0,Math.PI/2-next.a,0);ring.material.opacity=.6+Math.sin(now/250)*.2;
-
-const ready=mode==='ready';const behind=firstPerson?-.85:ready?7:6+Math.abs(speed)*.025;camPos.set(x-Math.cos(angle)*behind,(google&&!google.ready?70:roadHeight+(firstPerson?2.6:ready?6:5.2)),z-Math.sin(angle)*behind);camera.position.lerp(camPos,1-Math.exp(-dt*8));if(google?.ready){camera.position.y=Math.max(camera.position.y,roadHeight+2.6);cameraAnchor.set(x,roadHeight+2.6,z);google.keepCameraClear(cameraAnchor,camera.position);}look.set(x+Math.cos(angle)*18,(google&&!google.ready?-20:roadHeight+(firstPerson?1.7:1.5)),z+Math.sin(angle)*18);camera.lookAt(look);camera.fov=T.MathUtils.lerp(camera.fov,boostTimer>0||keys.shift?76:65,dt*3);camera.updateProjectionMatrix();renderer.render(scene,camera);
-if(now-hudTime>100){hudTime=now;miniMap();update({mode,lap:lap+1,speed:Math.round(Math.abs(speed)*2.237),time,boost,progress:mode==='finished'?100:progress/(total*RACE_LAPS)*100,street,position:mode==='finished'?1+rivals.filter(r=>r.s>=total*RACE_LAPS).length:1+rivals.filter(r=>r.s>progress).length,count:Math.ceil(count),drift:drifting,camera:firstPerson?'Driver':'Chase',scenery:google?(google.ready?'Google photographic scenery':'Loading Google scenery…'):'Modeled scenery',sceneryError:google?.error||'',credits:google?.credits()||''});}}
-camera.position.set(x-Math.cos(angle)*10,5,z-Math.sin(angle)*10);raf=requestAnimationFrame(frame);
-return {useModeled,start:reset,pause,recover,toggleCamera,setKey,getState:()=>({mode,time,progress,lap:lap+1}),dispose:()=>{disposed=true;cancelAnimationFrame(raf);google?.dispose();disposePark();disposeRoute();disposeMarkings();disposeTraffic();window.removeEventListener('keydown',handleDown);window.removeEventListener('keyup',handleUp);window.removeEventListener('blur',blur);scene.traverse(o=>{if(o instanceof T.Mesh){o.geometry.dispose();const mats=Array.isArray(o.material)?o.material:[o.material];mats.forEach(m=>m.dispose());}});officeTextures.forEach(t=>t.dispose());scene.traverse(o=>{if(o instanceof T.Sprite)o.material.dispose();});Object.values(facades).forEach(t=>t.dispose());renderer.dispose();}};
+import { RACE_LAPS, lapDistance } from './race-laps';
+import { prepareCourse } from './game/course';
+import { createGoogleScenery } from './google-scenery';
+import { createWorld } from './game/world';
+import { createRaceSimulation } from './game/simulation';
+import { createRaceVisuals } from './game/race-visuals';
+import { createRaceCamera } from './game/camera';
+import { createMinimap } from './game/minimap';
+import { bindRaceInput } from './game/input';
+import { disposeScene } from './game/dispose';
+import type { MapData, HUD, Facades } from './game/types';
+// Preserve the existing engine API for both the main game and the legacy /kart route.
+export type { MapData, HUD, Facades, Point } from './game/types';
+export { loadFacades } from './game/facades';
+export function makeGame(
+  canvas: HTMLCanvasElement,
+  mini: HTMLCanvasElement,
+  data: MapData,
+  update: (h: HUD) => void,
+  facades: Facades,
+  googleKey = '',
+) {
+  const d = prepareCourse(data);
+  const world = createWorld(canvas, d, facades),
+    { renderer, scene, camera, scenery, officeTextures } = world;
+  const inspection =
+    process.env.NODE_ENV === 'development'
+      ? Math.max(0, Number(new URLSearchParams(window.location.search).get('inspect')) || 0)
+      : 0;
+  const sim = createRaceSimulation(d, inspection, !!googleKey),
+    { route, checks, rivals } = sim,
+    { total, at } = route;
+  const { player, rivalMeshes, ring, pads } = createRaceVisuals(world, route);
+  const drawMinimap = createMinimap(mini, d, route),
+    drawCamera = createRaceCamera(camera, renderer, scene);
+  scenery.visible = !googleKey;
+  let google = googleKey ? createGoogleScenery(scene, camera, renderer, googleKey) : null;
+  let roadHeight = 0,
+    firstPerson = false,
+    raf = 0,
+    last = 0,
+    hudTime = 0,
+    disposed = false;
+  const toggleCamera = () => {
+    firstPerson = !firstPerson;
+  };
+  const unbindInput = bindRaceInput(sim, toggleCamera);
+  const useModeled = () => {
+    google?.dispose();
+    google = null;
+    sim.setPhotographic(false);
+    scenery.visible = true;
+    roadHeight = 0;
+    for (const pad of pads) pad.position.y = 0.13;
+  };
+  const start = () => {
+    if (google && (!google.ready || google.error)) return;
+    sim.start();
+  };
+  function frame(now: number) {
+    if (disposed) return;
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min((now - last) / 1000 || 0.016, 0.04);
+    last = now;
+    const width = canvas.clientWidth,
+      height = canvas.clientHeight;
+    if (
+      canvas.width !== Math.floor(width * renderer.getPixelRatio()) ||
+      canvas.height !== Math.floor(height * renderer.getPixelRatio())
+    ) {
+      renderer.setSize(width, height, false);
+      camera.aspect = width / height;
+      camera.updateProjectionMatrix();
+    }
+    // The optional imagery mode stays at this boundary; simulation remains independent of it.
+    sim.step(dt, (!google || google.ready) && !google?.error);
+    const state = sim.state,
+      { mode, x, z, angle, speed, time, boost, cp, lap, count, drifting, progress, street } = state;
+    if (google) {
+      const height = google.update(x, z, now);
+      if (height !== null) roadHeight = height;
+      for (const pad of pads) pad.position.y = roadHeight + 0.13;
+    }
+    player.position.set(x, roadHeight + (drifting ? Math.sin(now / 50) * 0.03 : 0), z);
+    player.rotation.y = -angle;
+    player.rotation.x = drifting ? Math.sin(now / 100) * 0.025 : 0;
+    player.visible = !firstPerson;
+    rivals.forEach((r, i) => {
+      const p = at(lapDistance(r.s, total));
+      rivalMeshes[i].position.set(p.x, roadHeight, p.z);
+      rivalMeshes[i].rotation.y = -p.a;
+    });
+    const next = at(checks[Math.min(cp, checks.length - 1)]);
+    ring.position.set(next.x, roadHeight + 5.8, next.z);
+    ring.rotation.set(0, Math.PI / 2 - next.a, 0);
+    ring.material.opacity = 0.6 + Math.sin(now / 250) * 0.2;
+    drawCamera(state, firstPerson, roadHeight, dt, !!sim.keys.shift, google);
+    if (now - hudTime > 100) {
+      hudTime = now;
+      drawMinimap(x, z, rivals);
+      update({
+        mode,
+        lap: lap + 1,
+        speed: Math.round(Math.abs(speed) * 2.237),
+        time,
+        boost,
+        progress: mode === 'finished' ? 100 : (progress / (total * RACE_LAPS)) * 100,
+        street,
+        position:
+          mode === 'finished'
+            ? 1 + rivals.filter((r) => r.s >= total * RACE_LAPS).length
+            : 1 + rivals.filter((r) => r.s > progress).length,
+        count: Math.ceil(count),
+        drift: drifting,
+        camera: firstPerson ? 'Driver' : 'Chase',
+        scenery: google
+          ? google.ready
+            ? 'Google photographic scenery'
+            : 'Loading Google scenery…'
+          : 'Modeled scenery',
+        sceneryError: google?.error || '',
+        credits: google?.credits() || '',
+      });
+    }
+  }
+  const initial = sim.state;
+  camera.position.set(
+    initial.x - Math.cos(initial.angle) * 10,
+    5,
+    initial.z - Math.sin(initial.angle) * 10,
+  );
+  raf = requestAnimationFrame(frame);
+  return {
+    useModeled,
+    start,
+    pause: sim.pause,
+    recover: sim.recover,
+    toggleCamera,
+    setKey: sim.setKey,
+    getState: () => {
+      const { mode, time, progress, lap } = sim.state;
+      return { mode, time, progress, lap: lap + 1 };
+    },
+    dispose: () => {
+      disposed = true;
+      cancelAnimationFrame(raf);
+      google?.dispose();
+      world.disposeTextures();
+      unbindInput();
+      disposeScene(scene);
+      officeTextures.forEach((t) => t.dispose());
+      Object.values(facades).forEach((t) => t.dispose());
+      renderer.dispose();
+    },
+  };
 }

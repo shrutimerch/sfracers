@@ -1,2 +1,4 @@
 import RaceGame from './race-game';
-export default function Home(){return <RaceGame/>}
+export default function Home() {
+  return <RaceGame />;
+}

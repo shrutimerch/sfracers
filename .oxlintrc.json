@@ -1,15 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "eslint",
-    "typescript",
-    "unicorn",
-    "oxc",
-    "react",
-    "import",
-    "jsx-a11y",
-    "nextjs"
-  ],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "react", "import", "jsx-a11y", "nextjs"],
   "categories": {
     "correctness": "error"
   },
@@ -52,5 +43,36 @@
     "typescript/no-require-imports": "error",
     "typescript/no-unnecessary-type-constraint": "error",
     "typescript/no-unsafe-function-type": "error"
-  }
+  },
+  "overrides": [
+    {
+      "files": [
+        "app/race-game.tsx",
+        "app/kart/page.tsx",
+        "app/about/page.tsx",
+        "app/route/page.tsx"
+      ],
+      "rules": {
+        "nextjs/no-html-link-for-pages": "off"
+      }
+    },
+    {
+      "files": ["app/route/page.tsx"],
+      "rules": {
+        "nextjs/no-img-element": "off"
+      }
+    },
+    {
+      "files": ["app/race-game.tsx", "app/kart/page.tsx"],
+      "rules": {
+        "jsx-a11y/prefer-tag-over-role": "off"
+      }
+    },
+    {
+      "files": ["app/playground-geometry.ts"],
+      "rules": {
+        "import/no-anonymous-default-export": "off"
+      }
+    }
+  ]
 }

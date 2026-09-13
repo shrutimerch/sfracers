@@ -2,20 +2,21 @@
   "name": "sites-project",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": ">=22.13.0"
-  },
+  "type": "module",
   "scripts": {
     "dev": "vinext dev",
     "build": "vinext build",
     "start": "wrangler dev --config dist/server/wrangler.json",
     "lint": "oxlint",
-    "format": "oxfmt"
+    "format": "oxfmt",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "typecheck": "tsc --noEmit",
+    "format:check": "oxfmt --check app tests"
   },
   "dependencies": {
+    "3d-tiles-renderer": "^0.5.2",
     "@base-ui/react": "1.7.0",
     "@shadcn/react": "0.3.0",
-    "3d-tiles-renderer": "^0.5.2",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "cmdk": "1.1.1",
@@ -54,5 +55,7 @@
     "vite": "8.0.13",
     "wrangler": "4.92.0"
   },
-  "type": "module"
+  "engines": {
+    "node": ">=22.13.0"
+  }
 }

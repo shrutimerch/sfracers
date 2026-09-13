@@ -1,8 +1,46 @@
-import {test} from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import data from '../app/waterfront-geometry.ts';
-import {routeProfiles} from '../app/route-profiles.ts';
-const read=p=>JSON.parse(readFileSync(new URL(p,import.meta.url)));
-const project=p=>[(p.lon+122.395)*87900,(37.786-p.lat)*111200];
-test('waterfront trees and lamps retain actual OSM positions and palm classifications',()=>{for(const kind of ['trees','lamps']){const source=read(`../reference/waterfront-${kind}-osm.json`).elements;assert.equal(data[kind].length,source.length);for(const item of data[kind]){const e=source.find(e=>e.id===item.id);assert.ok(e);const p=project(e);assert.ok(Math.hypot(p[0]-item.point[0],p[1]-item.point[1])<.001);if(kind==='trees')assert.equal(item.palm,e.tags.leaf_type==='palm');}}});
-test('park and rail outlines retain mapped geometry and stadium keeps the mapped perimeter',()=>{for(const kind of ['parks','rails']){const source=read(`../reference/waterfront-${kind==='rails'?'rail':kind}-osm.json`).elements;for(const item of data[kind]){const e=source.find(e=>e.id===item.id);assert.equal(item.points.length,e.geometry.length);item.points.forEach((p,i)=>{const q=project(e.geometry[i]);assert.ok(Math.hypot(p[0]-q[0],p[1]-q[1])<.001);});}}const raw=read('../reference/oracle-park-full-osm.json').elements;assert.equal(data.stadium[0].id,raw.find(e=>e.type==='relation').members[0].ref);assert.ok(data.stadium[0].points.length>10);});
-test('facade overrides refer to existing mapped buildings and twelve views were recorded',()=>{const course=read('../public/race-course.json');for(const id of Object.keys(routeProfiles))assert.ok(course.buildings.some(b=>b.id===Number(id)));const views=read('../reference/waterfront-streetview.json');assert.equal(views.length,12);assert.ok(views.every(v=>v.inspected&&v.imageryDate&&v.visibleLocationLabel));});
+import { routeProfiles } from '../app/route-profiles.ts';
+const read = (p) => JSON.parse(readFileSync(new URL(p, import.meta.url)));
+const project = (p) => [(p.lon + 122.395) * 87900, (37.786 - p.lat) * 111200];
+test('waterfront trees and lamps retain actual OSM positions and palm classifications', () => {
+  for (const kind of ['trees', 'lamps']) {
+    const source = read(`../reference/waterfront-${kind}-osm.json`).elements;
+    assert.equal(data[kind].length, source.length);
+    for (const item of data[kind]) {
+      const e = source.find((e) => e.id === item.id);
+      assert.ok(e);
+      const p = project(e);
+      assert.ok(Math.hypot(p[0] - item.point[0], p[1] - item.point[1]) < 0.001);
+      if (kind === 'trees') assert.equal(item.palm, e.tags.leaf_type === 'palm');
+    }
+  }
+});
+test('park and rail outlines retain mapped geometry and stadium keeps the mapped perimeter', () => {
+  for (const kind of ['parks', 'rails']) {
+    const source = read(
+      `../reference/waterfront-${kind === 'rails' ? 'rail' : kind}-osm.json`,
+    ).elements;
+    for (const item of data[kind]) {
+      const e = source.find((e) => e.id === item.id);
+      assert.equal(item.points.length, e.geometry.length);
+      item.points.forEach((p, i) => {
+        const q = project(e.geometry[i]);
+        assert.ok(Math.hypot(p[0] - q[0], p[1] - q[1]) < 0.001);
+      });
+    }
+  }
+  const raw = read('../reference/oracle-park-full-osm.json').elements;
+  assert.equal(data.stadium[0].id, raw.find((e) => e.type === 'relation').members[0].ref);
+  assert.ok(data.stadium[0].points.length > 10);
+});
+test('facade overrides refer to existing mapped buildings and twelve views were recorded', () => {
+  const course = read('../public/race-course.json');
+  for (const id of Object.keys(routeProfiles))
+    assert.ok(course.buildings.some((b) => b.id === Number(id)));
+  const views = read('../reference/waterfront-streetview.json');
+  assert.equal(views.length, 12);
+  assert.ok(views.every((v) => v.inspected && v.imageryDate && v.visibleLocationLabel));
+});

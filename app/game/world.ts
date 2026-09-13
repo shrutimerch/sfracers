@@ -1,0 +1,298 @@
+import { hasBrannanDoubleYellow } from '../scenery-locations';
+import * as T from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { buildingGeometry, type FacadeKind } from '../building-geometry';
+import { buildRouteScenery } from '../route-scenery';
+import { hasRouteProfile } from '../route-profiles';
+import { buildSouthPark, isLocal } from '../south-park';
+import { buildSidewalks } from '../sidewalks';
+import { buildRoadMarkings } from '../road-markings';
+import { buildTrafficControls } from '../traffic-controls';
+import type { MapData, Facades, Point } from './types';
+const distance = (a: Point, b: Point) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Facades) {
+  const renderer = new T.WebGLRenderer({
+    canvas,
+    antialias: true,
+    powerPreference: 'high-performance',
+  });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor('#becbcf');
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = T.PCFShadowMap;
+  renderer.outputColorSpace = T.SRGBColorSpace;
+  renderer.toneMapping = T.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  const scene = new T.Scene();
+  scene.fog = new T.Fog('#becbcf', 450, 1800);
+  const camera = new T.PerspectiveCamera(65, 1, 0.15, 2800);
+  scene.add(new T.HemisphereLight('#e3e8e7', '#707267', 1.65));
+  const sun = new T.DirectionalLight('#fff3dc', 2.0);
+  sun.position.set(-70, 160, 370);
+  sun.target.position.set(90, 0, 490);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, {
+    left: -155,
+    right: 155,
+    top: 155,
+    bottom: -155,
+    near: 1,
+    far: 600,
+  });
+  sun.shadow.normalBias = 0.08;
+  scene.add(sun, sun.target);
+  const material = (color: T.ColorRepresentation) =>
+    new T.MeshStandardMaterial({ color, roughness: 0.85 });
+  const ground = new T.Mesh(new T.PlaneGeometry(6500, 6500), material('#abaea5'));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -0.2;
+  scene.add(ground);
+  const boxGeo = new T.BoxGeometry(1, 1, 1);
+  const cube = (
+    parent: T.Object3D,
+    x: number,
+    y: number,
+    z: number,
+    sx: number,
+    sy: number,
+    sz: number,
+    color: T.ColorRepresentation,
+  ) => {
+    const m = new T.Mesh(boxGeo, material(color));
+    m.position.set(x, y, z);
+    m.scale.set(sx, sy, sz);
+    parent.add(m);
+    return m;
+  };
+  function ribbons(lines: Point[][], width: number, color: string, y: number) {
+    const vertices: number[] = [];
+    for (const points of lines)
+      for (let i = 1; i < points.length; i++) {
+        const a = points[i - 1],
+          b = points[i],
+          len = distance(a, b);
+        if (!len) continue;
+        const nx = ((-(b[1] - a[1]) / len) * width) / 2,
+          nz = (((b[0] - a[0]) / len) * width) / 2;
+        vertices.push(
+          a[0] + nx,
+          y,
+          a[1] + nz,
+          b[0] + nx,
+          y,
+          b[1] + nz,
+          a[0] - nx,
+          y,
+          a[1] - nz,
+          b[0] + nx,
+          y,
+          b[1] + nz,
+          b[0] - nx,
+          y,
+          b[1] - nz,
+          a[0] - nx,
+          y,
+          a[1] - nz,
+        );
+      }
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(vertices, 3));
+    geo.computeVertexNormals();
+    const mat = material(color);
+    mat.side = T.DoubleSide;
+    const mesh = new T.Mesh(geo, mat);
+    scene.add(mesh);
+    return mesh;
+  }
+  ribbons(
+    d.roads.filter((r) => r.name !== 'South Park').map((r) => r.points),
+    20,
+    '#b8b9b1',
+    0.015,
+  );
+  ribbons(
+    d.roads.filter((r) => r.name !== 'South Park').map((r) => r.points),
+    14,
+    '#686c68',
+    0.055,
+  );
+  for (const r of d.roads.filter((r) => r.name === 'South Park'))
+    ribbons([r.points], (r.width ?? 9.8) + 3.7, '#b8b9b1', 0.015);
+  // Promenade is a separate paved racing surface, not an asphalt traffic lane.
+  for (const path of d.paths || []) {
+    ribbons([path.points], path.width + 1, '#b6b1a2', 0.025);
+    ribbons([path.points], path.width, '#a6a397', 0.075);
+    for (let i = 1; i < path.points.length; i++) {
+      const a = path.points[i - 1],
+        b = path.points[i],
+        len = distance(a, b);
+      for (let t = 2; t < len; t += 4) {
+        const x = a[0] + ((b[0] - a[0]) * t) / len,
+          z = a[1] + ((b[1] - a[1]) * t) / len;
+        const seam = cube(scene, x, 0.08, z, 0.055, 0.008, path.width, '#777b74');
+        seam.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]);
+      }
+    }
+  }
+  // Road markings are aligned with the downloaded centerlines.
+  const stripes: T.Matrix4[] = [];
+  const temp = new T.Object3D();
+  for (const road of d.roads.filter((r) => r.name !== 'South Park' && r.name !== '2nd Street')) {
+    for (let i = 1; i < road.points.length; i++) {
+      const a = road.points[i - 1],
+        b = road.points[i],
+        len = distance(a, b);
+      for (let t = 4; t < len; t += 15) {
+        const stripeX = a[0] + ((b[0] - a[0]) * t) / len;
+        if (road.name === 'Brannan Street' && hasBrannanDoubleYellow(stripeX)) continue;
+        temp.position.set(a[0] + ((b[0] - a[0]) * t) / len, 0.08, a[1] + ((b[1] - a[1]) * t) / len);
+        temp.rotation.set(0, -Math.atan2(b[1] - a[1], b[0] - a[0]), 0);
+        temp.scale.set(Math.min(4, len - t), 0.015, 0.17);
+        temp.updateMatrix();
+        stripes.push(temp.matrix.clone());
+      }
+    }
+  }
+  const stripeMesh = new T.InstancedMesh(boxGeo, material('#f8eab7'), stripes.length);
+  stripes.forEach((m, i) => stripeMesh.setMatrixAt(i, m));
+  scene.add(stripeMesh);
+  // Textures use metres-per-window UVs, so tall walls repeat floors instead of stretching one photograph.
+  const kinds: FacadeKind[] = ['brick', 'masonry', 'glass'];
+  const walls: Record<FacadeKind, T.BufferGeometry[]> = { brick: [], masonry: [], glass: [] };
+  const roofs: T.BufferGeometry[] = [];
+  const ledges: T.Matrix4[] = [];
+  for (const texture of Object.values(facades))
+    texture.anisotropy = Math.min(16, renderer.capabilities.getMaxAnisotropy());
+  for (const building of d.buildings) {
+    if (
+      building.points.length < 4 ||
+      isLocal(building) ||
+      hasRouteProfile(building) ||
+      building.id === 443021970
+    )
+      continue;
+    const kind = building.facade || 'masonry';
+    const geometry = buildingGeometry(building);
+    walls[kind].push(geometry.walls);
+    roofs.push(geometry.roof);
+    for (let i = 1; i < building.points.length; i++) {
+      const a = building.points[i - 1],
+        b = building.points[i],
+        len = distance(a, b);
+      if (len < 1) continue;
+      temp.position.set((a[0] + b[0]) / 2, building.height + 0.06, (a[1] + b[1]) / 2);
+      temp.rotation.set(0, -Math.atan2(b[1] - a[1], b[0] - a[0]), 0);
+      temp.scale.set(len + 0.12, 0.26, 0.45);
+      temp.updateMatrix();
+      ledges.push(temp.matrix.clone());
+    }
+  }
+  for (const kind of kinds) {
+    if (!walls[kind].length) continue;
+    const merged = mergeGeometries(walls[kind]);
+    const m = new T.MeshStandardMaterial({
+      map: facades[kind],
+      color: '#ffffff',
+      roughness: kind === 'glass' ? 0.32 : 0.87,
+      metalness: kind === 'glass' ? 0.18 : 0,
+      side: T.DoubleSide,
+    });
+    scene.add(new T.Mesh(merged, m));
+    walls[kind].forEach((g) => g.dispose());
+  }
+  if (roofs.length) {
+    const merged = mergeGeometries(roofs);
+    scene.add(
+      new T.Mesh(
+        merged,
+        new T.MeshStandardMaterial({ color: '#8b8981', roughness: 1, side: T.DoubleSide }),
+      ),
+    );
+    roofs.forEach((g) => g.dispose());
+  }
+  const cornices = new T.InstancedMesh(boxGeo, material('#a9a59a'), ledges.length);
+  ledges.forEach((m, i) => cornices.setMatrixAt(i, m));
+  scene.add(cornices);
+  if (d.coast?.length) {
+    for (const coast of d.coast) {
+      ribbons([coast], 3, '#ddd1b0', 0.1);
+      const waterShape = new T.Shape();
+      const pts = [...coast, [3000, coast[coast.length - 1][1]], [3000, coast[0][1]]];
+      pts.forEach((p, i) => (i ? waterShape.lineTo(p[0], -p[1]) : waterShape.moveTo(p[0], -p[1])));
+      const water = new T.Mesh(
+        new T.ShapeGeometry(waterShape),
+        new T.MeshStandardMaterial({
+          color: '#32a8c4',
+          roughness: 0.3,
+          metalness: 0.25,
+          side: T.DoubleSide,
+        }),
+      );
+      water.rotation.x = -Math.PI / 2;
+      water.position.y = -0.12;
+      scene.add(water);
+    }
+  }
+  // Office markers sit on mapped building frontages; these are race labels, not replica signage.
+  const officeTextures: T.Texture[] = [];
+  for (const office of d.course?.landmarks || []) {
+    const c = document.createElement('canvas');
+    c.width = 768;
+    c.height = 192;
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#112b38';
+    ctx.fillRect(0, 0, 768, 192);
+    ctx.fillStyle = '#c4ff58';
+    ctx.fillRect(0, 0, 12, 192);
+    ctx.font = 'bold 46px sans-serif';
+    ctx.fillText(office.name, 32, 78);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '30px sans-serif';
+    ctx.fillText(office.address, 32, 135);
+    const texture = new T.CanvasTexture(c);
+    texture.colorSpace = T.SRGBColorSpace;
+    officeTextures.push(texture);
+    const marker = new T.Sprite(new T.SpriteMaterial({ map: texture, depthTest: true }));
+    marker.position.set(office.position[0], Math.max(office.height, 24), office.position[1]);
+    marker.scale.set(29, 7.25, 1);
+    scene.add(marker);
+    cube(
+      scene,
+      office.position[0],
+      office.height / 2,
+      office.position[1],
+      0.3,
+      office.height,
+      0.3,
+      '#c4ff58',
+    );
+  }
+  const disposeRoute = buildRouteScenery(scene, d, facades);
+  const disposePark = buildSouthPark(scene, d);
+  buildSidewalks(scene, d);
+  const disposeMarkings = buildRoadMarkings(scene, d);
+  const disposeTraffic = buildTrafficControls(scene, d);
+
+  const scenery = new T.Group();
+  // Reparenting removes children from scene; iterate a snapshot, not the live array.
+  for (const o of scene.children.slice())
+    if (o instanceof T.Mesh || o instanceof T.Group) scenery.add(o);
+  scene.add(scenery);
+  return {
+    renderer,
+    scene,
+    camera,
+    scenery,
+    officeTextures,
+    cube,
+    material,
+    disposeTextures() {
+      disposePark();
+      disposeRoute();
+      disposeMarkings();
+      disposeTraffic();
+    },
+  };
+}
+export type RaceWorld = ReturnType<typeof createWorld>;
