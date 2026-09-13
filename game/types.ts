@@ -2,6 +2,14 @@ import type * as T from 'three';
 import type { TrafficNode } from './scenery/traffic-controls';
 import type { Building, FacadeKind } from './scenery/geometry/building-geometry';
 export type Point = number[];
+export type BikeStation = {
+  id: string;
+  name: string;
+  position: Point;
+  angle: number;
+  capacity: number;
+  routeDistance: number;
+};
 export type StreetSign = {
   id: string;
   intersectionPosition: Point;
@@ -10,6 +18,7 @@ export type StreetSign = {
   blades: { name: string; angle: number; sourceWayIds: number[] }[];
 };
 export type MapData = {
+  bikeStations?: BikeStation[];
   streetSigns?: StreetSign[];
   trafficControls?: TrafficNode[];
   course?: {

@@ -1,4 +1,4 @@
-import json,math,heapq
+import json,math,heapq,subprocess,sys
 from pathlib import Path
 p=Path('public/streets.json');d=json.loads(p.read_text())
 street_signs=d.get('streetSigns', [])
@@ -48,4 +48,5 @@ out['buildings']=list(buildings.values())
 out['buildingCoverage']={'source':'streets.json','marginMetres':margin,'bounds':bounds,'footprintCount':len(buildings)}
 out['streetSigns']=[s for s in street_signs if min(xs)-180 <= s['intersectionPosition'][0] <= max(xs)+180 and min(zs)-180 <= s['intersectionPosition'][1] <= max(zs)+180]
 Path('public/race-course.json').write_text(json.dumps(out,separators=(',',':')))
+subprocess.run([sys.executable, str(Path(__file__).with_name('sync-bike-stations.py'))], check=True)
 print(json.dumps(out['course'],indent=2))

@@ -1,3 +1,4 @@
+import { createBayWater } from '../scenery/bay-water';
 import { DELANCEY_PATIO_ID } from '../scenery/delancey-street';
 import { HARBOR_BUILDING_IDS } from '../scenery/harbor-buildings';
 import { hasBrannanDoubleYellow } from '../scenery/config/scenery-locations';
@@ -12,6 +13,7 @@ import { buildRoadMarkings } from '../scenery/road-markings';
 import { buildCityMotion } from '../scenery/city-motion';
 import { buildTrafficControls } from '../scenery/traffic-controls';
 import { buildStreetSigns } from '../scenery/street-signs';
+import { buildBikeStations } from '../scenery/bike-stations';
 import type { MapData, Facades, Point } from '../types';
 const distance = (a: Point, b: Point) => Math.hypot(a[0] - b[0], a[1] - b[1]);
 export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Facades) {
@@ -214,23 +216,18 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   const cornices = new T.InstancedMesh(boxGeo, material('#a9a59a'), ledges.length);
   ledges.forEach((m, i) => cornices.setMatrixAt(i, m));
   scene.add(cornices);
+  const bayWater = createBayWater();
   if (d.coast?.length) {
     for (const coast of d.coast) {
       ribbons([coast], 3, '#ddd1b0', 0.1);
       const waterShape = new T.Shape();
       const pts = [...coast, [3000, coast[coast.length - 1][1]], [3000, coast[0][1]]];
       pts.forEach((p, i) => (i ? waterShape.lineTo(p[0], -p[1]) : waterShape.moveTo(p[0], -p[1])));
-      const water = new T.Mesh(
-        new T.ShapeGeometry(waterShape),
-        new T.MeshStandardMaterial({
-          color: '#32a8c4',
-          roughness: 0.3,
-          metalness: 0.25,
-          side: T.DoubleSide,
-        }),
-      );
+      const water = new T.Mesh(new T.ShapeGeometry(waterShape), bayWater.material);
       water.rotation.x = -Math.PI / 2;
       water.position.y = -0.12;
+      water.name = 'Bay water with wind ripples';
+      water.onBeforeRender = () => bayWater.update(performance.now() / 1000);
       scene.add(water);
     }
   }
@@ -274,6 +271,7 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   const disposeMarkings = buildRoadMarkings(scene, d);
   const disposeTraffic = buildTrafficControls(scene, d);
   const disposeSigns = buildStreetSigns(scene, d);
+  const disposeBikeStations = buildBikeStations(scene, d.bikeStations || []);
 
   const cityMotion = buildCityMotion(scene, d);
   const scenery = new T.Group();
@@ -291,11 +289,13 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
     cube,
     material,
     disposeTextures() {
+      bayWater.dispose();
       disposePark();
       disposeRoute();
       disposeMarkings();
       disposeTraffic();
       disposeSigns();
+      disposeBikeStations();
     },
   };
 }

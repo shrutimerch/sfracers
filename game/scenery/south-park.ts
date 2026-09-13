@@ -1,5 +1,6 @@
+import { createTreePlacement } from './tree-clearance';
 import { SCENERY_LOCATIONS } from './config/scenery-locations';
-import { parkParking, parkBikeDock } from './south-park-parking';
+import { parkParking } from './south-park-parking';
 import { parkGrass } from './geometry/park-ground';
 import { hasRouteProfile } from './config/route-profiles';
 import playgroundSource from './data/playground-geometry';
@@ -9,6 +10,8 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { MapData, Point } from '../types';
 import type { Building } from './geometry/building-geometry';
 import { buildingGeometry } from './geometry/building-geometry';
+import { buildCafeCentro, CAFE_CENTRO_ID } from './cafe-centro';
+import { buildBlueBottle, BLUE_BOTTLE_ID } from './blue-bottle';
 
 // Surveyed OSM geometry; architectural and planting details are reference-based approximations.
 export const parkCenter = new T.Vector2(90, 490);
@@ -16,6 +19,7 @@ export const isLocal = (b: Building) =>
   b.points.some(([x, z]) => Math.hypot(x - 90, z - 490) < 155);
 export function buildSouthPark(scene: T.Scene, d: MapData) {
   const textures: T.Texture[] = [];
+  const disposeLandmarks: (() => void)[] = [];
   let seed = 8241;
   const random = () => {
     seed = (seed * 1664525 + 1013904223) >>> 0;
@@ -31,7 +35,7 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
     wood = mat('#847354'),
     dark = mat('#343a39'),
     glass = mat('#40535a', 0.25);
-  const leaves = ['#34492d', '#435334', '#4b5c39', '#536344'].map((c) => mat(c));
+  const leaves = ['#465e3b', '#556845', '#5d714a', '#657855'].map((c) => mat(c));
   const add = (g: T.BufferGeometry, m: T.Material) => {
     if (!groups.has(m)) groups.set(m, []);
     groups.get(m)!.push(g);
@@ -256,7 +260,11 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
     }
   }
   // Mature, branched plane trees and evergreen crowns at mapped tree locations.
-  for (const [index, [x, z]] of (d.parkDetails?.trees || []).entries()) {
+  const treePlacement = createTreePlacement(d);
+  for (const [index, point] of (d.parkDetails?.trees || []).entries()) {
+    const position = treePlacement.place(point);
+    if (!position) continue;
+    const [x, z] = position;
     const h = 12 + random() * 5,
       base = new T.Vector3(x, 0.2, z),
       top = new T.Vector3(x + 0.3, h * 0.45, z - 0.3);
@@ -452,6 +460,12 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
     const geom = buildingGeometry(b);
     add(geom.walls, paint);
     add(geom.roof, dark);
+    if (b.id === CAFE_CENTRO_ID || b.id === BLUE_BOTTLE_ID) {
+      disposeLandmarks.push(
+        b.id === CAFE_CENTRO_ID ? buildCafeCentro(scene, b) : buildBlueBottle(scene, b),
+      );
+      continue;
+    }
     const center = b.points
       .reduce((p, v) => p.add(new T.Vector2(v[0], v[1])), new T.Vector2())
       .divideScalar(b.points.length);
@@ -720,65 +734,6 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
     box(8, 3.5, 586, 1.5, 4.6, 0.16, white, Math.PI / 4);
     rod(new T.Vector3(8, 0, 586), new T.Vector3(8, 6, 586), 0.08, steel);
   }
-  // Blue bike-share row visible on the northwest side of the user's entrance photo.
-  const bikeBlue = mat('#2778b9'),
-    tire = mat('#242b2d'),
-    silver = mat('#b4babc');
-  for (const bike of parkBikeDock(d.roads)) {
-    const { x, z, angle } = bike;
-    const p = (u: number, y: number, v = 0) =>
-      new T.Vector3(
-        x + Math.cos(angle) * u - Math.sin(angle) * v,
-        y,
-        z + Math.sin(angle) * u + Math.cos(angle) * v,
-      );
-    for (const u of [-0.7, 0.7]) {
-      const center = p(u, 0.39);
-      for (const [radius, tube, m] of [
-        [0.35, 0.055, tire],
-        [0.29, 0.018, silver],
-      ] as const) {
-        const g = new T.TorusGeometry(radius, tube, 6, 20);
-        g.rotateY(-angle);
-        g.translate(...center.toArray());
-        add(g, m);
-      }
-      for (let k = 0; k < 8; k++) {
-        const a = (k * Math.PI) / 4;
-        rod(center, p(u + Math.cos(a) * 0.28, 0.39 + Math.sin(a) * 0.28), 0.009, silver);
-      }
-    }
-    const rear = p(-0.7, 0.39),
-      front = p(0.7, 0.39),
-      crank = p(-0.06, 0.43),
-      seat = p(-0.28, 0.94),
-      head = p(0.4, 1.02);
-    for (const [a, b] of [
-      [rear, crank],
-      [crank, seat],
-      [seat, rear],
-      [seat, head],
-      [head, crank],
-      [head, front],
-    ])
-      rod(a, b, 0.032, bikeBlue);
-    rod(head, p(0.4, 1.2), 0.026, silver);
-    rod(p(0.4, 1.2, -0.25), p(0.4, 1.2, 0.25), 0.028, dark);
-    box(
-      ...([p(-0.29, 1.03).x, 1.03, p(-0.29, 1.03).z] as [number, number, number]),
-      0.32,
-      0.09,
-      0.24,
-      dark,
-      angle,
-    );
-    const panel = p(-0.58, 0.72);
-    box(panel.x, 0.72, panel.z, 0.53, 0.28, 0.1, bikeBlue, angle);
-    const dock = p(0.98, 0.42);
-    box(dock.x, 0.42, dock.z, 0.28, 0.8, 0.24, silver, angle);
-    const bollard = p(-1.2, 0.45);
-    rod(bollard.clone().setY(0.12), bollard.clone().setY(0.92), 0.035, concrete);
-  }
   for (const [m, geoms] of groups) {
     if (!geoms.length) continue;
     const g = mergeGeometries(geoms, false);
@@ -788,5 +743,8 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
     scene.add(mesh);
     geoms.forEach((g) => g.dispose());
   }
-  return () => textures.forEach((t) => t.dispose());
+  return () => {
+    textures.forEach((t) => t.dispose());
+    disposeLandmarks.forEach((dispose) => dispose());
+  };
 }

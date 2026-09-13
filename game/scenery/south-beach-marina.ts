@@ -1,3 +1,4 @@
+import { createTreePlacement } from './tree-clearance';
 import * as T from 'three';
 import { palmGeometry } from './geometry/palm-geometry.ts';
 import type { MapData, Point } from '../types';
@@ -19,7 +20,7 @@ export function buildSouthBeachMarina(
     wood = mat('#8d8471');
   const metal = mat('#bcc7c8'),
     bark = mat('#77684e');
-  const leaves = ['#37502a', '#526b33', '#708345'].map(mat);
+  const leaves = ['#49653a', '#648044', '#829856'].map(mat);
   const box = (
     x: number,
     y: number,
@@ -111,7 +112,9 @@ export function buildSouthBeachMarina(
     }
     return result;
   };
+  const treePlacement = createTreePlacement(d);
   const clear = (x: number, z: number) => {
+    if (!treePlacement.clear([x, z])) return false;
     for (const road of [...d.roads, ...(d.paths || [])])
       for (let i = 1; i < road.points.length; i++) {
         const a = road.points[i - 1],

@@ -1,6 +1,7 @@
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { MapData, Point } from '../types';
+import { buildSidewalkScooters, type ScooterPlacement } from './sidewalk-scooters';
 
 // A first detailed streetscape pass: real centerlines, representative SF concrete and fixtures.
 export function buildSidewalks(scene: T.Scene, d: MapData) {
@@ -96,6 +97,7 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
     return inside;
   };
   let count = 0;
+  const scooters: ScooterPlacement[] = [];
   for (const road of d.roads) {
     if (
       !['South Park', '2nd Street', 'Brannan Street', 'King Street', '3rd Street'].includes(
@@ -167,6 +169,23 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
           const y0 = height(inner0),
             y1 = height(inner1);
           const m = concrete[count++ % 4];
+          // Sparse, repeatable placements on actual sidewalk slabs, away from corners and docks.
+          if (
+            count % 79 === 23 &&
+            clear > 6 &&
+            !scooters.some((p) => Math.hypot(p.x - center[0], p.z - center[1]) < 24) &&
+            !(d.bikeStations || []).some(
+              (s) => Math.hypot(s.position[0] - center[0], s.position[1] - center[1]) < 16,
+            )
+          ) {
+            const parked = at(tm, side * (half + 0.8));
+            scooters.push({
+              x: parked[0],
+              y: 0.28,
+              z: parked[1],
+              angle: angle + ((count % 3) - 1) * 0.3 + (side < 0 ? Math.PI : 0),
+            });
+          }
           quad(inner0, inner1, outer0, outer1, y0, y1, m);
           // Visible vertical curb face and thin cap; slab joints stay at believable metre scale.
           const v = new T.BufferGeometry();
@@ -205,6 +224,7 @@ export function buildSidewalks(scene: T.Scene, d: MapData) {
         }
     }
   }
+  buildSidewalkScooters(scene, scooters);
   for (const [m, geometries] of groups) {
     const merged = mergeGeometries(geometries, false);
     if (!merged) continue;

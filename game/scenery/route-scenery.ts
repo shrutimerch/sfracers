@@ -1,11 +1,18 @@
+import { buildWaterfrontRailings } from './waterfront-railings';
+import {
+  buildEmbarcaderoLamps,
+  embarcaderoLampPositions,
+  isEmbarcaderoLamp,
+} from './embarcadero-lamps';
 import { buildDelanceyGarden } from './delancey-garden';
 import { buildPier38, PIER_38_ID } from './pier-38';
 import { buildBrannanWaterfront } from './brannan-waterfront';
 import { buildDelanceyStreet, DELANCEY_RESTAURANT_ID } from './delancey-street';
+import { broadleafGeometry } from './geometry/broadleaf-geometry';
 import { buildHarborBuildings } from './harbor-buildings';
 import { buildBayBridge } from './bay-bridge';
 import { buildSouthBeachMarina } from './south-beach-marina';
-import { waterfrontTreePosition } from './tree-clearance';
+import { createTreePlacement } from './tree-clearance';
 import { buildOraclePark } from './oracle-park';
 import { SCENERY_LOCATIONS, ROAD_APPEARANCE } from './config/scenery-locations';
 import { courtyardPaths } from './data/brannan-courtyard-data';
@@ -29,11 +36,13 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     dark = mat('#314448'),
     blue = mat('#385b6c'),
     bark = mat('#77684e'),
-    leaf = mat('#456038'),
+    leaf = mat('#577548'),
     rail = mat('#7c807e');
+  const streetBark = mat('#827e69');
+  const streetLeaves = ['#47633a', '#627a48', '#7a9051', '#94a55f', '#5d7646'].map(mat);
   const groundGrass = parkGrass(),
     grass = groundGrass.material,
-    palmLeaves = ['#3b542b', '#526b33', '#708345'].map(mat);
+    palmLeaves = ['#4d693b', '#648044', '#829856'].map(mat);
   const add = (g: T.BufferGeometry, m: T.Material) => {
     const n = g.index ? g.toNonIndexed() : g;
     if (n !== g) g.dispose();
@@ -355,24 +364,27 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     bed(u, v, width, depth);
   // Broad paved approach remains open between the front planters.
   for (let u = 0; u < 38; u += 2) line([cp(u, 0), cp(u, 2)], 0.025, pale, 0.22);
+  const treePlacement = createTreePlacement(d);
   for (const [u, v, h] of SCENERY_LOCATIONS.brannanCourtyard.trees) {
-    const [x, z] = cp(u, v);
-    rod(new T.Vector3(x, 0.6, z), new T.Vector3(x, h, z), 0.17, bark);
-    for (let j = 0; j < 6; j++) {
-      const a = j * 2.4,
-        tx = x + Math.cos(a) * 1.7,
-        tz = z + Math.sin(a) * 1.7;
-      rod(new T.Vector3(x, h * 0.55, z), new T.Vector3(tx, h - 0.3, tz), 0.07, bark);
-      const g = new T.SphereGeometry(1, 12, 9);
-      g.scale(1.8, 2.1, 1.7);
-      g.translate(tx, h + (j % 2) * 0.7, tz);
-      add(g, leaf);
-    }
+    const position = treePlacement.place(cp(u, v));
+    if (!position) continue;
+    const [x, z] = position;
+    broadleafGeometry(
+      x,
+      z,
+      h + 2,
+      Math.round(u * 971 + v * 317),
+      add,
+      { bark: streetBark, leaves: streetLeaves },
+      0.6,
+    );
   }
+
   cb(10, 3, 1.35, 3.3, 1.2, 0.38, courtStone);
   const disposeOraclePark = buildOraclePark(scene, survey.stadium, facades, routeDistance);
   buildBayBridge(scene);
   buildBrannanWaterfront(scene);
+  buildWaterfrontRailings(scene, d);
   buildDelanceyGarden(scene);
   const disposeHarborBuildings = buildHarborBuildings(scene);
   const inPolygon = (p: Point, pts: Point[]) => {
@@ -630,23 +642,29 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     add(ring, redSteel);
   }
   for (const tree of survey.trees) {
-    const [x, z] = tree.palm ? waterfrontTreePosition(tree.point, d.roads) : tree.point;
+    const position = treePlacement.place(tree.point);
+    if (!position) continue;
+    const [x, z] = position;
     if (Math.hypot(x - 90, z - 490) < 170 || routeDistance(x, z) > 90) continue;
     if (tree.palm) {
       palmGeometry(x, z, 10 + (tree.id % 4), add, { bark, leaves: palmLeaves });
     } else {
-      rod(new T.Vector3(x, 0, z), new T.Vector3(x, 6, z), 0.2, bark);
-      for (let j = 0; j < 3; j++) {
-        const g = new T.SphereGeometry(1, 10, 7);
-        g.scale(2.4, 2.7, 2.3);
-        g.translate(x + Math.cos(j * 2.1) * 1.1, 6.5 + (j % 2), z + Math.sin(j * 2.1) * 1.1);
-        add(g, leaf);
-      }
+      broadleafGeometry(x, z, 9.5 + (tree.id % 8) * 0.55, tree.id, add, {
+        bark: streetBark,
+        leaves: streetLeaves,
+      });
     }
   }
+  buildEmbarcaderoLamps(
+    scene,
+    embarcaderoLampPositions(
+      d,
+      survey.lamps.map((lamp) => lamp.point),
+    ).filter(([x, z]) => routeDistance(x, z) <= 85),
+  );
   for (const lamp of survey.lamps) {
     const [x, z] = lamp.point;
-    if (routeDistance(x, z) > 70) continue;
+    if (isEmbarcaderoLamp(lamp.point) || routeDistance(x, z) > 70) continue;
     rod(new T.Vector3(x, 0, z), new T.Vector3(x, 6.5, z), 0.075, blue);
     box(x, 0.2, z, 0.4, 0.4, 0.4, blue);
     const g = new T.SphereGeometry(0.24, 8, 6);

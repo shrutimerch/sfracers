@@ -74,3 +74,11 @@ The subsequent front reference at 691 The Embarcadero distinguishes the taller t
 ## Private garden at Brannan and Delancey
 
 `game/scenery/delancey-garden.ts` models the planted corner shown in the supplied May 2025 view from 198 Brannan: a low terracotta boundary with black iron railings, mature tree canopy, interior paths/seating, and pale sidewalk bollards. Garden bounds and furnishings are photo-based estimates placed between the existing road and building footprints; the enclosure remains private scenery.
+
+## Embarcadero heritage lamps
+
+`game/scenery/embarcadero-lamps.ts` follows the supplied May 2025 view at 637 The Embarcadero S: dark green tapered posts, fluted cast bases, decorative collars, faceted warm glass lanterns, peaked caps and finials. Mapped waterfront lamp positions are retained; gaps along the waterside sidewalk receive estimated infill positions outside building footprints, separated from existing lamps. No additional real-time point lights are added.
+
+## Pier 38 waterside details
+
+The supplied May 2025 close-up from 675 The Embarcadero guides `game/scenery/waterfront-railings.ts`: five horizontal metal rails between pale concrete posts following the retained Brannan Wharf shoreline, and a black-and-ivory banded square marker. `game/scenery/bay-water.ts` adds shared procedural color/bump maps with slow wind-ripple movement and a muted bay-water palette. Both water textures are released during world teardown.

@@ -14,11 +14,11 @@ export type FacadeProfile = {
 };
 export const southParkProfiles: Record<string, FacadeProfile> = {
   '102': {
-    color: '#aaa99c',
+    color: '#b3b1a6',
     trim: '#bec1b5',
     frames: '#617779',
-    floors: 3,
-    height: 10,
+    floors: 4,
+    height: 14.4,
     bays: 3,
     arches: true,
     ground: '#d6d0ab',
@@ -35,11 +35,11 @@ export const southParkProfiles: Record<string, FacadeProfile> = {
     arches: true,
   },
   '2': {
-    color: '#bc9470',
+    color: '#9b6043',
     trim: '#b3a18b',
     frames: '#465354',
     floors: 3,
-    height: 12,
+    height: 13,
     style: 'industrial',
   },
   '21': {
