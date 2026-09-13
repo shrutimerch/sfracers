@@ -1,3 +1,4 @@
+import { parkParkingObstacles } from '../scenery/south-park-parking';
 import { ORACLE_GENERIC_BUILDING_IDS } from '../scenery/oracle-park';
 import { buildPromenadePaving } from '../scenery/promenade-paving';
 import { embarcaderoDivider } from '../scenery/config/embarcadero-layout';
@@ -282,7 +283,11 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
     scenery,
     officeTextures,
     cityMotion,
-    trafficObstacles: [...cityMotion.obstacles, ...curbside.obstacles],
+    trafficObstacles: [
+      ...cityMotion.obstacles,
+      ...curbside.obstacles,
+      ...parkParkingObstacles(d.roads),
+    ],
     cube,
     material,
     disposeTextures() {

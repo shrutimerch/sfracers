@@ -1,3 +1,4 @@
+import type { TrafficObstacle } from '../simulation/traffic-collision';
 type Road = { name: string; points: number[][]; width?: number };
 // User's January 2025 Street View reference: the Second Street entrance has nose-in bays on both sides.
 export const isEastParkEntrance = (r: Road) =>
@@ -48,7 +49,8 @@ export function parkParking(roads: Road[]) {
       along += len;
     }
   }
-  return cars;
+  // Leave the west entrance junction clear where the loop meets the start approach.
+  return cars.filter((car) => car.noseIn || Math.hypot(car.x - 29.52, car.z - 554.02) > 3);
 }
 
 export function parkBikeDock(roads: Road[]) {
@@ -78,4 +80,16 @@ export function parkBikeDock(roads: Road[]) {
     }
   }
   return bikes;
+}
+
+export function parkParkingObstacles(roads: Road[]): TrafficObstacle[] {
+  return parkParking(roads).map((car) => ({
+    x: car.x,
+    z: car.z,
+    previousX: car.x,
+    previousZ: car.z,
+    angle: car.angle,
+    halfLength: 2.15,
+    halfWidth: 1.1,
+  }));
 }
