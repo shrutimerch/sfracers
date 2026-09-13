@@ -939,82 +939,6 @@ footer a {
     font-size: 12px;
   }
 }
-.route-link {
-  font-size: 14px;
-  color: #d0ff66;
-  white-space: nowrap;
-}
-.route-page {
-  min-height: 100dvh;
-  background: #123649;
-  color: #f5faf6;
-}
-.route-page header > a:last-child {
-  font-size: 16px;
-  color: #d0ff66;
-}
-.route-layout {
-  display: grid;
-  grid-template-columns: 380px minmax(0, 1fr);
-  gap: 40px;
-  padding: 40px;
-  max-width: 1500px;
-  margin: auto;
-  align-items: start;
-}
-.route-layout h1 {
-  font-size: 44px;
-  letter-spacing: -1.5px;
-  line-height: 1.05;
-  margin: 20px 0;
-}
-.route-layout p {
-  font-size: 16px;
-  line-height: 1.6;
-  color: #c2d8e1;
-}
-.route-layout img {
-  width: 100%;
-  border: 1px solid #557985;
-  border-radius: 12px;
-}
-.route-layout ol {
-  padding-left: 22px;
-  font-size: 16px;
-  line-height: 1.5;
-}
-.route-layout li {
-  margin: 14px 0;
-}
-.route-stats {
-  display: flex;
-  gap: 32px;
-  padding: 20px 0;
-  border-block: 1px solid #557985;
-}
-.route-stats b {
-  font-size: 28px;
-}
-.route-stats small {
-  display: block;
-  font-size: 12px;
-  letter-spacing: 1px;
-  margin-top: 6px;
-  color: #b6d0d9;
-}
-.route-drive {
-  display: block;
-  padding: 16px;
-  background: #ff8054;
-  color: #123649;
-  border-radius: 7px;
-  font-weight: 800;
-  text-decoration: none;
-  text-align: center;
-}
-.route-layout .route-note {
-  font-size: 14px;
-}
 .start-card {
   top: 150px;
 }
@@ -1022,23 +946,8 @@ footer a {
   max-width: calc(100% - 60px);
 }
 @media (max-width: 800px) {
-  .route-layout {
-    display: flex;
-    flex-direction: column;
-    padding: 24px;
-    gap: 24px;
-  }
-  .route-layout img {
-    order: -1;
-  }
-  .route-layout h1 {
-    font-size: 36px;
-  }
   .district {
     display: none;
-  }
-  .route-link {
-    margin-left: auto;
   }
   .race-title h2 {
     font-size: 20px;
@@ -1072,35 +981,4 @@ footer a {
   .brand-mark {
     display: none;
   }
-  .route-link {
-    font-size: 12px;
-  }
-}
-
-.variant-switch {
-  display: block;
-  margin: 14px 0;
-  color: #173443;
-  font-weight: 700;
-  font-size: 14px;
-}
-.course-choices {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-  padding: 24px 5vw;
-  background: #173443;
-}
-.course-choices a {
-  color: #c4ff58;
-  font-weight: 700;
-}
-.route-page .course-heading {
-  padding: 25px 5vw 0;
-}
-.route-page .route-layout {
-  border-bottom: 1px solid #bbc9cc;
-}
-.office-list a {
-  color: inherit;
 }

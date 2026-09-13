@@ -1,6 +1,6 @@
 # Bay City Kart
 
-A browser-based Three.js racing game on mapped San Francisco streets. The default waterfront circuit and `/vc` alternative use two laps. React handles the interface; a standalone simulation handles gameplay.
+A browser-based Three.js racing game on mapped San Francisco streets. The waterfront circuit uses two laps. React handles the interface; a standalone simulation handles gameplay.
 
 ## Develop and verify
 
@@ -44,7 +44,7 @@ Development-only `/?inspect=395` positions a stationary camera 395 meters along 
 
 ## Data flow
 
-1. The page loads `public/race-course.json` or `public/vc-course.json`, traffic controls and facade textures.
+1. The page loads `public/race-course.json`, traffic controls and facade textures.
 2. `prepareCourse` copies the map's road records and applies the existing park entrance widths. It does not mutate the imported JSON.
 3. `createWorld` builds static scenery once. `createRaceVisuals` adds dynamic race objects.
 4. `createRaceSimulation` owns racing state and exposes controls plus a read-only state snapshot. It has no DOM or Three.js dependency.
@@ -61,7 +61,7 @@ Other tests cover map provenance, geometry, acceleration, alternative park branc
 
 ## Legacy imagery code
 
-The main `/` and `/vc` routes use modeled scenery. The existing `/kart` route and optional photographic adapter remain compatible; `google-scenery.ts` stays outside the simulation. `street-camera.ts` and the small geometry helpers in `street-challenge.ts` remain for the earlier experiment and its tests. The unused Maps script loader was removed. No new imagery requests were introduced.
+The main `/` route uses modeled scenery. The existing `/kart` route and optional photographic adapter remain compatible; `google-scenery.ts` stays outside the simulation. `street-camera.ts` and the small geometry helpers in `street-challenge.ts` remain for the earlier experiment and its tests. The unused Maps script loader was removed. No new imagery requests were introduced.
 
 ## Formatting and lint choices
 

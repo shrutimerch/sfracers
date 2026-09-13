@@ -7,7 +7,7 @@ import { createRaceSimulation } from '../app/game/simulation.ts';
 const loadCourse = (name) =>
   JSON.parse(readFileSync(new URL(`../public/${name}.json`, import.meta.url)));
 
-for (const name of ['race-course', 'vc-course']) {
+for (const name of ['race-course']) {
   test(`${name}: drive both complete laps with real steering, pause, recover, finish, and restart`, () => {
     const sim = createRaceSimulation(prepareCourse(loadCourse(name)));
     sim.start();
