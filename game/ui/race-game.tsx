@@ -2,7 +2,16 @@
 import { RACE_LAPS } from '../simulation/race-laps';
 import { useEffect, useRef, useState } from 'react';
 import type { HUD, MapData } from '../engine';
-import { CHARACTERS, DEFAULT_CHARACTER, type CharacterId } from '../characters/roster.ts';
+import {
+  CHARACTERS,
+  STANDARD_CHARACTERS,
+  SECRET_CHARACTERS,
+  DEFAULT_CHARACTER,
+  type CharacterId,
+} from '../characters/roster.ts';
+import { createSecretCode } from '../characters/secret-code.ts';
+import { RaceStandings } from './race-standings';
+import { raceRoster } from '../characters/roster';
 import { CharacterPreview } from './character-preview';
 import {
   CHARACTER_PERFORMANCE,
@@ -20,12 +29,21 @@ export default function RaceGame() {
   const [character, setCharacter] = useState<CharacterId>(DEFAULT_CHARACTER);
   const characterRef = useRef(character);
   characterRef.current = character;
+  const [secretUnlocked, setSecretUnlocked] = useState(false);
+  const secretCode = useRef(createSecretCode());
   const selected = CHARACTERS.find((c) => c.id === character)!;
+  const rosterPack = selected.group;
+  const visibleCharacters =
+    rosterPack === 'sf'
+      ? STANDARD_CHARACTERS
+      : SECRET_CHARACTERS.filter((racer) => racer.group === rosterPack);
   const chooseCharacter = (id: CharacterId) => {
     if (engine.current?.selectCharacter(id)) {
       characterRef.current = id;
       setCharacter(id);
+      return true;
     }
+    return false;
   };
   const [error, setError] = useState(''),
     [hud, setHud] = useState<HUD>({
@@ -118,10 +136,43 @@ export default function RaceGame() {
     };
   }, []);
   const ready = hud.mode === 'ready' || hud.mode === 'loading';
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (
+        !['ready', 'finished'].includes(hud.mode) ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey
+      )
+        return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        target.closest('textarea, input:not([type="radio"]), [contenteditable="true"]')
+      )
+        return;
+      if (!secretCode.current.press(event.key, event.repeat)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setSecretUnlocked(true);
+      if (engine.current?.selectCharacter('sam')) {
+        characterRef.current = 'sam';
+        setCharacter('sam');
+      }
+    };
+    const resetCode = () => secretCode.current.reset();
+    window.addEventListener('keydown', onKey, true);
+    window.addEventListener('blur', resetCode);
+    return () => {
+      window.removeEventListener('keydown', onKey, true);
+      window.removeEventListener('blur', resetCode);
+      resetCode();
+    };
+  }, [hud.mode]);
   const imageryLoading = hud.scenery === 'Loading Google scenery…';
   const press = (key: string, value: boolean) => engine.current?.setKey(key, value);
   return (
-    <main>
+    <main className={`arcade-game ${ready ? 'in-garage' : 'in-race'}`}>
       <header>
         <a href="/" className="brand">
           <span className="brand-mark">SF</span> BAY CITY <em>KART</em>
@@ -162,15 +213,17 @@ export default function RaceGame() {
           </p>
         </div>
         {!ready && (
-          <div className="place">
-            <b>{hud.position}</b>
-            <span>
-              / 4<br />
-              POSITION
-              <br />
-              LAP {hud.lap} / {RACE_LAPS}
-            </span>
-          </div>
+          <>
+            <div className="place" aria-label={`Position ${hud.position} of 4`}>
+              <b>{hud.position}</b>
+              <span>{['', 'st', 'nd', 'rd', 'th'][hud.position] || 'th'}</span>
+            </div>
+            <RaceStandings order={hud.standings ?? raceRoster(character)} player={character} />
+            <div className="lap-counter">
+              LAP <b>{hud.lap}</b>
+              <span> / {RACE_LAPS}</span>
+            </div>
+          </>
         )}
         {(ready || hud.mode === 'paused' || hud.mode === 'finished' || error) && (
           <div className={`start-card${ready || hud.mode === 'finished' ? ' character-card' : ''}`}>
@@ -206,10 +259,34 @@ export default function RaceGame() {
             </p>
             {(ready || hud.mode === 'finished') && !error && (
               <>
+                {secretUnlocked && (
+                  <div className="roster-switch">
+                    <span role="status">Secret roster unlocked</span>
+                    <div role="group" aria-label="Character roster">
+                      {(
+                        [
+                          ['sf', 'SF Racers', 'chonkers'],
+                          ['vc', 'Incubators', 'garry'],
+                          ['ceo', 'CEOs', 'sam'],
+                        ] as const
+                      ).map(([group, label, initial]) => (
+                        <button
+                          key={group}
+                          type="button"
+                          aria-pressed={rosterPack === group}
+                          disabled={hud.mode === 'loading'}
+                          onClick={() => chooseCharacter(initial)}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <CharacterPreview character={character} />
                 <fieldset className="character-options" disabled={hud.mode === 'loading'}>
                   <legend>Choose a character</legend>
-                  {CHARACTERS.map((racer) => (
+                  {visibleCharacters.map((racer) => (
                     <label key={racer.id} className={character === racer.id ? 'selected' : ''}>
                       <input
                         type="radio"
@@ -226,6 +303,16 @@ export default function RaceGame() {
                     </label>
                   ))}
                 </fieldset>
+                {rosterPack !== 'sf' && (
+                  <p className="rival-group" aria-live="polite">
+                    {selected.group === 'ceo' ? 'CEO race' : 'Incubator race'} · Rivals:{' '}
+                    {CHARACTERS.filter(
+                      (racer) => racer.group === selected.group && racer.id !== character,
+                    )
+                      .map((racer) => racer.name)
+                      .join(', ')}
+                  </p>
+                )}
                 <div className="character-stats" aria-label={`${selected.name} acceleration`}>
                   <p>{CHARACTER_PERFORMANCE[character].feel}</p>
                   {ACCELERATION_BANDS.map((band) => (
@@ -302,12 +389,42 @@ export default function RaceGame() {
           </div>
         </div>
         <div className="bottom-hud">
-          <div className="speed">
+          <div className="speed" aria-label={`${hud.speed} miles per hour`}>
+            <svg className="speed-arc" viewBox="0 0 230 170" aria-hidden="true">
+              {[
+                '#27e8dc',
+                '#40ec88',
+                '#8ff543',
+                '#c7f538',
+                '#f9ea43',
+                '#ffbe39',
+                '#ff8735',
+                '#ff5149',
+              ].map((color, i) => {
+                const angle = ((180 - i * 20) * Math.PI) / 180;
+                const x = 119 + 96 * Math.cos(angle),
+                  y = 130 - 96 * Math.sin(angle);
+                return (
+                  <rect
+                    key={color}
+                    x={x - 12}
+                    y={y - 8}
+                    width="24"
+                    height="16"
+                    rx="3"
+                    transform={`rotate(${180 - i * 20 + 90} ${x} ${y})`}
+                    fill={hud.speed >= (i + 1) * 12 ? color : '#34414c'}
+                    stroke="#111a22"
+                    strokeWidth="4"
+                  />
+                );
+              })}
+            </svg>
             <b>{hud.speed.toString().padStart(2, '0')}</b>
             <span>MPH</span>
           </div>
           <div className="timer">
-            <span className="eyebrow">RACE TIME</span>
+            <span className="eyebrow">TIME</span>
             <b>{fmt(hud.time)}</b>
           </div>
           <div className="boost">

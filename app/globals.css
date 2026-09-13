@@ -1165,3 +1165,619 @@ footer a {
   bottom: 0;
   z-index: 2;
 }
+
+/* Floating arcade HUD: leave the center of the road open. */
+.arcade-game.in-race > header {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 5;
+  height: auto;
+  padding: 0;
+  background: transparent;
+}
+.arcade-game.in-race > header .brand,
+.arcade-game.in-race > header .district,
+.arcade-game.in-race > footer,
+.arcade-game.in-race .race-title,
+.arcade-game.in-race .course-progress {
+  display: none;
+}
+.arcade-game.in-race .arena {
+  height: 100dvh;
+  min-height: 500px;
+}
+.arcade-game.in-race .vignette {
+  background: linear-gradient(#142c3c22, transparent 22%, transparent 78%, #142c3c33);
+}
+.arcade-game.in-race .scenery-status:has(:not(button)) {
+  top: 62px;
+}
+.arcade-game.in-race .scenery-status {
+  top: auto;
+  bottom: 8px;
+  left: 16px;
+  font-size: 11px;
+  opacity: 0.65;
+}
+.arcade-game .place,
+.arcade-game .lap-counter,
+.arcade-game .timer,
+.arcade-game .speed,
+.arcade-game .standing-rank {
+  font-family: 'Arial Black', Arial, sans-serif;
+  font-style: italic;
+  font-weight: 950;
+  color: #fff1a3;
+  -webkit-text-stroke: 2px #17202a;
+  paint-order: stroke fill;
+  text-shadow: 3px 4px 0 #17202a;
+  pointer-events: none;
+}
+.arcade-game .place {
+  top: 22px;
+  left: 32px;
+  right: auto;
+  gap: 0;
+  align-items: baseline;
+  transform: rotate(-7deg);
+}
+.arcade-game .place b {
+  font-size: clamp(90px, 10vw, 145px);
+  color: #fff0a1;
+  letter-spacing: -9px;
+  line-height: 1;
+}
+.arcade-game .place > span {
+  font-size: 45px;
+  color: #fff0a1;
+  line-height: 1;
+  letter-spacing: -3px;
+}
+.race-standings {
+  position: absolute;
+  top: 190px;
+  left: 36px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 14px;
+  pointer-events: none;
+}
+.race-standings li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 72px;
+}
+.standing-portrait {
+  width: 72px;
+  height: 72px;
+  border: 3px solid #1a2235;
+  border-radius: 13px;
+  box-shadow: 3px 4px 0 #18263599;
+  transform: rotate(-4deg);
+  overflow: hidden;
+}
+.standing-portrait img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.22);
+}
+.standing-portrait > span {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  font-size: 32px;
+  font-weight: 900;
+}
+.standing-rank {
+  position: absolute;
+  left: -18px;
+  top: -12px;
+  font-size: 33px;
+  z-index: 1;
+}
+.standing-name {
+  color: white;
+  font-size: 14px;
+  font-weight: 900;
+  text-shadow: 1px 2px 3px #111;
+}
+.standing-name small {
+  display: block;
+  color: #fff283;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+.is-player .standing-portrait {
+  border-color: #fff082;
+  box-shadow:
+    0 0 0 3px #ee6651,
+    3px 5px 0 #18263599;
+}
+.arcade-game .lap-counter {
+  position: absolute;
+  bottom: 36px;
+  left: 32px;
+  color: #b4fa54;
+  font-size: 34px;
+  transform: rotate(-5deg);
+}
+.arcade-game .lap-counter b {
+  font-size: 68px;
+}
+.arcade-game .lap-counter span {
+  font-size: 32px;
+}
+.arcade-game .bottom-hud {
+  display: contents;
+}
+.arcade-game .timer {
+  position: absolute;
+  top: 27px;
+  right: 32px;
+  border: 0;
+  padding: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+.arcade-game .timer .eyebrow {
+  font-size: 25px;
+  letter-spacing: 0;
+}
+.arcade-game .timer b {
+  font:
+    italic 900 clamp(28px, 3.8vw, 52px) 'Arial Black',
+    Arial,
+    sans-serif;
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 1px;
+}
+.arcade-game .minimap {
+  top: 115px;
+  right: 30px;
+  bottom: auto;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 2px #0b1d2d);
+}
+.arcade-game .minimap canvas {
+  width: clamp(150px, 17vw, 250px);
+  height: auto;
+  margin: 6px 0;
+}
+.arcade-game .minimap > span {
+  font-size: 11px;
+  color: #fff;
+  letter-spacing: 0.6px;
+}
+.arcade-game .minimap > div {
+  font-size: 11px;
+  color: #fff;
+}
+.arcade-game .speed {
+  position: absolute;
+  right: 30px;
+  bottom: 32px;
+  width: 230px;
+  height: 170px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 0 8px 30px 0;
+  gap: 8px;
+}
+.arcade-game .speed b {
+  font-size: 66px;
+  color: #ffeb69;
+  z-index: 1;
+  font-variant-numeric: tabular-nums;
+}
+.arcade-game .speed > span {
+  position: absolute;
+  bottom: 6px;
+  right: 12px;
+  font-size: 22px;
+  color: #ffeb69;
+}
+.speed-arc {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(1px 2px 0 #101820);
+}
+.arcade-game .boost {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 175px;
+  text-shadow: 0 2px 3px #112;
+}
+.arcade-game .boost .eyebrow {
+  font-size: 12px;
+  color: #fff;
+}
+.arcade-game .boost .eyebrow > span {
+  padding: 2px 5px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  background: #12273488;
+}
+.arcade-game .boost > div {
+  height: 13px;
+  margin-top: 6px;
+  border: 2px solid #172632;
+  box-shadow: 0 1px 0 #ffffff88;
+}
+.arcade-game .boost i {
+  background: linear-gradient(90deg, #41ddcb, #c5fa55);
+}
+.arcade-game .right-controls {
+  bottom: 91px;
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.arcade-game .right-controls button {
+  font-size: 12px;
+  padding: 8px 12px;
+  background: #14283999;
+  border-color: #d8eef977;
+  border-radius: 22px;
+}
+.arcade-game .right-controls kbd {
+  font-size: 11px;
+}
+.arcade-game.in-garage .timer {
+  display: none;
+}
+.arcade-game.in-garage .speed {
+  display: none;
+}
+.arcade-game.in-race .start-card {
+  z-index: 6;
+}
+@media (max-height: 730px) and (min-width: 701px) {
+  .race-standings {
+    top: 155px;
+    gap: 9px;
+  }
+  .race-standings li,
+  .standing-portrait {
+    height: 56px;
+  }
+  .standing-portrait {
+    width: 56px;
+  }
+  .arcade-game .minimap canvas {
+    width: 170px;
+  }
+  .arcade-game .minimap {
+    top: 105px;
+  }
+}
+@media (max-width: 700px) {
+  .arcade-game .place {
+    left: 18px;
+    top: 20px;
+  }
+  .arcade-game .place b {
+    font-size: 82px;
+    letter-spacing: -5px;
+  }
+  .arcade-game .place > span {
+    font-size: 30px;
+  }
+  .arcade-game .timer {
+    right: 16px;
+    top: 28px;
+    gap: 6px;
+  }
+  .arcade-game .timer b {
+    font-size: 25px;
+  }
+  .arcade-game .timer .eyebrow {
+    font-size: 14px;
+  }
+  .arcade-game.in-race > header {
+    top: 8px;
+  }
+  .arcade-game.in-race > header button {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+  .race-standings {
+    top: 126px;
+    left: 26px;
+    gap: 12px;
+  }
+  .race-standings li,
+  .standing-portrait {
+    height: 45px;
+  }
+  .standing-portrait {
+    width: 45px;
+    border-radius: 8px;
+  }
+  .standing-rank {
+    font-size: 25px;
+    left: -14px;
+    top: -9px;
+  }
+  .standing-name {
+    display: none;
+  }
+  .arcade-game .minimap {
+    right: 16px;
+    top: 100px;
+  }
+  .arcade-game .minimap canvas {
+    width: 125px;
+  }
+  .arcade-game .minimap > span {
+    display: none;
+  }
+  .arcade-game .minimap > div {
+    font-size: 9px;
+  }
+  .arcade-game .lap-counter {
+    left: 18px;
+    bottom: 157px;
+    font-size: 22px;
+  }
+  .arcade-game .lap-counter b {
+    font-size: 42px;
+  }
+  .arcade-game .lap-counter span {
+    font-size: 24px;
+  }
+  .arcade-game .speed {
+    right: 12px;
+    bottom: 140px;
+    width: 155px;
+    height: 115px;
+    padding: 0 5px 19px 0;
+  }
+  .arcade-game .speed b {
+    font-size: 43px;
+  }
+  .arcade-game .speed > span {
+    font-size: 15px;
+    bottom: 0;
+  }
+  .arcade-game .boost {
+    bottom: 82px;
+    left: 18px;
+    transform: none;
+    width: 120px;
+  }
+  .arcade-game .right-controls {
+    bottom: 85px;
+    left: auto;
+    right: 14px;
+    transform: none;
+  }
+  .arcade-game .right-controls button {
+    font-size: 11px;
+    padding: 7px 9px;
+  }
+  .arcade-game .right-controls kbd {
+    display: none;
+  }
+  .arcade-game .touch {
+    bottom: 18px;
+  }
+  .arcade-game .touch button {
+    min-height: 44px;
+  }
+}
+
+@font-face {
+  font-family: 'Luckiest Guy';
+  src: url('/fonts/LuckiestGuy-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+/* Chunky game lettering and the cream / gold / lime palette of the reference. */
+.arcade-game .place,
+.arcade-game .place b,
+.arcade-game .place > span,
+.arcade-game .lap-counter,
+.arcade-game .lap-counter b,
+.arcade-game .lap-counter span,
+.arcade-game .timer .eyebrow,
+.arcade-game .timer b,
+.arcade-game .speed b,
+.arcade-game .speed > span,
+.arcade-game .standing-rank {
+  font-family: 'Luckiest Guy', 'Arial Black', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  -webkit-text-stroke: 5px #090b08;
+  paint-order: stroke fill;
+  text-shadow: 2px 3px 0 #090b08;
+}
+.arcade-game .place {
+  transform: rotate(-7deg) skewX(-6deg);
+  gap: 3px;
+}
+.arcade-game .place b {
+  letter-spacing: -5px;
+  -webkit-text-stroke-width: 9px;
+}
+.arcade-game .place > span {
+  letter-spacing: -2px;
+  font-size: 50px;
+}
+.arcade-game .place b,
+.arcade-game .place > span {
+  color: #fffac2;
+  background: linear-gradient(
+    150deg,
+    #ffffd5 15%,
+    #f4f0b7 40%,
+    #c0bd8a 41%,
+    #e8e4b6 70%,
+    #8d906e 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(3px 5px 0 #090b08);
+}
+.arcade-game .timer {
+  transform: skewX(-7deg);
+}
+.arcade-game .timer .eyebrow {
+  font-size: 30px;
+}
+.arcade-game .timer b {
+  letter-spacing: 2px;
+}
+.arcade-game .timer .eyebrow,
+.arcade-game .timer b,
+.arcade-game .speed b,
+.arcade-game .speed > span {
+  color: #ffe33e;
+  background: linear-gradient(#fff7ad 8%, #ffe74d 48%, #ffc22e 73%, #e99720 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: none;
+  filter: drop-shadow(2px 3px 0 #090b08);
+}
+.arcade-game .lap-counter {
+  color: #8df82e;
+  transform: rotate(-5deg) skewX(-7deg);
+  -webkit-text-stroke-width: 5px;
+  text-shadow: 2px 4px 0 #090b08;
+}
+.arcade-game .lap-counter b {
+  color: #baff43;
+  -webkit-text-stroke-width: 6px;
+}
+.arcade-game .lap-counter span {
+  color: #a1ff35;
+}
+.arcade-game .standing-rank {
+  color: #ffef9a;
+  -webkit-text-stroke-width: 4px;
+  transform: rotate(-9deg);
+}
+.arcade-game .race-standings li:nth-child(4) .standing-rank {
+  color: #b9fb50;
+}
+.arcade-game .standing-portrait {
+  border-color: #27219a;
+  box-shadow: 3px 4px 0 #14104eaa;
+}
+.arcade-game .is-player .standing-portrait {
+  border-color: #ff554e;
+  box-shadow:
+    0 0 0 2px #ff9384,
+    3px 5px 0 #171038aa;
+}
+.arcade-game .standing-name {
+  color: #fff3b4;
+}
+.arcade-game .standing-name small {
+  color: #ffec3e;
+}
+.arcade-game .boost .eyebrow,
+.arcade-game .right-controls button {
+  font-family: 'Luckiest Guy', 'Arial Black', sans-serif;
+  font-weight: 400;
+  color: #ffeb70;
+  letter-spacing: 0.6px;
+  text-shadow: 1px 2px 0 #050807;
+}
+.arcade-game .right-controls kbd,
+.arcade-game .boost .eyebrow > span {
+  color: #c6ff42;
+  font-family: Arial, sans-serif;
+  font-weight: 800;
+}
+.arcade-game .boost i {
+  background: linear-gradient(90deg, #00dcc7, #60f52a 55%, #d4ff26);
+}
+@media (max-width: 700px) {
+  .arcade-game .place > span {
+    font-size: 32px;
+  }
+  .arcade-game .place b {
+    -webkit-text-stroke-width: 6px;
+  }
+  .arcade-game .timer .eyebrow {
+    font-size: 17px;
+  }
+  .arcade-game .timer b {
+    letter-spacing: 1px;
+  }
+  .arcade-game .timer .eyebrow,
+  .arcade-game .timer b,
+  .arcade-game .speed > span {
+    -webkit-text-stroke-width: 3px;
+  }
+}
+
+@font-face {
+  font-family: 'Super Mario 256';
+  src: url('/fonts/SuperMario256.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+.arcade-game .timer .eyebrow,
+.arcade-game .timer b {
+  font-family: 'Super Mario 256', 'Luckiest Guy', sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+.roster-switch {
+  margin-top: 12px;
+}
+.roster-switch > span {
+  display: block;
+  color: #c6ff53;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.roster-switch > div {
+  display: flex;
+  gap: 6px;
+}
+.roster-switch button {
+  flex: 1;
+  background: #102e40;
+  border: 1px solid #547588;
+  color: #d4e5e9;
+  padding: 8px;
+  border-radius: 7px;
+  font-size: 14px;
+}
+.roster-switch button[aria-pressed='true'] {
+  border-color: #c6ff53;
+  background: #254c58;
+  color: white;
+}
+.start-card.character-card .rival-group {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #d5e8ee;
+}

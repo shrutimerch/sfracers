@@ -15,7 +15,12 @@ test('Chonkers starts by default and every selection leaves three distinct rival
     const roster = raceRoster(character.id);
     assert.equal(roster[0], character.id);
     assert.equal(new Set(roster).size, 4);
-    assert.deepEqual([...roster].sort(), CHARACTERS.map((c) => c.id).sort());
+    assert.deepEqual(
+      [...roster].sort(),
+      CHARACTERS.filter((c) => c.group === character.group)
+        .map((c) => c.id)
+        .sort(),
+    );
     assert.ok(isCharacterId(character.id));
   }
   assert.equal(isCharacterId('mario'), false);

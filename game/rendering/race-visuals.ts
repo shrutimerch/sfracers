@@ -2,12 +2,7 @@ import * as T from 'three';
 import { createStartMarshal } from './start-marshal.ts';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { createRacer } from '../characters/racer.ts';
-import {
-  CHARACTERS,
-  DEFAULT_CHARACTER,
-  raceRoster,
-  type CharacterId,
-} from '../characters/roster.ts';
+import { DEFAULT_CHARACTER, raceRoster, type CharacterId } from '../characters/roster.ts';
 import type { RaceWorld } from './world';
 import type { RaceRoute } from '../simulation/route-math';
 export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
@@ -84,9 +79,7 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
   const environment = generator.fromScene(room, 0.04);
   room.dispose();
   generator.dispose();
-  const models = new Map(
-    CHARACTERS.map((character) => [character.id, createRacer(character.id, environment.texture)]),
-  );
+  const models = new Map<CharacterId, ReturnType<typeof createRacer>>();
   const slots = Array.from({ length: 4 }, () => new T.Group());
   slots.forEach((slot) => scene.add(slot));
   const [player, ...rivalMeshes] = slots;
@@ -94,7 +87,11 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
   const selectCharacter = (id: CharacterId) => {
     roster = raceRoster(id);
     slots.forEach((slot) => slot.clear());
-    roster.forEach((character, index) => slots[index].add(models.get(character)!.root));
+    roster.forEach((character, index) => {
+      if (!models.has(character))
+        models.set(character, createRacer(character, environment.texture));
+      slots[index].add(models.get(character)!.root);
+    });
   };
   selectCharacter(DEFAULT_CHARACTER);
   const animateRacers = (
@@ -130,7 +127,12 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
     pads.push(m);
   }
 
-  const startMarshal = createStartMarshal(scene, at(9));
+  // Place the marshal on the grid-facing side of the gantry, clear of the banner.
+  const startMarshal = createStartMarshal(scene, {
+    x: finish.x - Math.cos(finish.a) * 3,
+    z: finish.z - Math.sin(finish.a) * 3,
+    a: finish.a,
+  });
   return {
     startMarshal,
     player,
@@ -139,6 +141,12 @@ export function createRaceVisuals(world: RaceWorld, route: RaceRoute) {
     pads,
     selectCharacter,
     animateRacers,
-    disposeRacerEnvironment: () => environment.dispose(),
+    disposeRacerEnvironment: () => {
+      models.forEach((model) => {
+        model.root.removeFromParent();
+        model.dispose();
+      });
+      environment.dispose();
+    },
   };
 }

@@ -9,8 +9,6 @@ export function createMinimap(mini: HTMLCanvasElement, d: MapData, route: RaceRo
     const w = mini.width,
       h = mini.height;
     c.clearRect(0, 0, w, h);
-    c.fillStyle = '#15374c';
-    c.fillRect(0, 0, w, h);
     const xs = d.route.map((p) => p[0]),
       zs = d.route.map((p) => p[1]),
       cx = (Math.min(...xs) + Math.max(...xs)) / 2,
@@ -25,7 +23,7 @@ export function createMinimap(mini: HTMLCanvasElement, d: MapData, route: RaceRo
     for (const r of [...d.roads, ...(d.paths || [])]) {
       c.beginPath();
       r.points.forEach((p, i) => (i ? c.lineTo(p[0], p[1]) : c.moveTo(p[0], p[1])));
-      c.strokeStyle = '#54798a';
+      c.strokeStyle = '#b0c8d0';
       c.lineWidth = 1 / scale;
       c.stroke();
     }

@@ -1,3 +1,4 @@
+import { buildSouthParkCommons, SPC_BUILDING_ID } from './south-park-commons.ts';
 import { beachHeight, inPolygon, BRANNAN_LAWN_HEIGHT } from './park-surface';
 import { isMedianPalm, medianPalmRows } from './median-layout';
 import { buildMedianLamps, medianLampPositions } from './median-lamps';
@@ -45,6 +46,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   const disposeTownsendCorner = buildTownsendCorner(scene);
   const groups = new Map<T.Material, T.BufferGeometry[]>();
   const disposeDelancey: (() => void)[] = [];
+  const landmarkTextures: T.Texture[] = [];
   let disposePier40: (() => void) | undefined;
   let disposePier38: (() => void) | undefined;
   const mat = (color: string) =>
@@ -162,6 +164,10 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       scene.add(wall);
     } else add(geom.walls, wallMat);
     add(geom.roof, dark);
+    if (b.id === SPC_BUILDING_ID) {
+      disposeDelancey.push(buildSouthParkCommons(scene, b));
+      continue;
+    }
     if (b.id === DELANCEY_RESTAURANT_ID || b.id === DELANCEY_EMBARCADERO_ID) {
       disposeDelancey.push(buildDelanceyStreet(scene, b));
       continue;
@@ -210,6 +216,77 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       }
       if (b.id === 125401316) {
         detail(l / 2, b.height + 0.1, l + 0.5, 0.4, mat('#a57556'), 1.1);
+      }
+      if (b.id === 124890326) {
+        // Golden Goat corner: broad sand-colored piers and tall silver-framed glazing.
+        const bays = Math.max(2, Math.round(l / 5.8));
+        const step = l / bays;
+        const varney = i === 3;
+        const doorU = l - 10;
+        detail(l / 2, 0.8, l, 1.6, trim, 0.18, 0.12);
+        for (let j = 0; j <= bays; j++)
+          detail(j * step, b.height / 2, 0.7, b.height, wallMat, 0.5, 0.24);
+        for (let j = 0; j < bays; j++) {
+          const u = (j + 0.5) * step,
+            w = step - 1.35;
+          for (const [y, h] of [
+            [4, 4.6],
+            [9.1, 4.2],
+            [13.6, 3.8],
+          ]) {
+            if (varney && y === 4 && Math.abs(u - doorU) < step * 0.55) continue;
+            detail(u, y, w + 0.2, h + 0.2, frame, 0.15, 0.26);
+            detail(u, y, w, h, glass, 0.12, 0.36);
+            detail(u, y, 0.07, h, frame, 0.08, 0.45);
+            for (const f of [-0.28, 0.2]) detail(u, y + h * f, w, 0.065, frame, 0.08, 0.45);
+            detail(u, y - h / 2 - 0.13, w + 0.45, 0.12, trim, 0.3, 0.28);
+          }
+        }
+        if (varney) {
+          detail(doorU, 1.5, 3.4, 2.9, dark, 0.16, 0.3);
+          for (const side of [-1, 1]) {
+            detail(doorU + side * 0.76, 1.55, 1.38, 2.5, glass, 0.1, 0.4);
+            detail(doorU + side * 0.13, 1.2, 0.045, 0.42, rail, 0.07, 0.5);
+          }
+          detail(doorU, 3.17, 4.5, 0.72, dark, 0.3, 0.42);
+          const canvas = document.createElement('canvas');
+          canvas.width = 1024;
+          canvas.height = 192;
+          const ctx = canvas.getContext('2d')!;
+          ctx.fillStyle = '#24302c';
+          ctx.fillRect(0, 0, 1024, 192);
+          ctx.strokeStyle = '#dab76a';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(12, 12, 1000, 168);
+          ctx.fillStyle = '#f2dfac';
+          ctx.textAlign = 'center';
+          ctx.font = 'bold 92px sans-serif';
+          ctx.fillText('GOLDEN GOAT', 512, 113);
+          ctx.font = '28px sans-serif';
+          ctx.fillText('COFFEE  ·  VARNEY PLACE', 512, 159);
+          const texture = new T.CanvasTexture(canvas);
+          texture.colorSpace = T.SRGBColorSpace;
+          landmarkTextures.push(texture);
+          const sign = new T.Mesh(
+            new T.PlaneGeometry(4.35, 0.69),
+            new T.MeshBasicMaterial({ map: texture }),
+          );
+          sign.name = 'Golden Goat coffee entrance sign';
+          sign.position.set(
+            a[0] + Math.cos(angle) * doorU + nx * 0.59,
+            3.17,
+            a[1] + Math.sin(angle) * doorU + nz * 0.59,
+          );
+          sign.rotation.y = Math.atan2(nx, nz);
+          scene.add(sign);
+          const wood = mat('#78583e');
+          for (const side of [-1, 1]) {
+            const u = doorU + side * 2.7;
+            detail(u, 0.63, 1.5, 0.12, wood, 0.42, 0.65);
+            for (const leg of [-0.58, 0.58]) detail(u + leg, 0.4, 0.1, 0.46, dark, 0.32, 0.65);
+          }
+        }
+        continue;
       }
       detail(l / 2, b.height - 0.2, l, 0.4, trim, 0.5);
       detail(l / 2, 3.8, l, 0.35, trim, 0.35);
@@ -750,6 +827,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     disposeBaysideVillage();
     disposeMuniPaving();
     groundGrass.texture.dispose();
+    landmarkTextures.forEach((texture) => texture.dispose());
     disposeDelancey.forEach((dispose) => dispose());
     disposePier38?.();
     disposePier40?.();

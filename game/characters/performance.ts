@@ -3,6 +3,14 @@ import type { CharacterId } from './roster.ts';
 // Interpolate between two complete curves so the middleweights always sit
 // between the heavy and light racers, even beyond the displayed speed bands.
 export const CHARACTER_PERFORMANCE: Record<CharacterId, { lightness: number; feel: string }> = {
+  sam: { lightness: 0.65, feel: 'Balanced · a little more launch' },
+  dario: { lightness: 0.4, feel: 'Smooth · strong at speed' },
+  elon: { lightness: 0.9, feel: 'Quick launch · fades at speed' },
+  mark: { lightness: 0.55, feel: 'Balanced through the speed range' },
+  garry: { lightness: 0.75, feel: 'Quick off the line' },
+  pejman: { lightness: 0.25, feel: 'Patient launch · strong at speed' },
+  andrew: { lightness: 0.85, feel: 'Fast launch · lighter at speed' },
+  aditya: { lightness: 0.5, feel: 'Balanced through the speed range' },
   chonkers: { lightness: 0, feel: 'Slow launch · strong at speed' },
   karl: { lightness: 1, feel: 'Quick launch · fades at speed' },
   daniel: { lightness: 0.6, feel: 'Balanced · a little more launch' },

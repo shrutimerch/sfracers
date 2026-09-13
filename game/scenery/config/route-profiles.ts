@@ -10,6 +10,8 @@ export type RouteProfile = {
   bay?: number;
 };
 export const routeProfiles: Record<number, RouteProfile> = {
+  1171034242: { color: '#52626a', trim: '#68777b', frames: '#27323a', floors: 2, bay: 2.4 }, // South Park Commons, 380 Brannan
+  124890323: { color: '#a6a497', trim: '#c6c3b7', frames: '#464943', floors: 2, bay: 3.2 }, // Narrow 374 Brannan neighbor
   288647983: { color: '#c6c6b9', trim: '#e1e0d4', frames: '#72807a', floors: 3, bay: 3.7 }, // South Beach Marina Apartments, Townsend corner
   288647982: { color: '#c6c5b8', trim: '#e3e0d3', frames: '#617573', floors: 10, bay: 3.5 }, // Apartment tower behind the Townsend lawn
   288648572: { color: '#c6c6b9', trim: '#e1e0d4', frames: '#72807a', floors: 3, bay: 3.7 }, // Townsend west wing
@@ -59,12 +61,12 @@ export const routeProfiles: Record<number, RouteProfile> = {
   }, // Third/Townsend apartments
   129176901: { color: '#b79d64', trim: '#9e5547', frames: '#3f3934', floors: 2, bay: 4 }, // Third/Townsend low retail
   124890326: {
-    color: '#c8bd91',
-    trim: '#dcd9bf',
-    frames: '#a2b1ad',
-    floors: 4,
+    color: '#d1c18f',
+    trim: '#c8c2ac',
+    frames: '#a2ada8',
+    floors: 3,
     grid: true,
-    bay: 4,
+    bay: 5.8,
   }, // Third/Brannan and Varney
   124903637: { color: '#d2d3ca', trim: '#e4e2d6', frames: '#444e4c', floors: 2, bay: 4 }, // Third/Brannan pale low corner
   113545685: {

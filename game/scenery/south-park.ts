@@ -688,15 +688,152 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
   const fuelRoof = d.buildings.find((b) => b.id === SCENERY_LOCATIONS.shell.canopyBuildingId);
   if (fuelRoof) {
     const white = mat('#e0dfd3'),
-      yellow = mat('#e9bd35'),
-      red = mat('#b84135');
+      yellow = mat('#ffd327'),
+      red = mat('#df3028');
     const forecourt = SCENERY_LOCATIONS.shell.forecourt;
-    slab(forecourt, concrete, 0.12);
-    slab(fuelRoof.points, white, 4.7);
-    strip(fuelRoof.points, 0.25, yellow, 4.58);
-    strip(fuelRoof.points, 0.25, red, 4.38);
+    const forecourtConcrete = surface('#b5b2a5', 0.28, 2);
+    const floorTexture = forecourtConcrete.map! as T.CanvasTexture;
+    const floorCanvas = floorTexture.image as HTMLCanvasElement;
+    const floorCtx = floorCanvas.getContext('2d')!;
+    // One repeated panel spans 4.5 metres; grain and stains stay at street scale.
+    floorCtx.strokeStyle = '#817f7470';
+    floorCtx.lineWidth = 1.2;
+    floorCtx.strokeRect(0.6, 0.6, 254.8, 254.8);
+    for (let i = 0; i < 14; i++) {
+      const x = random() * 256,
+        y = random() * 256,
+        radius = 8 + random() * 24;
+      const stain = floorCtx.createRadialGradient(x, y, 1, x, y, radius);
+      stain.addColorStop(0, 'rgba(65,61,51,0.08)');
+      stain.addColorStop(1, 'rgba(65,61,51,0)');
+      floorCtx.fillStyle = stain;
+      floorCtx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
+    }
+    floorTexture.needsUpdate = true;
+    forecourtConcrete.bumpMap = floorTexture;
+    forecourtConcrete.bumpScale = 0.035;
+    texturedSlab(forecourt, forecourtConcrete, 0.12);
+
+    // Short brown brick screen beside the park entrance, leaving the driveway open.
+    // Follow the surveyed South Park entrance, rather than independently guessing both endpoints.
+    const entrance = d.roads.find(
+      (r) =>
+        r.name === 'South Park' &&
+        r.points.length < 5 &&
+        r.points.every((p) => p[0] < 31 && p[1] > 549),
+    );
+    const entranceA = entrance?.points[0] ?? [29.84, 550.25];
+    const entranceB = entrance?.points[1] ?? [-0.04, 580.5];
+    const wallAngle = Math.atan2(entranceA[1] - entranceB[1], entranceA[0] - entranceB[0]);
+    const wallLength = 11.3;
+    // Place the entire wall behind the 1.9 m sidewalk, on the forecourt side.
+    // A further 2 m setback keeps its base and cap clear of the walking strip.
+    const wallSetback = (entrance?.width ?? 9.8) / 2 + 1.9 + 2;
+    const wallA = [
+      entranceB[0] + Math.cos(wallAngle) * 6 - Math.sin(wallAngle) * wallSetback,
+      entranceB[1] + Math.sin(wallAngle) * 6 + Math.cos(wallAngle) * wallSetback,
+    ];
+    const wallB = [
+      wallA[0] + Math.cos(wallAngle) * wallLength,
+      wallA[1] + Math.sin(wallAngle) * wallLength,
+    ];
+    const brickCanvas = document.createElement('canvas');
+    brickCanvas.width = 512;
+    brickCanvas.height = 256;
+    const brickCtx = brickCanvas.getContext('2d')!;
+    brickCtx.fillStyle = '#9b9383';
+    brickCtx.fillRect(0, 0, 512, 256);
+    const brickColors = ['#914f41', '#a75b49', '#874638', '#a35b4b', '#984d3d'];
+    for (let row = 0; row < 8; row++)
+      for (let col = -1; col < 9; col++) {
+        const x = col * 64 + (row % 2) * 32,
+          y = row * 32;
+        brickCtx.fillStyle = brickColors[(row * 7 + col + 10) % brickColors.length];
+        brickCtx.fillRect(x + 2, y + 2, 60, 28);
+        brickCtx.fillStyle = '#d4b7a124';
+        brickCtx.fillRect(x + 3, y + 3, 58, 2);
+        brickCtx.fillStyle = '#281f1c35';
+        brickCtx.fillRect(x + 3, y + 27, 58, 2);
+      }
+    for (let i = 0; i < 10000; i++) {
+      brickCtx.fillStyle = random() > 0.5 ? '#ffffff14' : '#17100c1c';
+      brickCtx.fillRect(random() * 512, random() * 256, 1, 1);
+    }
+    const brickTexture = new T.CanvasTexture(brickCanvas);
+    brickTexture.colorSpace = T.SRGBColorSpace;
+    brickTexture.wrapS = brickTexture.wrapT = T.RepeatWrapping;
+    brickTexture.repeat.set(wallLength / 2.4, 0.65 / 0.72);
+    textures.push(brickTexture);
+    const wallMaterial = new T.MeshStandardMaterial({
+      map: brickTexture,
+      bumpMap: brickTexture,
+      bumpScale: 0.045,
+      roughness: 0.95,
+    });
+    // Reference treatment: gray rendered lower wall, with a red-brick upper band.
+    const lowerMaterial = surface('#92938d', 0.16, 2);
+    lowerMaterial.bumpMap = lowerMaterial.map;
+    lowerMaterial.bumpScale = 0.02;
+    const lowerWall = new T.Mesh(new T.BoxGeometry(wallLength, 1.45, 0.32), lowerMaterial);
+    lowerWall.name = 'Shell gray lower boundary wall';
+    lowerWall.position.set((wallA[0] + wallB[0]) / 2, 0.845, (wallA[1] + wallB[1]) / 2);
+    lowerWall.rotation.y = -wallAngle;
+    lowerWall.castShadow = true;
+    lowerWall.receiveShadow = true;
+    scene.add(lowerWall);
+    const wall = new T.Mesh(new T.BoxGeometry(wallLength, 0.65, 0.32), wallMaterial);
+    wall.name = 'Shell red-brick upper boundary wall';
+    wall.position.set((wallA[0] + wallB[0]) / 2, 1.895, (wallA[1] + wallB[1]) / 2);
+    wall.rotation.y = -wallAngle;
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    scene.add(wall);
+    box(
+      wall.position.x,
+      2.28,
+      wall.position.z,
+      wallLength + 0.12,
+      0.13,
+      0.44,
+      mat('#a89981'),
+      wallAngle,
+    );
+    box(wall.position.x, 0.2, wall.position.z, wallLength + 0.08, 0.16, 0.4, edge, wallAngle);
+    // Broad, chamfered Shell fascia with the narrow red stripe below the yellow band.
+    slab(fuelRoof.points, white, 4.95);
+    slab(fuelRoof.points, white, 4.38);
+    for (let i = 1; i < fuelRoof.points.length; i++) {
+      const a = fuelRoof.points[i - 1],
+        b = fuelRoof.points[i];
+      const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
+      const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      for (const [y, height, material] of [
+        [4.86, 0.18, white],
+        [4.66, 0.24, yellow],
+        [4.49, 0.1, red],
+        [4.4, 0.08, white],
+      ] as const)
+        box((a[0] + b[0]) / 2, y, (a[1] + b[1]) / 2, length, height, 0.25, material, angle);
+    }
+    // Subtle concrete joints break up the open driveway without blocking it.
+    for (let i = 0; i < 4; i++) {
+      const x = 12 + i * 5.2,
+        z = 588 + i * 5.2;
+      box(x, 0.125, z, 13, 0.008, 0.025, edge, -Math.PI / 4);
+    }
     for (const [x, z] of SCENERY_LOCATIONS.shell.pumps) {
-      box(x, 2.3, z, 0.24, 4.6, 0.24, white);
+      box(x, 2.25, z, 0.34, 4.5, 0.34, white);
+      box(x, 1.7, z, 0.37, 0.22, 0.37, yellow);
+      box(x, 1.53, z, 0.37, 0.08, 0.37, red);
+      box(x, 4.36, z, 1.4, 0.04, 0.7, mat('#fff7da'), -0.78);
+      for (const u of [-1.8, 1.8]) {
+        rod(
+          new T.Vector3(x + u * 0.71, 0.2, z - u * 0.71),
+          new T.Vector3(x + u * 0.71, 0.95, z - u * 0.71),
+          0.075,
+          yellow,
+        );
+      }
       box(x, 0.14, z, 3, 0.22, 1.1, concrete, -0.78);
       for (const u of [-0.85, 0.85]) {
         const px = x + u * 0.71,
@@ -704,36 +841,148 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
         box(px, 0.95, pz, 0.6, 1.6, 0.5, white, -0.78);
         box(px, 1.3, pz, 0.62, 0.48, 0.52, dark, -0.78);
         box(px, 0.38, pz, 0.62, 0.4, 0.52, red, -0.78);
+        box(px, 1.78, pz, 0.68, 0.17, 0.56, yellow, -0.78);
+        for (const side of [-1, 1]) {
+          const nx = side * 0.71,
+            nz = side * 0.71;
+          box(px + nx * 0.27, 1.35, pz + nz * 0.27, 0.3, 0.17, 0.025, mat('#97bbc1'), -0.78);
+          box(px + nx * 0.28, 1.02, pz + nz * 0.28, 0.24, 0.14, 0.03, steel, -0.78);
+          const hose = new T.CatmullRomCurve3([
+            new T.Vector3(px + nx * 0.32, 1.55, pz + nz * 0.32),
+            new T.Vector3(px + nx * 0.61, 0.85, pz + nz * 0.61),
+            new T.Vector3(px + nx * 0.5, 0.45, pz + nz * 0.5),
+            new T.Vector3(px + nx * 0.32, 1.05, pz + nz * 0.32),
+          ]);
+          add(new T.TubeGeometry(hose, 12, 0.027, 5, false), dark);
+        }
       }
     }
-    // Brand and services sign; historical fuel prices are deliberately omitted.
+    // Glazed Food Mart frontage behind the pumps, on the surveyed shop footprint.
+    const shopA = [39.19, 607.22],
+      shopB = [48.34, 598.06];
+    const shopAngle = Math.atan2(shopB[1] - shopA[1], shopB[0] - shopA[0]);
+    const shopLength = Math.hypot(shopB[0] - shopA[0], shopB[1] - shopA[1]);
+    const shopPoint = (u: number) => [
+      shopA[0] + Math.cos(shopAngle) * u - 0.08,
+      shopA[1] + Math.sin(shopAngle) * u - 0.08,
+    ];
+    for (let u = 1; u < shopLength - 0.5; u += 1.75) {
+      const [x, z] = shopPoint(u);
+      box(x, 1.6, z, 1.5, 2.5, 0.08, glass, shopAngle);
+      for (const side of [-0.79, 0.79])
+        box(
+          x + Math.cos(shopAngle) * side,
+          1.6,
+          z + Math.sin(shopAngle) * side,
+          0.075,
+          2.6,
+          0.12,
+          white,
+          shopAngle,
+        );
+    }
+    const [sx, sz] = shopPoint(shopLength / 2);
+    box(sx, 3.25, sz, shopLength, 0.65, 0.14, white, shopAngle);
+    box(sx, 3.62, sz, shopLength, 0.12, 0.18, yellow, shopAngle);
+    const shopCanvas = document.createElement('canvas');
+    shopCanvas.width = 512;
+    shopCanvas.height = 96;
+    const shopCtx = shopCanvas.getContext('2d')!;
+    shopCtx.fillStyle = '#e0dfd3';
+    shopCtx.fillRect(0, 0, 512, 96);
+    shopCtx.fillStyle = '#cf3029';
+    shopCtx.font = 'bold 62px sans-serif';
+    shopCtx.textAlign = 'center';
+    shopCtx.fillText('Food Mart', 256, 69);
+    const shopTexture = new T.CanvasTexture(shopCanvas);
+    shopTexture.colorSpace = T.SRGBColorSpace;
+    textures.push(shopTexture);
+    const shopSign = new T.Mesh(
+      new T.PlaneGeometry(4.8, 0.65),
+      new T.MeshBasicMaterial({ map: shopTexture, side: T.DoubleSide }),
+    );
+    shopSign.rotation.y = -shopAngle + Math.PI;
+    shopSign.position.set(sx - 0.13, 3.25, sz - 0.13);
+    scene.add(shopSign);
+    // Tall curbside pylon, with the scalloped yellow Shell emblem and service panels.
     const c = document.createElement('canvas');
     c.width = 256;
     c.height = 512;
     const ctx = c.getContext('2d')!;
     ctx.fillStyle = '#eeeede';
     ctx.fillRect(0, 0, 256, 512);
-    ctx.fillStyle = '#bd342f';
-    ctx.font = 'bold 45px sans-serif';
+    // Emblem is drawn into the sign texture so it stays crisp at street scale.
+    ctx.fillStyle = '#e52e26';
+    ctx.beginPath();
+    ctx.moveTo(54, 122);
+    ctx.lineTo(33, 77);
+    ctx.bezierCurveTo(19, 18, 103, -4, 128, 17);
+    ctx.bezierCurveTo(157, -4, 237, 18, 223, 77);
+    ctx.lineTo(202, 122);
+    ctx.lineTo(165, 122);
+    ctx.lineTo(156, 138);
+    ctx.lineTo(100, 138);
+    ctx.lineTo(91, 122);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#ffda2b';
+    ctx.beginPath();
+    ctx.moveTo(61, 113);
+    ctx.lineTo(44, 73);
+    ctx.bezierCurveTo(34, 27, 102, 7, 128, 28);
+    ctx.bezierCurveTo(158, 7, 222, 27, 212, 73);
+    ctx.lineTo(195, 113);
+    ctx.lineTo(158, 113);
+    ctx.lineTo(150, 129);
+    ctx.lineTo(106, 129);
+    ctx.lineTo(98, 113);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#e52e26';
+    ctx.lineWidth = 5;
+    for (const [x, y] of [
+      [52, 49],
+      [81, 25],
+      [108, 18],
+      [147, 18],
+      [175, 25],
+      [203, 49],
+    ]) {
+      ctx.beginPath();
+      ctx.moveTo(128, 121);
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    }
     ctx.textAlign = 'center';
-    ctx.fillText('Shell', 128, 83);
+    // Match the reference's red/green price-panel rhythm without presenting live prices.
+    for (let i = 0; i < 4; i++) {
+      const y = 158 + i * 43;
+      ctx.fillStyle = '#d7d9c8';
+      ctx.fillRect(21, y, 214, 37);
+      ctx.fillStyle = i === 3 ? '#339644' : '#d73227';
+      ctx.font = 'bold 28px monospace';
+      ctx.fillText('–.––', 154, y + 28);
+      ctx.fillStyle = '#535c58';
+      ctx.font = '10px sans-serif';
+      ctx.fillText(['Regular', 'Plus', 'Premium', 'Diesel'][i], 58, y + 24);
+    }
     ctx.fillStyle = '#e9bd35';
-    ctx.fillRect(18, 110, 220, 17);
+    ctx.fillRect(18, 341, 220, 9);
     ctx.fillStyle = '#344a58';
-    ctx.font = '26px sans-serif';
+    ctx.font = 'bold 23px sans-serif';
     for (const [i, t] of ['Food Mart', 'ATM', '24 Hours'].entries())
-      ctx.fillText(t, 128, 215 + i * 90);
+      ctx.fillText(t, 128, 387 + i * 44);
     const texture = new T.CanvasTexture(c);
     texture.colorSpace = T.SRGBColorSpace;
     textures.push(texture);
     const face = new T.MeshBasicMaterial({ map: texture, side: T.DoubleSide });
-    const g = new T.PlaneGeometry(1.4, 4.5);
+    const g = new T.PlaneGeometry(1.55, 6.7);
     g.rotateY(-Math.PI / 4);
-    g.translate(7.9, 3.5, 586.1);
+    g.translate(7.86, 3.95, 586.14);
     const sign = new T.Mesh(g, face);
     scene.add(sign);
-    box(8, 3.5, 586, 1.5, 4.6, 0.16, white, Math.PI / 4);
-    rod(new T.Vector3(8, 0, 586), new T.Vector3(8, 6, 586), 0.08, steel);
+    box(8, 3.95, 586, 1.65, 6.8, 0.22, white, Math.PI / 4);
+    rod(new T.Vector3(8, 0, 586), new T.Vector3(8, 7.4, 586), 0.08, steel);
   }
   for (const [m, geoms] of groups) {
     if (!geoms.length) continue;

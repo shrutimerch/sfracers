@@ -136,7 +136,17 @@ export function makeGame(
     if (now - hudTime > 100) {
       hudTime = now;
       drawMinimap(x, z, rivals);
+      const standings = [
+        ...rivals.map((r) => ({ character: r.character, distance: r.s })),
+        {
+          character: state.character,
+          distance: mode === 'finished' ? total * RACE_LAPS : progress,
+        },
+      ]
+        .sort((a, b) => b.distance - a.distance)
+        .map((r) => r.character);
       update({
+        standings,
         mode,
         lap: lap + 1,
         speed: Math.round(Math.abs(speed) * 2.237),
@@ -186,8 +196,8 @@ export function makeGame(
       google?.dispose();
       world.disposeTextures();
       unbindInput();
-      disposeScene(scene);
       disposeRacerEnvironment();
+      disposeScene(scene);
       officeTextures.forEach((t) => t.dispose());
       Object.values(facades).forEach((t) => t.dispose());
       renderer.dispose();

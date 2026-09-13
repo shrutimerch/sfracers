@@ -39,6 +39,7 @@ export type MapData = {
   };
 };
 export type HUD = {
+  standings?: import('./characters/roster').CharacterId[];
   mode: string;
   lap: number;
   speed: number;
