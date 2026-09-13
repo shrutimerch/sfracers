@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'SF / Bay City Kart',
-  description: 'A 3D kart race through real South Park, SoMa, and Embarcadero streets.',
+  title: 'South Park Quest',
+  description: 'Find three checkpoints in real Street View photographs around South Park, San Francisco.',
 };
 
 export default function RootLayout({
