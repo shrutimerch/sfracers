@@ -1,5 +1,7 @@
 export function advanceSpeed(speed:number,gas:boolean,brake:boolean,boosting:boolean,dt:number){
- const acceleration=brake?-48:gas?(boosting?20:11):-3.8;
+ // Speeds are metres/second. Throttle pull halves near 56 mph, but never hits a speed cap.
+ const throttlePull=(boosting?20:11)/(1+(Math.max(0,speed)/25)**2);
+ const acceleration=brake?-48:gas?throttlePull:-3.8;
  return Math.max(brake?-8:0,speed+acceleration*dt);
 }
 type Line={name:string;points:number[][];width?:number};
