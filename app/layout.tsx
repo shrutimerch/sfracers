@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'South Park Quest',
-  description: 'Find three checkpoints in real Street View photographs around South Park, San Francisco.',
+  title: 'SF / South Park Waterfront Racer',
+  description: 'Race a real street circuit from South Park to the Embarcadero in a 3D browser racer.',
 };
 
 export default function RootLayout({
