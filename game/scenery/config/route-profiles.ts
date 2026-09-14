@@ -10,6 +10,7 @@ export type RouteProfile = {
   bay?: number;
 };
 export const routeProfiles: Record<number, RouteProfile> = {
+  143294965: { color: '#b47962', trim: '#eee9d7', frames: '#eeeeDC', floors: 3 }, // Pear, 600 Townsend
   1171034242: { color: '#52626a', trim: '#68777b', frames: '#27323a', floors: 2, bay: 2.4 }, // South Park Commons, 380 Brannan
   124890323: { color: '#a6a497', trim: '#c6c3b7', frames: '#464943', floors: 2, bay: 3.2 }, // Narrow 374 Brannan neighbor
   288647983: { color: '#c6c6b9', trim: '#e1e0d4', frames: '#72807a', floors: 3, bay: 3.7 }, // South Beach Marina Apartments, Townsend corner

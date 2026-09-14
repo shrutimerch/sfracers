@@ -106,6 +106,7 @@ export function makeGame(
       if (height !== null) roadHeight = height;
       for (const pad of pads) pad.position.y = roadHeight + 0.13;
     }
+    world.lighting.update(x, z, roadHeight);
     player.position.set(x, roadHeight + (drifting ? Math.sin(now / 50) * 0.03 : 0), z);
     player.rotation.y = -angle;
     player.rotation.x = drifting ? Math.sin(now / 100) * 0.025 : 0;

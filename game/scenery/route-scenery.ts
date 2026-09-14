@@ -1,3 +1,4 @@
+import { buildPearTownsend, PEAR_TOWNSEND_ID } from './pear-townsend.ts';
 import { buildSouthParkCommons, SPC_BUILDING_ID } from './south-park-commons.ts';
 import { beachHeight, inPolygon, BRANNAN_LAWN_HEIGHT } from './park-surface';
 import { isMedianPalm, medianPalmRows } from './median-layout';
@@ -142,6 +143,10 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   for (const b of d.buildings) {
     const p = routeProfiles[b.id ?? 0];
     if (!p) continue;
+    if (b.id === PEAR_TOWNSEND_ID) {
+      disposeDelancey.push(buildPearTownsend(scene, b));
+      continue;
+    }
     if (b.id === PIER_40_ID) {
       disposePier40 = buildPier40(scene);
       continue;
@@ -733,7 +738,11 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     const [x, z] = position;
     if (Math.hypot(x - 90, z - 490) < 170 || routeDistance(x, z) > 90) continue;
     if (tree.palm) {
-      palmGeometry(x, z, 10 + (tree.id % 4), add, { bark, leaves: palmLeaves });
+      const willieMaysPlaza = x > 315 && x < 347 && z > 855 && z < 903;
+      palmGeometry(x, z, (willieMaysPlaza ? 19 : 10) + (tree.id % 4), add, {
+        bark,
+        leaves: palmLeaves,
+      });
     } else {
       broadleafGeometry(x, z, 9.5 + (tree.id % 8) * 0.55, tree.id, add, {
         bark: streetBark,

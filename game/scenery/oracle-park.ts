@@ -1,3 +1,4 @@
+import { buildOracleOutfield } from './oracle-outfield.ts';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { Facades, Point } from '../types';
@@ -75,6 +76,8 @@ export function buildOraclePark(
       const length = Math.hypot(b[0] - a[0], b[1] - a[1]);
       const mx = (a[0] + b[0]) / 2,
         mz = (a[1] + b[1]) / 2;
+      // Replace the southwest entrance notch with the open Willie Mays Gate below.
+      if (Math.hypot(mx - 365, mz - 865) < 27) continue;
       if (length < 3 || routeDistance(mx, mz) > 90) continue;
       const angle = Math.atan2(b[1] - a[1], b[0] - a[0]);
       const ux = Math.cos(angle),
@@ -270,6 +273,141 @@ export function buildOraclePark(
   for (const offset of [-10, 0, 10]) {
     box(525.5 + offset * Math.SQRT1_2, 18.6, 715.8 + offset * Math.SQRT1_2, 0.18, 4, 0.25, steel);
   }
+  // Willie Mays Plaza: the entrance runs parallel to the waterfront roadway,
+  // facing northwest across the mapped palms rather than across the traffic lane.
+  // Its open steel portal is flanked by brick wings, rather than a solid facade
+  // or a second clock tower. Local +Z goes into the stadium.
+  // Match the adjacent King / Embarcadero approach from (300.85, 882.11)
+  // to (382.39, 798.99). The plaza, canopy, signs and wings share this frame.
+  const gateRotation = Math.atan2(882.11 - 798.99, 382.39 - 300.85);
+  const gatePoint = (x: number, y: number, z: number) =>
+    new T.Vector3(x, y, z)
+      .applyAxisAngle(new T.Vector3(0, 1, 0), gateRotation)
+      .add(new T.Vector3(365, 0, 865));
+  const gateBox = (
+    x: number,
+    y: number,
+    z: number,
+    w: number,
+    h: number,
+    d: number,
+    m: T.Material,
+  ) => {
+    const p = gatePoint(x, y, z);
+    box(p.x, p.y, p.z, w, h, d, m, -gateRotation);
+  };
+  gateBox(0, 0.06, -13, 64, 0.12, 30, stone);
+  // Terracotta paving bands across the broad, unobstructed palm court.
+  for (const z of [-5, -13, -21]) gateBox(0, 0.13, z, 64, 0.04, 1.5, brick);
+  for (const x of [-24, 24]) {
+    gateBox(x, 8.8, 3, 24, 17.6, 8, brick);
+    gateBox(x, 0.85, -1.15, 24, 1.7, 0.4, stone);
+    gateBox(x, 17.5, 3, 24.6, 0.6, 8.5, stone);
+    for (const dx of [-8, 0, 8]) {
+      gateBox(x + dx, 8.7, -1.2, 4.6, 13.6, 0.18, glass);
+      for (let y = 2.4; y < 16; y += 1.4) gateBox(x + dx, y, -1.34, 4.6, 0.1, 0.12, steel);
+      for (const mullion of [-2.2, 0, 2.2])
+        gateBox(x + dx + mullion, 8.7, -1.34, 0.12, 13.6, 0.12, steel);
+    }
+    gateBox(x, 6.4, -1.4, 24, 0.55, 0.5, stone);
+  }
+  // The gate is recessed from the King Street facade. Close the exposed end
+  // of its northeast wing with a return wall back to the mapped stadium edge.
+  // Overlap both walls slightly so the diagonal join has no daylight seam.
+  const returnX = 35.6;
+  gateBox(returnX, 8.8, -11.8, 1.6, 17.6, 24, brick);
+  gateBox(returnX, 0.85, -11.8, 1.9, 1.7, 24.4, stone);
+  gateBox(returnX, 6.4, -11.8, 1.9, 0.55, 24.4, stone);
+  gateBox(returnX, 17.5, -11.8, 2.1, 0.6, 24.4, stone);
+  for (const z of [-19.5, -12, -4.5]) {
+    gateBox(returnX + 0.84, 9.3, z, 0.15, 12.4, 4.6, glass);
+    for (let y = 3.5; y < 15.5; y += 1.4) gateBox(returnX + 0.94, y, z, 0.12, 0.1, 4.6, steel);
+    for (const dz of [-2.2, 0, 2.2]) gateBox(returnX + 0.94, 9.3, z + dz, 0.12, 12.4, 0.12, steel);
+  }
+  // Flat-topped plaza clock tower overlaps the connecting wing and street facade.
+  gateBox(returnX, 14.5, -17.5, 10.5, 29, 12.5, brick);
+  gateBox(returnX, 0.9, -17.5, 10.9, 1.8, 12.9, stone);
+  gateBox(returnX, 28.8, -17.5, 11.4, 0.9, 13.4, stone);
+  gateBox(returnX, 27.9, -17.5, 10.9, 0.3, 12.9, stone);
+  for (const y of [6.5, 17]) {
+    gateBox(returnX, y, -23.85, 4.6, 9, 0.3, stone);
+    gateBox(returnX, y, -24.04, 3.6, 8.2, 0.12, glass);
+    for (let dy = -3.5; dy <= 3.5; dy += 1.15)
+      gateBox(returnX, y + dy, -24.14, 3.6, 0.1, 0.1, steel);
+    for (const dx of [-1.15, 0, 1.15]) gateBox(returnX + dx, y, -24.14, 0.1, 8.2, 0.1, steel);
+  }
+  gateBox(returnX, 11.5, -17.5, 10.8, 0.6, 12.8, stone);
+  // Taller brick piers frame the sign; the gates are recessed behind the canopy.
+  for (const x of [-12, 12]) {
+    gateBox(x, 11.2, 0, 2, 22.4, 5, brick);
+    gateBox(x, 21.9, 0, 2.3, 0.7, 5.3, stone);
+    gateBox(x, 1, -2.55, 2.2, 2, 0.35, stone);
+  }
+  gateBox(0, 4, 5, 22, 8, 0.35, steel);
+  for (let x = -10.5; x <= 10.5; x += 0.55) gateBox(x, 3.5, 4.76, 0.055, 7, 0.12, stone);
+  for (const y of [8, 13, 21.5]) gateBox(0, y, -1.8, 24, 0.42, 0.5, steel);
+  gateBox(0, 8, 0.5, 25, 0.4, 9, steel);
+  for (const x of [-10, -5, 0, 5, 10]) {
+    gateBox(x, 14.5, -1.8, 0.28, 14, 0.35, steel);
+    beam(gatePoint(x, 8, -3.8), gatePoint(x, 12, 1.5), 0.2);
+  }
+  const gateSign = (
+    draw: (ctx: CanvasRenderingContext2D) => void,
+    y: number,
+    w: number,
+    h: number,
+  ) => {
+    const sign = panel(1536, 256, draw, 0, 0, 0, w, h);
+    if (sign) {
+      sign.name = 'Willie Mays Gate entrance lettering';
+      sign.position.copy(gatePoint(0, y, -2.12));
+      sign.rotation.y = gateRotation + Math.PI;
+    }
+  };
+  gateSign(
+    (ctx) => {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.font = 'bold 185px Georgia';
+      ctx.strokeStyle = '#dfc5a4';
+      ctx.lineWidth = 12;
+      ctx.strokeText('ORACLE PARK', 768, 128);
+      ctx.fillStyle = '#b74732';
+      ctx.fillText('ORACLE PARK', 768, 128);
+    },
+    19.6,
+    22,
+    3.7,
+  );
+  gateSign(
+    (ctx) => {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#e26443';
+      ctx.font = 'bold 65px Georgia';
+      ctx.fillText('HOME OF THE SAN FRANCISCO GIANTS', 768, 128);
+    },
+    11.5,
+    23,
+    3.8,
+  );
+  gateSign(
+    (ctx) => {
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#dcc6a3';
+      ctx.font = 'bold 78px Georgia';
+      ctx.fillText('WILLIE MAYS GATE', 768, 128);
+    },
+    6.7,
+    12,
+    2,
+  );
+  for (let x = -30; x <= 30; x += 3) {
+    if (Math.abs(x) < 5) continue;
+    gateBox(x, 0.7, -28, 0.35, 1.4, 0.35, steel);
+  }
+
   const clock = (ctx: CanvasRenderingContext2D) => {
     ctx.fillStyle = '#c6b995';
     ctx.beginPath();
@@ -299,6 +437,22 @@ export function buildOraclePark(
   };
   panel(512, 512, clock, 0, 30.5, -6.69, 4.6, 4.6);
   panel(512, 512, clock, 6.69, 30.5, 0, 4.6, 4.6, true);
+  for (const side of [false, true]) {
+    const plazaClock = panel(512, 512, clock, 0, 0, 0, 3.5, 3.5);
+    if (plazaClock) {
+      plazaClock.name = 'Willie Mays Plaza tower clock';
+      plazaClock.position.copy(
+        gatePoint(side ? returnX + 5.32 : returnX, 25, side ? -17.5 : -23.83),
+      );
+      plazaClock.rotation.y = gateRotation + (side ? Math.PI / 2 : Math.PI);
+    }
+  }
+  const plazaTowerSign = panel(1024, 192, towerSign, 0, 0, 0, 8.5, 1.2);
+  if (plazaTowerSign) {
+    plazaTowerSign.name = 'Willie Mays Plaza tower lettering';
+    plazaTowerSign.position.copy(gatePoint(returnX, 27.3, -23.84));
+    plazaTowerSign.rotation.y = gateRotation + Math.PI;
+  }
   panel(
     512,
     768,
@@ -342,5 +496,9 @@ export function buildOraclePark(
     group.add(mesh);
     geometries.forEach((g) => g.dispose());
   }
-  return () => textures.forEach((t) => t.dispose());
+  const disposeOutfield = buildOracleOutfield(group);
+  return () => {
+    textures.forEach((t) => t.dispose());
+    disposeOutfield();
+  };
 }
