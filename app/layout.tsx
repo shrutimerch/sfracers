@@ -13,6 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://sfracers.shrutimerchant.com'),
   title: 'SF / South Park Waterfront Racer',
   description:
     'Race a real street circuit from South Park to the Embarcadero in a 3D browser racer.',

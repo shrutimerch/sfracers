@@ -1,16 +1,20 @@
 'use client';
 import { useRef, useState } from 'react';
+import type { EngineClass } from '../simulation/engine-class';
+import { ShareButton } from './share-button';
 import { Trophy } from 'lucide-react';
 import { CHARACTERS } from '../characters/roster';
 import { formatRaceTime, type RaceResult } from '../leaderboard/model';
 export function RaceFinish({
   timeMs,
+  cc,
   character,
   position,
   submit,
   onRaceAgain,
   onChooseRacer,
 }: Omit<RaceResult, 'id'> & {
+  cc: EngineClass;
   submit: (result: RaceResult, name: string, xHandle: string) => Promise<void>;
   onRaceAgain: () => void;
   onChooseRacer: () => void;
@@ -21,6 +25,7 @@ export function RaceFinish({
     character,
     position,
   }));
+  const [raceCc] = useState(cc);
   const [editing, setEditing] = useState(false),
     [name, setName] = useState(''),
     [xHandle, setXHandle] = useState('');
@@ -107,6 +112,13 @@ export function RaceFinish({
             Submit to leaderboard
           </button>
         )}
+        <ShareButton
+          timeMs={result.timeMs}
+          name={name}
+          character={result.character}
+          cc={raceCc}
+          position={result.position}
+        />
         <div className="finish-actions">
           <button onClick={onRaceAgain} disabled={saving}>
             Race again →

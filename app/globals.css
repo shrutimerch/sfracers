@@ -2211,3 +2211,102 @@ footer a {
   border-radius: 10px;
   font-size: 14px;
 }
+
+.share-control {
+  margin-top: 16px;
+}
+.share-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid #89adbd;
+  border-radius: 10px;
+  background: #294d61;
+  color: #f3f6e8;
+  font-weight: 700;
+  cursor: pointer;
+}
+.share-button:hover { background: #365f74; }
+.share-button:focus-visible { outline: 3px solid #d5ff78; outline-offset: 3px; }
+.share-button:disabled { opacity: .65; cursor: wait; }
+.share-status {
+  display: block;
+  color: #d5ff78;
+  font-size: 12px;
+}
+.share-status:not(:empty) { margin-top: 8px; }
+.share-control input {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px;
+  background: #0a2332;
+  color: #fff;
+  border: 1px solid #89adbd;
+  border-radius: 8px;
+}
+
+.challenge-page {
+  min-height: 100svh;
+  display: grid;
+  place-content: center;
+  padding: 30px 20px;
+  box-sizing: border-box;
+  background: linear-gradient(#071c3699, #071c36e8), url('/start-line.jpg') center / cover;
+  color: #f3f6e8;
+  text-align: center;
+}
+.challenge-brand { color: #d5ff78; font: 26px 'Luckiest Guy', sans-serif; margin-bottom: 28px; text-decoration: none; }
+.challenge-card { max-width: 520px; padding: clamp(24px, 5vw, 48px); background: #102f42ee; border: 2px solid #dfbe57; border-radius: 24px; box-shadow: 0 20px 70px #06172399; }
+.challenge-card h1 { font: clamp(30px, 5vw, 44px) 'Luckiest Guy', sans-serif; color: #ffe468; line-height: 1.2; }
+.challenge-card p { color: #c6dae4; line-height: 1.6; }
+.challenge-time { display: block; font: clamp(46px, 9vw, 72px) 'Luckiest Guy', sans-serif; color: #d5ff78; }
+.challenge-go { display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 12px; padding: 18px; margin-top: 28px; background: #d5ff78; color: #102f42; font-weight: 800; text-decoration: none; }
+.challenge-go:hover { background: #e8ffa9; }
+.challenge-go:focus-visible { outline: 3px solid white; outline-offset: 4px; }
+.challenge-card small { display: block; margin-top: 18px; color: #9ebfcd; }
+.engine-class-options {
+  border: 0;
+  padding: 0;
+  margin: 12px 0;
+  min-width: 0;
+}
+.engine-class-options legend {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 7px;
+}
+.engine-class-options > div {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.engine-class-options label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 10px 5px;
+  border: 2px solid #52606b;
+  border-radius: 10px;
+  cursor: pointer;
+  background: #142839;
+  color: #fffdf3;
+}
+.engine-class-options label.selected {
+  border-color: #d7fa55;
+  background: #304324;
+}
+.engine-class-options label:focus-within {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+.engine-class-options input { accent-color: #d7fa55; }
+.engine-class-options label span { font-size: 11px; }
+.engine-class-options small { display: block; margin-top: 7px; font-size: 11px; }

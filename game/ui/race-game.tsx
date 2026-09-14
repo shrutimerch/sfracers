@@ -3,6 +3,7 @@ import { Leaderboard } from './leaderboard';
 import { RaceFinish } from './race-finish';
 import { useLeaderboard } from '../leaderboard/use-leaderboard';
 import { RACE_LAPS } from '../simulation/race-laps';
+import { ENGINE_CLASSES, type EngineClass } from '../simulation/engine-class.ts';
 import { useEffect, useRef, useState } from 'react';
 import type { HUD, MapData } from '../engine';
 import {
@@ -31,6 +32,9 @@ export default function RaceGame() {
     mini = useRef<HTMLCanvasElement>(null),
     engine = useRef<ReturnType<typeof import('../engine').makeGame> | null>(null);
   const [character, setCharacter] = useState<CharacterId>(DEFAULT_CHARACTER);
+  const [engineClass, setEngineClass] = useState<EngineClass>(100);
+  const engineClassRef = useRef(engineClass);
+  engineClassRef.current = engineClass;
   const characterRef = useRef(character);
   characterRef.current = character;
   const [secretUnlocked, setSecretUnlocked] = useState(false);
@@ -127,7 +131,7 @@ export default function RaceGame() {
                   if (!input || typeof input !== 'object' || Object.keys(input).length)
                     throw Error('Expected an empty object');
                   if (!engine.current) throw Error('Game is not ready');
-                  audio.startRace(() => engine.current?.start(characterRef.current));
+                  audio.startRace(() => engine.current?.start(characterRef.current, engineClassRef.current));
                   return engine.current.getState();
                 },
               },
@@ -296,6 +300,28 @@ export default function RaceGame() {
             </p>
             {(ready || hud.mode === 'finished') && !error && (
               <>
+                <fieldset className="engine-class-options">
+                  <legend>Choose your engine class</legend>
+                  <div>
+                    {([50, 100, 150] as const).map((cc) => (
+                      <label key={cc} className={engineClass === cc ? 'selected' : ''}>
+                        <input
+                          type="radio"
+                          name="engine-class"
+                          value={cc}
+                          checked={engineClass === cc}
+                          onChange={() => {
+                            engineClassRef.current = cc;
+                            setEngineClass(cc);
+                          }}
+                        />
+                        <b>{cc}cc</b>
+                        <span>{ENGINE_CLASSES[cc].label}</span>
+                      </label>
+                    ))}
+                  </div>
+                  <small>{ENGINE_CLASSES[engineClass].description}</small>
+                </fieldset>
                 {secretUnlocked && (
                   <div className="roster-switch">
                     <span role="status">Secret roster unlocked</span>
@@ -391,7 +417,7 @@ export default function RaceGame() {
               onClick={() =>
                 hud.mode === 'paused'
                   ? engine.current?.pause()
-                  : audio.startRace(() => engine.current?.start(characterRef.current))
+                  : audio.startRace(() => engine.current?.start(characterRef.current, engineClassRef.current))
               }
             >
               {hud.mode === 'loading'
@@ -402,7 +428,7 @@ export default function RaceGame() {
                     ? 'Back to the race →'
                     : hud.mode === 'finished'
                       ? 'Race again →'
-                      : `Race as ${selected.name} →`}
+                      : `Race ${engineClass}cc as ${selected.name} →`}
             </button>
             <div className="start-help">
               <span>↑ / W &nbsp; ACCELERATE</span>
@@ -416,11 +442,12 @@ export default function RaceGame() {
         {hud.mode === 'finished' && !audio.starting && (
           <>
             <RaceFinish
+              cc={engineClass}
               timeMs={Math.round(hud.time * 1000)}
               character={character}
               position={hud.position}
               submit={leaderboard.submit}
-              onRaceAgain={() => audio.startRace(() => engine.current?.start(characterRef.current))}
+              onRaceAgain={() => audio.startRace(() => engine.current?.start(characterRef.current, engineClassRef.current))}
               onChooseRacer={() => engine.current?.garage()}
             />
             <Leaderboard {...leaderboard} />

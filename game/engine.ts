@@ -73,8 +73,9 @@ export function makeGame(
     for (const pad of pads) pad.position.y = 0.13;
   };
   const characterSelection = createCharacterSelection(sim, selectCharacter, initialCharacter);
-  const start = (character?: CharacterId) => {
+  const start = (character?: CharacterId, engineClass = sim.state.engineClass) => {
     if (google && (!google.ready || google.error)) return false;
+    if (engineClass !== sim.state.engineClass && !sim.selectEngineClass(engineClass)) return false;
     return characterSelection.start(character);
   };
   let animationTime = 0;
@@ -191,7 +192,7 @@ export function makeGame(
     setKey: sim.setKey,
     getState: () => {
       const { mode, time, progress, lap } = sim.state;
-      return { mode, time, progress, lap: lap + 1, character: sim.state.character };
+      return { mode, time, progress, lap: lap + 1, character: sim.state.character, engineClass: sim.state.engineClass };
     },
     dispose: () => {
       disposed = true;

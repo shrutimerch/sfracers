@@ -9,6 +9,7 @@ import { RACE_LAPS, completeCheckpoint, lapDistance } from './race-laps.ts';
 import { advanceSpeed, drivingSurface, raceChecks } from './driving.ts';
 import { createRoute } from './route-math.ts';
 import type { MapData } from '../types';
+import { ENGINE_CLASSES, isEngineClass, type EngineClass } from './engine-class.ts';
 // Pure racing state: no DOM, Three.js objects, network access, or animation scheduling.
 export function createRaceSimulation(
   d: MapData,
@@ -22,6 +23,7 @@ export function createRaceSimulation(
   const checks = raceChecks(total, d.course?.sections),
     surfaceAt = drivingSurface(d.roads, d.paths);
   let character: CharacterId = DEFAULT_CHARACTER;
+  let engineClass: EngineClass = 100;
   const rivals = raceRoster(character)
     .slice(1)
     .map((id, i) => ({
@@ -110,6 +112,7 @@ export function createRaceSimulation(
       const boosting = (keys.shift && boost > 0 && speed > 2) || boostTimer > 0;
       boostTimer = Math.max(0, boostTimer - dt);
       boost = Math.max(0, Math.min(100, boost + (keys.shift && speed > 2 ? -24 : 8) * dt));
+      const tuning = ENGINE_CLASSES[engineClass];
       speed = advanceSpeed(speed, !!gas, !!brake, boosting, dt, character);
       angle +=
         turn *
@@ -169,8 +172,8 @@ export function createRaceSimulation(
         );
       for (const r of rivals) {
         r.speed = Math.min(
-          r.cruiseSpeed,
-          advanceSpeed(r.speed, true, false, false, dt, r.character),
+          r.cruiseSpeed * tuning.rivals,
+          advanceSpeed(r.speed / tuning.rivals, true, false, false, dt, r.character) * tuning.rivals,
         );
         r.s = Math.min(total * RACE_LAPS, r.s + r.speed * dt);
         const p = at(lapDistance(r.s, total));
@@ -196,6 +199,11 @@ export function createRaceSimulation(
     step,
     setKey,
     start: reset,
+    selectEngineClass(value: number) {
+      if (!isEngineClass(value) || !['ready', 'finished'].includes(mode)) return false;
+      engineClass = value;
+      return true;
+    },
     garage() {
       if (mode !== 'finished') return;
       reset();
@@ -223,6 +231,7 @@ export function createRaceSimulation(
     get state() {
       return {
         character,
+        engineClass,
         mode,
         x,
         z,
