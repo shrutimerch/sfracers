@@ -1,5 +1,6 @@
 'use client';
 import { Leaderboard } from './leaderboard';
+import { MobileControls } from './mobile-controls';
 import { RaceFinish } from './race-finish';
 import { useLeaderboard } from '../leaderboard/use-leaderboard';
 import { RACE_LAPS } from '../simulation/race-laps';
@@ -561,29 +562,7 @@ export default function RaceGame() {
         <div className="course-progress">
           <i style={{ width: `${hud.progress}%` }} />
         </div>
-        <div className="touch">
-          {[
-            ['←', 'arrowleft'],
-            ['↑', 'arrowup'],
-            ['↓', 'arrowdown'],
-            ['→', 'arrowright'],
-            ['DRIFT', ' '],
-            ['BOOST', 'shift'],
-          ].map(([label, key]) => (
-            <button
-              key={key}
-              aria-label={label}
-              onPointerDown={(e) => {
-                e.currentTarget.setPointerCapture(e.pointerId);
-                press(key, true);
-              }}
-              onPointerUp={() => press(key, false)}
-              onPointerCancel={() => press(key, false)}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
+        <MobileControls active={hud.mode === 'racing'} onInput={(input) => engine.current?.setMobileInput(input)} />
       </section>
       <footer>
         <a href="/about">Scenery & privacy</a>

@@ -1,3 +1,4 @@
+import type { MobileInput } from './mobile-input';
 import {
   DEFAULT_CHARACTER,
   isCharacterId,
@@ -50,11 +51,13 @@ export function createRaceSimulation(
     progress = 0,
     street = route.nearest(x, z).name || 'South Park',
     padCooldown = 0;
+  let mobile: MobileInput | null = null;
   const keys: Record<string, boolean> = {};
   const setKey = (key: string, value: boolean) => {
     keys[key] = value;
   };
   const reset = () => {
+    mobile = null;
     mode = 'countdown';
     x = d.route[0][0];
     z = d.route[0][1];
@@ -99,19 +102,23 @@ export function createRaceSimulation(
     }
     if ((mode === 'racing' || (mode === 'inspection' && freeDrive)) && canRace) {
       time += dt;
-      const gas = keys.w || keys.arrowup,
-        brake = keys.s || keys.arrowdown,
-        turn = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0);
+      const gas = keys.w || keys.arrowup || (mobile && !mobile.brake),
+        brake = keys.s || keys.arrowdown || mobile?.brake,
+        turn =
+          mobile?.steer ?? (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0);
       const wasDrifting = drifting;
-      drifting = !!(keys[' '] && turn && speed > 8);
+      drifting = !!((keys[' '] || mobile?.drift) && turn && speed > 8);
       if (drifting) driftCharge = Math.min(2, driftCharge + dt);
       else if (wasDrifting) {
         if (driftCharge > 0.6) boostTimer = 1.1 + driftCharge * 0.4;
         driftCharge = 0;
       }
-      const boosting = (keys.shift && boost > 0 && speed > 2) || boostTimer > 0;
+      const boosting = ((keys.shift || mobile?.boost) && boost > 0 && speed > 2) || boostTimer > 0;
       boostTimer = Math.max(0, boostTimer - dt);
-      boost = Math.max(0, Math.min(100, boost + (keys.shift && speed > 2 ? -24 : 8) * dt));
+      boost = Math.max(
+        0,
+        Math.min(100, boost + ((keys.shift || mobile?.boost) && speed > 2 ? -24 : 8) * dt),
+      );
       const tuning = ENGINE_CLASSES[engineClass];
       speed = advanceSpeed(speed, !!gas, !!brake, boosting, dt, character);
       angle +=
@@ -173,7 +180,8 @@ export function createRaceSimulation(
       for (const r of rivals) {
         r.speed = Math.min(
           r.cruiseSpeed * tuning.rivals,
-          advanceSpeed(r.speed / tuning.rivals, true, false, false, dt, r.character) * tuning.rivals,
+          advanceSpeed(r.speed / tuning.rivals, true, false, false, dt, r.character) *
+            tuning.rivals,
         );
         r.s = Math.min(total * RACE_LAPS, r.s + r.speed * dt);
         const p = at(lapDistance(r.s, total));
@@ -198,6 +206,14 @@ export function createRaceSimulation(
     keys,
     step,
     setKey,
+    setMobileInput(value: MobileInput | null) {
+      mobile = value
+        ? {
+            ...value,
+            steer: Number.isFinite(value.steer) ? Math.max(-1, Math.min(1, value.steer)) : 0,
+          }
+        : null;
+    },
     start: reset,
     selectEngineClass(value: number) {
       if (!isEngineClass(value) || !['ready', 'finished'].includes(mode)) return false;
@@ -212,6 +228,7 @@ export function createRaceSimulation(
     pause,
     recover,
     blur() {
+      mobile = null;
       Object.keys(keys).forEach((k) => delete keys[k]);
       if (mode === 'racing' || mode === 'countdown' || mode === 'inspection') pause();
     },

@@ -2313,3 +2313,25 @@ footer a {
 
 .share-actions { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
 .trophy-card .share-actions { justify-content: center; }
+
+.mobile-controls { position: absolute; z-index: 15; left: max(16px, env(safe-area-inset-left)); right: max(16px, env(safe-area-inset-right)); bottom: max(16px, env(safe-area-inset-bottom)); display: flex; align-items: end; justify-content: space-between; pointer-events: none; user-select: none; -webkit-user-select: none; }
+.mobile-steering { text-align: center; }
+.mobile-stick { width: 132px; height: 132px; border: 2px solid #bbd6e7aa; border-radius: 50%; background: #102f4299; position: relative; display: grid; place-items: center; touch-action: none; pointer-events: auto; }
+.mobile-stick-knob { width: 48px; height: 48px; background: #d5ff78cc; border: 2px solid #f4ffc9; border-radius: 50%; box-shadow: 0 4px 12px #0005; position: absolute; }
+.mobile-stick-arrows { color: #c8e0ed; font-size: 26px; letter-spacing: 24px; padding-left: 24px; }
+.mobile-steering small { display: block; color: white; font-size: 9px; font-weight: 800; margin-top: 7px; text-shadow: 0 1px 3px #000; }
+.mobile-pedals { display: grid; grid-template-columns: repeat(2, 66px); gap: 10px; pointer-events: auto; }
+.mobile-pedals button { min-height: 56px; border-radius: 18px; border: 2px solid #adc9d9; background: #16374be6; color: white; font-size: 11px; font-weight: 900; touch-action: none; }
+.mobile-pedals .mobile-brake { grid-column: 1 / -1; background: #813f3ce6; }
+.mobile-pedals .mobile-boost { color: #d5ff78; }
+.mobile-pedals button:active { background: #527589; }
+@media (pointer: coarse) {
+  .arcade-game.in-race .speed { bottom: 190px; right: 16px; transform: scale(.65); transform-origin: right bottom; }
+  .arcade-game.in-race .right-controls { bottom: 180px; left: 16px; right: auto; transform: none; flex-wrap: wrap; max-width: 155px; }
+  .arcade-game.in-race .right-controls button { font-size: 10px; min-height: 38px; }
+  .arcade-game.in-race .right-controls button:last-child { display: none; }
+  .arcade-game.in-race .right-controls kbd { display: none; }
+  .arcade-game.in-race .boost { bottom: 20px; width: 100px; }
+  .arcade-game.in-race .lap-counter { bottom: 230px; }
+  .arcade-game.in-race .minimap { width: 110px; top: 75px; right: 12px; }
+}

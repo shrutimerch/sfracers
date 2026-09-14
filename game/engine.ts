@@ -190,9 +190,17 @@ export function makeGame(
     recover: sim.recover,
     toggleCamera,
     setKey: sim.setKey,
+    setMobileInput: sim.setMobileInput,
     getState: () => {
       const { mode, time, progress, lap } = sim.state;
-      return { mode, time, progress, lap: lap + 1, character: sim.state.character, engineClass: sim.state.engineClass };
+      return {
+        mode,
+        time,
+        progress,
+        lap: lap + 1,
+        character: sim.state.character,
+        engineClass: sim.state.engineClass,
+      };
     },
     dispose: () => {
       disposed = true;
