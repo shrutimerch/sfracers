@@ -1,0 +1,14 @@
+Tracks selected by the project owner on 2026-09-13.
+Source game: Mario Kart: Double Dash!!
+
+character-select.m4a — Game Select (menu / character selection; loop)
+https://www.youtube.com/watch?v=7WPNkLaGFis
+
+start-grid.m4a — Start Grid Grand Prix (pre-grid sting; play once)
+https://www.youtube.com/watch?v=QOfNPwZVoIo
+
+circuit.m4a — Yoshi Circuit (race; loop)
+https://www.youtube.com/watch?v=gynpCNZcL_o
+
+Audio: AAC from the selected sources, remuxed into browser-compatible M4A with fast-start metadata.
+Countdown tones are synthesized locally by game/audio/use-race-audio.ts.

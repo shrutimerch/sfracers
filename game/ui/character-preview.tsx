@@ -5,7 +5,13 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { createRacer } from '../characters/racer.ts';
 import { CHARACTERS, type CharacterId } from '../characters/roster.ts';
 
-export function CharacterPreview({ character }: { character: CharacterId }) {
+export function CharacterPreview({
+  character,
+  startLine = false,
+}: {
+  character: CharacterId;
+  startLine?: boolean;
+}) {
   const canvas = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     const element = canvas.current;
@@ -22,8 +28,13 @@ export function CharacterPreview({ character }: { character: CharacterId }) {
     renderer.toneMappingExposure = 1.25;
     const scene = new T.Scene();
     const camera = new T.PerspectiveCamera(33, 1, 0.1, 30);
-    camera.position.set(4.3, 2.9, 4.8);
-    camera.lookAt(0, 0.84, 0);
+    if (startLine) {
+      camera.position.set(-7, 6, 0);
+      camera.lookAt(18, 1.5, 0);
+    } else {
+      camera.position.set(4.3, 2.9, 4.8);
+      camera.lookAt(0, 0.84, 0);
+    }
     const pmrem = new T.PMREMGenerator(renderer);
     const room = new RoomEnvironment();
     const environment = pmrem.fromScene(room, 0.04);
@@ -44,7 +55,7 @@ export function CharacterPreview({ character }: { character: CharacterId }) {
       new T.MeshStandardMaterial({ color: '#24475a', roughness: 0.4, metalness: 0.25 }),
     );
     floor.position.y = -0.09;
-    scene.add(floor);
+    if (!startLine) scene.add(floor);
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const started = performance.now();
     let frame = 0;
@@ -53,9 +64,16 @@ export function CharacterPreview({ character }: { character: CharacterId }) {
         height = element.clientHeight;
       renderer.setSize(width, height, false);
       camera.aspect = width / Math.max(height, 1);
+      if (startLine)
+        camera.fov = T.MathUtils.radToDeg(
+          2 *
+            Math.atan(
+              Math.tan(T.MathUtils.degToRad(65 / 2)) * Math.min(1, 1600 / 886 / camera.aspect),
+            ),
+        );
       camera.updateProjectionMatrix();
       const elapsed = reducedMotion.matches ? 0 : (performance.now() - started) / 1000;
-      racer.root.rotation.y = Math.sin(elapsed * 0.45) * 0.38;
+      racer.root.rotation.y = startLine ? 0 : Math.sin(elapsed * 0.45) * 0.38;
       racer.update(0, 0, 0, false, elapsed);
       renderer.render(scene, camera);
       frame = requestAnimationFrame(draw);
@@ -69,12 +87,12 @@ export function CharacterPreview({ character }: { character: CharacterId }) {
       environment.dispose();
       renderer.dispose();
     };
-  }, [character]);
+  }, [character, startLine]);
   const name = CHARACTERS.find((c) => c.id === character)!.name;
   return (
     <canvas
       ref={canvas}
-      className="character-preview"
+      className={startLine ? 'start-line-racer' : 'character-preview'}
       role="img"
       aria-label={`3D preview of ${name} and their kart`}
     />

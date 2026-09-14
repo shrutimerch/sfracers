@@ -1,3 +1,4 @@
+import { finishBuildSteps } from '../loading/build-steps.ts';
 import { SOUTH_PARK_GRASS_HEIGHT } from './park-surface';
 import { createTreePlacement } from './tree-clearance';
 import { SCENERY_LOCATIONS } from './config/scenery-locations';
@@ -19,6 +20,9 @@ export const parkCenter = new T.Vector2(90, 490);
 export const isLocal = (b: Building) =>
   b.points.some(([x, z]) => Math.hypot(x - 90, z - 490) < 155);
 export function buildSouthPark(scene: T.Scene, d: MapData) {
+  return finishBuildSteps(buildSouthParkSteps(scene, d));
+}
+export function* buildSouthParkSteps(scene: T.Scene, d: MapData) {
   const textures: T.Texture[] = [];
   const disposeLandmarks: (() => void)[] = [];
   let seed = 8241;
@@ -451,6 +455,7 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
   for (const original of d.buildings.filter(
     (b) => isLocal(b) && !hasRouteProfile(b) && b.id !== SCENERY_LOCATIONS.shell.canopyBuildingId,
   )) {
+    yield;
     const profile =
       original.street === 'South Park' ? southParkProfiles[original.address || ''] : undefined;
     const b = profile ? { ...original, height: profile.height } : original;
@@ -647,6 +652,7 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
   // Parking follows South Park itself, independent of which race route is selected.
   let carIndex = 0;
   for (const car of parkParking(d.roads)) {
+    yield;
     const { x, z, angle: ang } = car,
       body = mat(['#dadbd5', '#343b42', '#afb3b1', '#243c4a', '#6e3431'][carIndex++ % 5]);
     box(x, 0.65, z, 4.2, 0.75, 1.75, body, ang);
@@ -985,6 +991,7 @@ export function buildSouthPark(scene: T.Scene, d: MapData) {
     rod(new T.Vector3(8, 0, 586), new T.Vector3(8, 7.4, 586), 0.08, steel);
   }
   for (const [m, geoms] of groups) {
+    yield;
     if (!geoms.length) continue;
     const g = mergeGeometries(geoms, false);
     const mesh = new T.Mesh(g, m);

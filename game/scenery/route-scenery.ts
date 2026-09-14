@@ -1,3 +1,4 @@
+import { finishBuildSteps } from '../loading/build-steps.ts';
 import { buildPearTownsend, PEAR_TOWNSEND_ID } from './pear-townsend.ts';
 import { buildSouthParkCommons, SPC_BUILDING_ID } from './south-park-commons.ts';
 import { beachHeight, inPolygon, BRANNAN_LAWN_HEIGHT } from './park-surface';
@@ -43,6 +44,9 @@ import type { MapData, Facades, Point } from '../types';
 
 // Mapped positions; modeled detail sizes are estimates from reference/waterfront-streetview.json.
 export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) {
+  return finishBuildSteps(buildRouteScenerySteps(scene, d, facades));
+}
+export function* buildRouteScenerySteps(scene: T.Scene, d: MapData, facades: Facades) {
   const disposeBaysideVillage = buildBaysideVillage(scene);
   const disposeTownsendCorner = buildTownsendCorner(scene);
   const groups = new Map<T.Material, T.BufferGeometry[]>();
@@ -141,6 +145,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     return best;
   };
   for (const b of d.buildings) {
+    yield;
     const p = routeProfiles[b.id ?? 0];
     if (!p) continue;
     if (b.id === PEAR_TOWNSEND_ID) {
@@ -484,14 +489,23 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   }
 
   cb(10, 3, 1.35, 3.3, 1.2, 0.38, courtStone);
+  yield;
   const disposeOraclePark = buildOraclePark(scene, survey.stadium, facades, routeDistance);
+  yield;
   buildBayBridge(scene);
+  yield;
   buildBrannanWaterfront(scene);
+  yield;
   buildWaterfrontRailings(scene, d);
+  yield;
   buildOracleApproachGarden(scene);
+  yield;
   buildDelanceyGarden(scene);
+  yield;
   buildDelanceyCourtyard(scene);
+  yield;
   buildDelanceyWaterfrontGardens(scene);
+  yield;
   const disposeHarborBuildings = buildHarborBuildings(scene);
   const southBeach = survey.parks.find((p) => p.id === 23750468)!;
   buildSouthBeachMarina(
@@ -537,11 +551,13 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     add(mesh, grass);
   };
   for (const p of survey.parks) {
+    yield;
     slab(p.points, pale, 0.09);
     if (p.id === 23750468) lawnSurface(p.points, beachHeight);
   }
   // Brannan Wharf's lawn has its own mapped outline, not a shrunken copy of the park boundary.
   for (const lawn of survey.lawns) {
+    yield;
     lawnSurface(lawn.points, () => BRANNAN_LAWN_HEIGHT);
     for (let i = 1; i < lawn.points.length; i++) {
       const a = lawn.points[i - 1],
@@ -720,9 +736,12 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     add(ring, redSteel);
   }
   const medianPalms = medianPalmRows(d).flat();
-  for (const [index, [x, z]] of medianPalms.entries())
+  for (const [index, [x, z]] of medianPalms.entries()) {
+    yield;
     palmGeometry(x, z, 10 + (index % 4), add, { bark, leaves: palmLeaves });
+  }
   for (const tree of survey.trees) {
+    yield;
     if (tree.palm && isMedianPalm(tree.point)) continue;
     // The Townsend forecourt has its own reference-matched winter trees.
     if (
@@ -750,7 +769,9 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
       });
     }
   }
+  yield;
   const medianLamps = medianLampPositions(d, medianPalms);
+  yield;
   buildMedianLamps(scene, medianLamps);
   buildEmbarcaderoLamps(
     scene,
@@ -779,6 +800,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     add(g, pale);
     box(x, 7.02, z, 0.43, 0.1, 0.43, blue);
   }
+  yield;
   const disposeMuniPaving = buildMuniPaving(scene, d, medianPalms);
   const railBase = mat('#454642');
   const railHead = new T.MeshStandardMaterial({
@@ -827,6 +849,7 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
     );
   }
   for (const [m, gs] of groups) {
+    yield;
     if (!gs.length) continue;
     const g = mergeGeometries(gs);
     if (!g) throw new Error('Route scenery geometry could not be merged');

@@ -4,7 +4,7 @@ import { devShortcutDistance } from './simulation/dev-shortcuts';
 import { RACE_LAPS, lapDistance } from './simulation/race-laps';
 import { prepareCourse } from './simulation/course';
 import { createGoogleScenery } from './imagery/google-scenery';
-import { createWorld } from './rendering/world';
+import { createWorld, createWorldAsync, type RaceWorld } from './rendering/world';
 import { createRaceSimulation } from './simulation/simulation';
 import { createRaceVisuals } from './rendering/race-visuals';
 import { createRaceCamera } from './rendering/camera';
@@ -23,9 +23,10 @@ export function makeGame(
   facades: Facades,
   googleKey = '',
   initialCharacter: CharacterId = DEFAULT_CHARACTER,
+  preparedWorld?: RaceWorld,
 ) {
   const d = prepareCourse(data);
-  const world = createWorld(canvas, d, facades),
+  const world = preparedWorld ?? createWorld(canvas, d, facades),
     { renderer, scene, camera, scenery, officeTextures } = world;
   const shortcut =
     process.env.NODE_ENV === 'development'
@@ -204,4 +205,26 @@ export function makeGame(
       renderer.dispose();
     },
   };
+}
+
+export async function makeGameAsync(
+  canvas: HTMLCanvasElement,
+  mini: HTMLCanvasElement,
+  data: MapData,
+  update: (h: HUD) => void,
+  facades: Facades,
+  initialCharacter: () => CharacterId,
+  signal?: AbortSignal,
+) {
+  const world = await createWorldAsync(canvas, prepareCourse(data), facades, signal);
+  try {
+    signal?.throwIfAborted();
+    return makeGame(canvas, mini, data, update, facades, '', initialCharacter(), world);
+  } catch (error) {
+    world.disposeTextures();
+    disposeScene(world.scene);
+    world.officeTextures.forEach((texture) => texture.dispose());
+    world.renderer.dispose();
+    throw error;
+  }
 }

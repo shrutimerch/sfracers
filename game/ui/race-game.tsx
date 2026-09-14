@@ -13,6 +13,7 @@ import { createSecretCode } from '../characters/secret-code.ts';
 import { RaceStandings } from './race-standings';
 import { raceRoster } from '../characters/roster';
 import { CharacterPreview } from './character-preview';
+import { useRaceAudio } from '../audio/use-race-audio';
 import {
   CHARACTER_PERFORMANCE,
   ACCELERATION_BANDS,
@@ -38,7 +39,11 @@ export default function RaceGame() {
       ? STANDARD_CHARACTERS
       : SECRET_CHARACTERS.filter((racer) => racer.group === rosterPack);
   const chooseCharacter = (id: CharacterId) => {
-    if (engine.current?.selectCharacter(id)) {
+    if (
+      !engine.current ||
+      engine.current.getState().mode === 'loading' ||
+      engine.current.selectCharacter(id)
+    ) {
       characterRef.current = id;
       setCharacter(id);
       return true;
@@ -59,13 +64,14 @@ export default function RaceGame() {
       drift: false,
       camera: 'Driver',
     });
+  const audio = useRaceAudio(hud);
   useEffect(() => {
     let cancelled = false;
     const lifecycle = new AbortController();
     Promise.all([
       Promise.resolve({ googleMapsKey: '' }),
       import('../engine'),
-      fetch('/race-course.json').then((r) => {
+      fetch('/race-course.json', { signal: lifecycle.signal }).then((r) => {
         if (!r.ok) throw Error('Could not load the street map. Please reload.');
         return r.json() as Promise<MapData>;
       }),
@@ -74,7 +80,7 @@ export default function RaceGame() {
         if (cancelled) return;
         const [facades, controls] = await Promise.all([
           module.loadFacades(),
-          fetch('/traffic-controls-osm.json').then((r) => {
+          fetch('/traffic-controls-osm.json', { signal: lifecycle.signal }).then((r) => {
             if (!r.ok) throw Error('Traffic map could not load.');
             return r.json() as Promise<{ elements: NonNullable<MapData['trafficControls']> }>;
           }),
@@ -85,17 +91,20 @@ export default function RaceGame() {
           return;
         }
         try {
-          engine.current = module.makeGame(
+          engine.current = await module.makeGameAsync(
             canvas.current,
             mini.current,
             data,
             setHud,
             facades,
-            config.googleMapsKey,
-            characterRef.current,
+            () => characterRef.current,
+            lifecycle.signal,
           );
-        } catch {
-          setError('3D graphics could not start. Try a browser with WebGL enabled.');
+        } catch (error) {
+          Object.values(facades).forEach((texture) => texture.dispose());
+          if (cancelled) return;
+          setError('The race could not finish loading. Please reload and try again.');
+          return;
         }
         const context = (
           document as Document & {
@@ -114,7 +123,7 @@ export default function RaceGame() {
                   if (!input || typeof input !== 'object' || Object.keys(input).length)
                     throw Error('Expected an empty object');
                   if (!engine.current) throw Error('Game is not ready');
-                  engine.current.start(characterRef.current);
+                  audio.startRace(() => engine.current?.start(characterRef.current));
                   return engine.current.getState();
                 },
               },
@@ -135,11 +144,11 @@ export default function RaceGame() {
       engine.current = null;
     };
   }, []);
-  const ready = hud.mode === 'ready' || hud.mode === 'loading';
+  const ready = (hud.mode === 'ready' || hud.mode === 'loading') && !audio.starting;
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (
-        !['ready', 'finished'].includes(hud.mode) ||
+        !['loading', 'ready', 'finished'].includes(hud.mode) ||
         event.ctrlKey ||
         event.metaKey ||
         event.altKey
@@ -155,7 +164,7 @@ export default function RaceGame() {
       event.preventDefault();
       event.stopPropagation();
       setSecretUnlocked(true);
-      if (engine.current?.selectCharacter('sam')) {
+      if (!engine.current || engine.current.selectCharacter('sam')) {
         characterRef.current = 'sam';
         setCharacter('sam');
       }
@@ -173,6 +182,7 @@ export default function RaceGame() {
   const press = (key: string, value: boolean) => engine.current?.setKey(key, value);
   return (
     <main className={`arcade-game ${ready ? 'in-garage' : 'in-race'}`}>
+      <link rel="preload" as="image" href="/start-line.jpg" />
       <header>
         <a href="/" className="brand">
           <span className="brand-mark">SF</span> BAY CITY <em>KART</em>
@@ -180,7 +190,14 @@ export default function RaceGame() {
         <span className="district">
           SOUTH PARK → WATERFRONT <i>01</i>
         </span>
-        <button onClick={() => engine.current?.pause()} disabled={ready}>
+        <button
+          onClick={audio.toggleMute}
+          aria-pressed={audio.muted}
+          aria-label={audio.muted ? 'Turn sound on' : 'Mute music and countdown'}
+        >
+          {audio.muted ? 'Sound off' : 'Sound on'}
+        </button>
+        <button onClick={() => engine.current?.pause()} disabled={ready || audio.starting}>
           {hud.mode === 'paused' ? 'Resume ▶' : 'Pause Ⅱ'}
         </button>
       </header>
@@ -190,6 +207,17 @@ export default function RaceGame() {
           ref={canvas}
           aria-label="3D kart racing through real San Francisco streets. Arrow keys drive, Space drifts, Shift boosts, V changes camera."
         />
+        {hud.mode === 'loading' && (
+          <>
+            <img
+              className="start-line-preview"
+              src="/start-line.jpg"
+              alt="South Park race start line"
+              fetchPriority="high"
+            />
+            <CharacterPreview character={character} startLine />
+          </>
+        )}
         <div className="vignette" />
         {hud.scenery && (
           <div className="scenery-status" role="status">
@@ -227,150 +255,159 @@ export default function RaceGame() {
             </div>
           </>
         )}
-        {(ready || hud.mode === 'paused' || hud.mode === 'finished' || error) && (
-          <div className={`start-card${ready || hud.mode === 'finished' ? ' character-card' : ''}`}>
-            <span className="sticker">
-              {hud.mode === 'finished'
-                ? 'CHECKERED FLAG'
-                : hud.mode === 'paused'
-                  ? 'PIT STOP'
-                  : 'CHOOSE YOUR RACER'}
-            </span>
-            <h1>
-              {hud.mode === 'finished' ? (
-                <>
-                  That’s a<br />
-                  wrap!
-                </>
-              ) : hud.mode === 'paused' ? (
-                <>
-                  Taking
-                  <br />a breather.
-                </>
-              ) : (
-                selected.name
-              )}
-            </h1>
-            <p>
-              {error ||
-                (hud.mode === 'finished'
-                  ? `Finished in ${fmt(hud.time)}. Ready for another race?`
-                  : hud.mode === 'paused'
-                    ? 'The race is paused. Your rivals can wait.'
-                    : selected.description)}
-            </p>
-            {(ready || hud.mode === 'finished') && !error && (
-              <>
-                {secretUnlocked && (
-                  <div className="roster-switch">
-                    <span role="status">Secret roster unlocked</span>
-                    <div role="group" aria-label="Character roster">
-                      {(
-                        [
-                          ['sf', 'SF Racers', 'chonkers'],
-                          ['vc', 'Incubators', 'garry'],
-                          ['ceo', 'CEOs', 'sam'],
-                        ] as const
-                      ).map(([group, label, initial]) => (
-                        <button
-                          key={group}
-                          type="button"
-                          aria-pressed={rosterPack === group}
-                          disabled={hud.mode === 'loading'}
-                          onClick={() => chooseCharacter(initial)}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                <CharacterPreview character={character} />
-                <fieldset className="character-options" disabled={hud.mode === 'loading'}>
-                  <legend>Choose a character</legend>
-                  {visibleCharacters.map((racer) => (
-                    <label key={racer.id} className={character === racer.id ? 'selected' : ''}>
-                      <input
-                        type="radio"
-                        name="character"
-                        value={racer.id}
-                        checked={character === racer.id}
-                        onChange={() => chooseCharacter(racer.id)}
-                      />
-                      <span className="character-color" style={{ background: racer.color }} />
-                      <span>
-                        <strong>{racer.name}</strong>
-                        <small>{racer.title}</small>
-                      </span>
-                    </label>
-                  ))}
-                </fieldset>
-                {rosterPack !== 'sf' && (
-                  <p className="rival-group" aria-live="polite">
-                    {selected.group === 'ceo' ? 'CEO race' : 'Incubator race'} · Rivals:{' '}
-                    {CHARACTERS.filter(
-                      (racer) => racer.group === selected.group && racer.id !== character,
-                    )
-                      .map((racer) => racer.name)
-                      .join(', ')}
-                  </p>
-                )}
-                <div className="character-stats" aria-label={`${selected.name} acceleration`}>
-                  <p>{CHARACTER_PERFORMANCE[character].feel}</p>
-                  {ACCELERATION_BANDS.map((band) => (
-                    <div className="character-stat" key={band.mph}>
-                      <span>{band.label}</span>
-                      <meter
-                        min={0}
-                        max={100}
-                        value={accelerationRating(character, band.mph)}
-                        aria-label={`${band.label} acceleration relative to the strongest racer at this speed`}
-                      />
-                    </div>
-                  ))}
-                  <small>Acceleration compared at each speed</small>
-                </div>
-              </>
-            )}
-            <div className="race-spec">
-              <div>
-                <b>
-                  2.18 <small>KM</small>
-                </b>
-                <span>PROPOSED CIRCUIT</span>
-              </div>
-              <div>
-                <b>
-                  4 <small>KARTS</small>
-                </b>
-                <span>TWO LAPS · NO SPEED CAP</span>
-              </div>
-            </div>
-            <button
-              className="go"
-              disabled={hud.mode === 'loading' || !!error || imageryLoading || !!hud.sceneryError}
-              onClick={() =>
-                hud.mode === 'paused' ? engine.current?.pause() : engine.current?.start(character)
-              }
+        {!audio.starting &&
+          (ready || hud.mode === 'paused' || hud.mode === 'finished' || error) && (
+            <div
+              className={`start-card${ready || hud.mode === 'finished' ? ' character-card' : ''}`}
             >
-              {hud.mode === 'loading'
-                ? 'Building the city…'
-                : imageryLoading
-                  ? 'Loading photographed South Park…'
+              <span className="sticker">
+                {hud.mode === 'finished'
+                  ? 'CHECKERED FLAG'
                   : hud.mode === 'paused'
-                    ? 'Back to the race →'
-                    : hud.mode === 'finished'
-                      ? 'Race again →'
-                      : `Race as ${selected.name} →`}
-            </button>
-            <div className="start-help">
-              <span>↑ / W &nbsp; ACCELERATE</span>
-              <span>← → / A D &nbsp; STEER</span>
-              <span>SPACE &nbsp; DRIFT</span>
-              <span>SHIFT &nbsp; BOOST</span>
+                    ? 'PIT STOP'
+                    : 'CHOOSE YOUR RACER'}
+              </span>
+              <h1>
+                {hud.mode === 'finished' ? (
+                  <>
+                    That’s a<br />
+                    wrap!
+                  </>
+                ) : hud.mode === 'paused' ? (
+                  <>
+                    Taking
+                    <br />a breather.
+                  </>
+                ) : (
+                  selected.name
+                )}
+              </h1>
+              <p>
+                {error ||
+                  (hud.mode === 'finished'
+                    ? `Finished in ${fmt(hud.time)}. Ready for another race?`
+                    : hud.mode === 'paused'
+                      ? 'The race is paused. Your rivals can wait.'
+                      : selected.description)}
+              </p>
+              {(ready || hud.mode === 'finished') && !error && (
+                <>
+                  {secretUnlocked && (
+                    <div className="roster-switch">
+                      <span role="status">Secret roster unlocked</span>
+                      <div role="group" aria-label="Character roster">
+                        {(
+                          [
+                            ['sf', 'SF Racers', 'chonkers'],
+                            ['vc', 'Incubators', 'garry'],
+                            ['ceo', 'CEOs', 'sam'],
+                          ] as const
+                        ).map(([group, label, initial]) => (
+                          <button
+                            key={group}
+                            type="button"
+                            aria-pressed={rosterPack === group}
+                            onClick={() => chooseCharacter(initial)}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <CharacterPreview character={character} />
+                  <fieldset className="character-options">
+                    <legend>Choose a character</legend>
+                    {visibleCharacters.map((racer) => (
+                      <label key={racer.id} className={character === racer.id ? 'selected' : ''}>
+                        <input
+                          type="radio"
+                          name="character"
+                          value={racer.id}
+                          checked={character === racer.id}
+                          onChange={() => chooseCharacter(racer.id)}
+                        />
+                        <span className="character-color" style={{ background: racer.color }} />
+                        <span>
+                          <strong>{racer.name}</strong>
+                          <small>{racer.title}</small>
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
+                  {rosterPack !== 'sf' && (
+                    <p className="rival-group" aria-live="polite">
+                      {selected.group === 'ceo' ? 'CEO race' : 'Incubator race'} · Rivals:{' '}
+                      {CHARACTERS.filter(
+                        (racer) => racer.group === selected.group && racer.id !== character,
+                      )
+                        .map((racer) => racer.name)
+                        .join(', ')}
+                    </p>
+                  )}
+                  <div className="character-stats" aria-label={`${selected.name} acceleration`}>
+                    <p>{CHARACTER_PERFORMANCE[character].feel}</p>
+                    {ACCELERATION_BANDS.map((band) => (
+                      <div className="character-stat" key={band.mph}>
+                        <span>{band.label}</span>
+                        <meter
+                          min={0}
+                          max={100}
+                          value={accelerationRating(character, band.mph)}
+                          aria-label={`${band.label} acceleration relative to the strongest racer at this speed`}
+                        />
+                      </div>
+                    ))}
+                    <small>Acceleration compared at each speed</small>
+                  </div>
+                </>
+              )}
+              <div className="race-spec">
+                <div>
+                  <b>
+                    2.18 <small>KM</small>
+                  </b>
+                  <span>PROPOSED CIRCUIT</span>
+                </div>
+                <div>
+                  <b>
+                    4 <small>KARTS</small>
+                  </b>
+                  <span>{RACE_LAPS === 1 ? 'ONE LAP' : `${RACE_LAPS} LAPS`} · NO SPEED CAP</span>
+                </div>
+              </div>
+              {hud.mode === 'loading' && !error && (
+                <p className="track-loading" role="status">
+                  Choose your racer while the track loads.
+                </p>
+              )}
+              <button
+                className="go"
+                disabled={hud.mode === 'loading' || !!error || imageryLoading || !!hud.sceneryError}
+                onClick={() =>
+                  hud.mode === 'paused'
+                    ? engine.current?.pause()
+                    : audio.startRace(() => engine.current?.start(characterRef.current))
+                }
+              >
+                {hud.mode === 'loading'
+                  ? 'Loading track…'
+                  : imageryLoading
+                    ? 'Loading photographed South Park…'
+                    : hud.mode === 'paused'
+                      ? 'Back to the race →'
+                      : hud.mode === 'finished'
+                        ? 'Race again →'
+                        : `Race as ${selected.name} →`}
+              </button>
+              <div className="start-help">
+                <span>↑ / W &nbsp; ACCELERATE</span>
+                <span>← → / A D &nbsp; STEER</span>
+                <span>SPACE &nbsp; DRIFT</span>
+                <span>SHIFT &nbsp; BOOST</span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
         {hud.mode === 'countdown' && (
           <div className="sr-only" aria-live="assertive">
             {hud.count > 2 ? 'Ready' : 'Set'}: {hud.count}
@@ -381,7 +418,10 @@ export default function RaceGame() {
             DRIFT CHARGING <span>Release SPACE for a boost</span>
           </div>
         )}
-        <div className="minimap" hidden={hud.scenery?.startsWith('Google') || imageryLoading}>
+        <div
+          className="minimap"
+          hidden={hud.mode === 'loading' || hud.scenery?.startsWith('Google') || imageryLoading}
+        >
           <span>
             WATERFRONT CIRCUIT <i>N ↑</i>
           </span>
