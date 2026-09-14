@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   createRaceAudio,
   RACE_TRACKS,
+  MENU_AUDIO_ID,
   type AudioRaceState,
   type AudioStatus,
   type Track,
@@ -17,10 +18,22 @@ export function useRaceAudio(state: AudioRaceState) {
     unavailable: false,
   });
   useEffect(() => {
+    const preload = document.getElementById(MENU_AUDIO_ID) as
+      | (HTMLAudioElement & {
+          stopEarlyPlayback?: () => void;
+          raceAudioActivated?: string;
+        })
+      | null;
+    const wasPlaying = !!preload && (!preload.paused || preload.raceAudioActivated === 'true');
+    preload?.stopEarlyPlayback?.();
     const tracks = Object.fromEntries(
       Object.entries(RACE_TRACKS).map(([name, src]) => {
-        const audio = new Audio(src);
-        audio.preload = 'none';
+        if (name === 'menu' && preload) return [name, preload];
+        const audio = new Audio();
+        // Set the policy before the URL: only menu music downloads during startup.
+        // Buffer it before the first gesture instead of starting its fetch on that click.
+        audio.preload = name === 'menu' ? 'auto' : 'none';
+        audio.src = src;
         return [name, audio];
       }),
     ) as Record<keyof typeof RACE_TRACKS, HTMLAudioElement>;
@@ -33,6 +46,7 @@ export function useRaceAudio(state: AudioRaceState) {
       {
         tracks: tracks as unknown as Record<keyof typeof RACE_TRACKS, Track>,
         unlock() {
+          if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
           try {
             context ??= new AudioContext();
             void context.resume().catch(() => {});
@@ -66,22 +80,29 @@ export function useRaceAudio(state: AudioRaceState) {
       muted,
     );
     controller.current = audio;
+    if (wasPlaying) audio.enable();
     setStatus((current) => ({ ...current, muted }));
-    const enable = () => audio.enable();
+    const enable = (event: Event) => {
+      if (event.target instanceof Element && event.target.closest('[data-audio-toggle]')) return;
+      if (preload) preload.raceAudioActivated = 'true';
+      audio.enable();
+    };
     const visibility = () => {
       if (document.hidden) audio.suspend();
       else audio.resume();
     };
-    window.addEventListener('pointerdown', enable);
-    window.addEventListener('keydown', enable);
+    window.addEventListener('pointerdown', enable, true);
+    window.addEventListener('keydown', enable, true);
     document.addEventListener('visibilitychange', visibility);
     return () => {
       controller.current = null;
-      window.removeEventListener('pointerdown', enable);
-      window.removeEventListener('keydown', enable);
+      window.removeEventListener('pointerdown', enable, true);
+      window.removeEventListener('keydown', enable, true);
       document.removeEventListener('visibilitychange', visibility);
       audio.dispose();
       Object.values(tracks).forEach((track) => {
+        // Retain the initial HTML player's buffer through Strict Mode and HMR remounts.
+        if (track === preload) return;
         track.removeAttribute('src');
         track.load();
       });
@@ -98,6 +119,10 @@ export function useRaceAudio(state: AudioRaceState) {
       else start();
     },
     toggleMute: () => {
+      if (!status.muted && (!status.enabled || status.unavailable)) {
+        controller.current?.enable();
+        return;
+      }
       const muted = controller.current?.toggleMute() ?? false;
       try {
         localStorage.setItem('sf-racer-muted', String(muted));

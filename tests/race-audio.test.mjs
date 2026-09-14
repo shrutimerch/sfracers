@@ -60,6 +60,8 @@ test('menu → complete intro → three beeps → go and looping circuit', () =>
   tracks.intro.onended();
   tracks.intro.onended();
   assert.equal(starts, 1);
+  // No HUD update is needed for the first beep; repeated end events are harmless.
+  assert.equal(events.filter((e) => e === 'beep').length, 1);
   for (const count of [3, 3, 2, 2, 1]) audio.update({ mode: 'countdown', count });
   audio.update({ mode: 'racing', count: 0 });
   audio.update({ mode: 'racing', count: 0 });
@@ -174,5 +176,20 @@ test('finishing muted resumes the correct result track when sound is enabled', (
   audio.update({ mode: 'countdown', count: 3 });
   audio.update({ mode: 'racing', count: 0 });
   assert.equal(events.at(-1), 'play:circuit');
+  audio.dispose();
+});
+
+test('the controller retries rejected autoplay on a subsequent gesture', async () => {
+  const { audio, tracks, events } = setup();
+  const play = tracks.menu.play;
+  tracks.menu.play = () => Promise.reject(new Error('NotAllowedError'));
+  audio.enable();
+  await new Promise((resolve) => setImmediate(resolve));
+  tracks.menu.play = play;
+  audio.enable();
+  assert.equal(events.at(-1), 'play:menu');
+  const count = events.filter((event) => event === 'play:menu').length;
+  audio.enable();
+  assert.equal(events.filter((event) => event === 'play:menu').length, count);
   audio.dispose();
 });

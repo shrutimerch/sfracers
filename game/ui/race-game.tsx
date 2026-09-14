@@ -197,11 +197,12 @@ export default function RaceGame() {
           SOUTH PARK → WATERFRONT <i>01</i>
         </span>
         <button
+          data-audio-toggle
           onClick={audio.toggleMute}
           aria-pressed={audio.muted}
-          aria-label={audio.muted ? 'Turn sound on' : 'Mute music and countdown'}
+          aria-label={audio.muted ? 'Turn sound on' : !audio.enabled || audio.unavailable ? 'Play music' : 'Mute music and countdown'}
         >
-          {audio.muted ? 'Sound off' : 'Sound on'}
+          {audio.muted ? 'Sound off' : !audio.enabled || audio.unavailable ? 'Play music' : 'Sound on'}
         </button>
         <button onClick={() => engine.current?.pause()} disabled={ready || audio.starting}>
           {hud.mode === 'paused' ? 'Resume ▶' : 'Pause Ⅱ'}
@@ -509,6 +510,26 @@ export default function RaceGame() {
           </button>
           <button onClick={() => engine.current?.recover()}>
             ↻ Unstuck <kbd>R</kbd>
+          </button>
+          <button
+            aria-label="Drift — hold Space"
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId);
+              press(' ', true);
+            }}
+            onPointerUp={() => press(' ', false)}
+            onPointerCancel={() => press(' ', false)}
+            onLostPointerCapture={() => press(' ', false)}
+            onKeyDown={(e) => {
+              if (e.key === ' ' || e.key === 'Enter') {
+                e.preventDefault();
+                press(' ', true);
+              }
+            }}
+            onKeyUp={() => press(' ', false)}
+            onBlur={() => press(' ', false)}
+          >
+            Drift <kbd>Space</kbd>
           </button>
         </div>
         <div className="course-progress">

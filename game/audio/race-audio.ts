@@ -1,6 +1,7 @@
+export const MENU_AUDIO_ID = 'race-menu-music';
 export const RACE_TRACKS = {
   menu: '/audio/character-select.m4a',
-  intro: '/audio/start-grid.m4a',
+  intro: '/audio/start-grid.m4a?v=first-half-3',
   circuit: '/audio/circuit.m4a',
   finishFirst: '/audio/finish-first.m4a',
   finishSecond: '/audio/finish-second.m4a',
@@ -64,6 +65,11 @@ export function createRaceAudio(deps: Dependencies, initialMuted = false) {
     starting = false;
     notify();
     start();
+    // Start the first tone in the same callback as the simulation, rather than
+    // waiting for a rendered frame, throttled HUD publication, and React effect.
+    state = { ...state, mode: 'countdown', count: 3 };
+    lastCount = 3;
+    if (enabled && !muted && !suspended) deps.beep(false);
   };
   const play = (name: keyof typeof RACE_TRACKS, restart = false) => {
     if (disposed || suspended || muted || !enabled) return;
@@ -114,8 +120,10 @@ export function createRaceAudio(deps: Dependencies, initialMuted = false) {
       if (!enabled) {
         enabled = true;
         notify();
-        sync();
       }
+      // An autoplay rejection must be retried within the next real user gesture.
+      // sync() leaves an already playing track alone.
+      sync();
     },
     toggleMute() {
       muted = !muted;
