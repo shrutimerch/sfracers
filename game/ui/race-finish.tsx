@@ -12,12 +12,10 @@ export function RaceFinish({
   position,
   submit,
   onRaceAgain,
-  onChooseRacer,
 }: Omit<RaceResult, 'id'> & {
   cc: EngineClass;
   submit: (result: RaceResult, name: string, xHandle: string) => Promise<void>;
   onRaceAgain: () => void;
-  onChooseRacer: () => void;
 }) {
   const [result] = useState<RaceResult>(() => ({
     id: crypto.randomUUID(),
@@ -122,9 +120,6 @@ export function RaceFinish({
         <div className="finish-actions">
           <button onClick={onRaceAgain} disabled={saving}>
             Race again →
-          </button>
-          <button onClick={onChooseRacer} disabled={saving}>
-            Choose racer
           </button>
         </div>
       </div>

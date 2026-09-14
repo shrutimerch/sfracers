@@ -1,14 +1,14 @@
 'use client';
 import { useState } from 'react';
 import { challengePath, type ChallengeDetails } from '../leaderboard/challenge';
-import { Share2 } from 'lucide-react';
+import { Share2, Copy } from 'lucide-react';
 import { formatRaceTime } from '../leaderboard/model';
 
 export function ShareButton({ timeMs, ...details }: { timeMs?: number } & ChallengeDetails) {
   const [status, setStatus] = useState('');
   const [manualLink, setManualLink] = useState('');
   const [busy, setBusy] = useState(false);
-  async function share() {
+  async function share(copyOnly = false) {
     const text =
       timeMs === undefined
         ? 'Race me through San Francisco in SF Racer!'
@@ -22,7 +22,7 @@ export function ShareButton({ timeMs, ...details }: { timeMs?: number } & Challe
       if (!response.ok || !data.url)
         throw Error(data.error || 'Couldn’t create a share link. Try again.');
       const url = new URL(challengePath(timeMs, details), data.url).href;
-      if (navigator.share) {
+      if (!copyOnly && navigator.share) {
         try {
           await navigator.share({ title: 'SF Racer', text, url });
           return;
@@ -47,10 +47,20 @@ export function ShareButton({ timeMs, ...details }: { timeMs?: number } & Challe
   }
   return (
     <div className="share-control">
-      <button type="button" className="share-button" onClick={share} disabled={busy}>
-        <Share2 size={16} aria-hidden="true" />
-        {timeMs === undefined ? 'Share' : 'Share my time'}
-      </button>
+      <div className="share-actions">
+        <button type="button" className="share-button" onClick={() => void share()} disabled={busy}>
+          <Share2 size={16} aria-hidden="true" />
+          {timeMs === undefined ? 'Share' : 'Share my time'}
+        </button>
+        <button
+          type="button"
+          className="share-button"
+          onClick={() => void share(true)}
+          disabled={busy}
+        >
+          <Copy size={16} aria-hidden="true" /> Copy link
+        </button>
+      </div>
       <span className="share-status" role="status">
         {status}
       </span>

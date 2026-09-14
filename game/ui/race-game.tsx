@@ -428,7 +428,7 @@ export default function RaceGame() {
                     ? 'Back to the race →'
                     : hud.mode === 'finished'
                       ? 'Race again →'
-                      : `Race ${engineClass}cc as ${selected.name} →`}
+                      : `Race as ${selected.name} →`}
             </button>
             <div className="start-help">
               <span>↑ / W &nbsp; ACCELERATE</span>
@@ -447,8 +447,7 @@ export default function RaceGame() {
               character={character}
               position={hud.position}
               submit={leaderboard.submit}
-              onRaceAgain={() => audio.startRace(() => engine.current?.start(characterRef.current, engineClassRef.current))}
-              onChooseRacer={() => engine.current?.garage()}
+              onRaceAgain={() => engine.current?.garage()}
             />
             <Leaderboard {...leaderboard} />
           </>

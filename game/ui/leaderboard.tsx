@@ -1,5 +1,4 @@
 'use client';
-import { ShareButton } from './share-button';
 import { Trophy } from 'lucide-react';
 import { CHARACTERS } from '../characters/roster';
 import { formatRaceTime, type LeaderboardEntry } from '../leaderboard/model';
@@ -64,7 +63,6 @@ export function Leaderboard({
         )}
         <p className="leaderboard-footnote">South Park Waterfront · 1 lap</p>
       </details>
-      <ShareButton />
     </aside>
   );
 }

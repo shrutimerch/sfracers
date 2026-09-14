@@ -2310,3 +2310,6 @@ footer a {
 .engine-class-options input { accent-color: #d7fa55; }
 .engine-class-options label span { font-size: 11px; }
 .engine-class-options small { display: block; margin-top: 7px; font-size: 11px; }
+
+.share-actions { display: flex; align-items: flex-start; flex-wrap: wrap; gap: 8px; }
+.trophy-card .share-actions { justify-content: center; }
