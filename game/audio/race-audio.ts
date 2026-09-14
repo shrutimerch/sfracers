@@ -2,8 +2,11 @@ export const RACE_TRACKS = {
   menu: '/audio/character-select.m4a',
   intro: '/audio/start-grid.m4a',
   circuit: '/audio/circuit.m4a',
+  finishFirst: '/audio/finish-first.m4a',
+  finishSecond: '/audio/finish-second.m4a',
+  finishOther: '/audio/finish-third-fourth.m4a',
 } as const;
-export type AudioRaceState = { mode: string; count: number };
+export type AudioRaceState = { mode: string; count: number; position?: number };
 export type AudioStatus = {
   muted: boolean;
   starting: boolean;
@@ -37,6 +40,7 @@ export function createRaceAudio(deps: Dependencies, initialMuted = false) {
     unavailable = false;
   let state: AudioRaceState = { mode: 'loading', count: 3 };
   let active: keyof typeof RACE_TRACKS | null = null;
+  let finishTrack: 'finishFirst' | 'finishSecond' | 'finishOther' = 'finishOther';
   let lastCount = 0,
     pausedFrom = '',
     disposed = false,
@@ -86,8 +90,8 @@ export function createRaceAudio(deps: Dependencies, initialMuted = false) {
   };
   const sync = () => {
     if (disposed || starting) return;
-    if (state.mode === 'loading' || state.mode === 'ready' || state.mode === 'finished')
-      play('menu');
+    if (state.mode === 'loading' || state.mode === 'ready') play('menu');
+    else if (state.mode === 'finished') play(finishTrack);
     else if (state.mode === 'racing' || state.mode === 'inspection') play('circuit');
     else {
       stop();
@@ -149,6 +153,17 @@ export function createRaceAudio(deps: Dependencies, initialMuted = false) {
     update(next: AudioRaceState) {
       const previous = state;
       state = next;
+      if (next.mode === 'finished' && previous.mode !== 'finished') {
+        // Capture the place at the finish line; later rival updates must not change the music.
+        finishTrack =
+          next.position === 1
+            ? 'finishFirst'
+            : next.position === 2
+              ? 'finishSecond'
+              : 'finishOther';
+        deps.tracks[finishTrack].currentTime = 0;
+        active = null;
+      }
       if (next.mode === 'paused') pausedFrom = previous.mode;
       if (next.mode === 'countdown') {
         if (previous.mode !== 'countdown' && previous.mode !== 'paused') lastCount = 0;

@@ -90,7 +90,7 @@ export function useRaceAudio(state: AudioRaceState) {
   }, []);
   useEffect(() => {
     controller.current?.update(state);
-  }, [state.mode, state.count]);
+  }, [state.mode, state.count, state.position]);
   return {
     ...status,
     startRace: (start: () => void) => {

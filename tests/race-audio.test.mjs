@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createRaceAudio } from '../game/audio/race-audio.ts';
+import { createRaceAudio, RACE_TRACKS } from '../game/audio/race-audio.ts';
 function setup(muted = false) {
   const events = [],
     timers = new Map();
   let id = 0;
   const tracks = Object.fromEntries(
-    ['menu', 'intro', 'circuit'].map((name) => [
+    Object.keys(RACE_TRACKS).map((name) => [
       name,
       {
         loop: false,
@@ -125,5 +125,54 @@ test('hidden tabs silence playback and cannot finish the pre-grid wait', () => {
   assert.equal(events.filter((e) => e.startsWith('play:')).length, plays);
   audio.resume();
   assert.equal(timers.size, 1);
+  audio.dispose();
+});
+
+for (const [position, expected] of [
+  [1, 'finishFirst'],
+  [2, 'finishSecond'],
+  [3, 'finishOther'],
+  [4, 'finishOther'],
+]) {
+  test(`place ${position} plays ${expected} once and retains the finish-line result`, () => {
+    const { audio, tracks, events } = setup();
+    audio.enable();
+    audio.update({ mode: 'racing', count: 0, position });
+    const start = events.length;
+    tracks[expected].currentTime = 9;
+    audio.update({ mode: 'finished', count: 0, position });
+    assert.equal(tracks[expected].currentTime, 0);
+    assert.deepEqual(
+      events.slice(start).filter((event) => event.startsWith('play:')),
+      [`play:${expected}`],
+    );
+    tracks[expected].currentTime = 2;
+    audio.update({ mode: 'finished', count: 0, position: 4 });
+    assert.equal(tracks[expected].currentTime, 2);
+    assert.equal(events.filter((event) => event === `play:${expected}`).length, 1);
+    audio.toggleMute();
+    audio.toggleMute();
+    assert.equal(events.at(-1), `play:${expected}`);
+    assert.equal(tracks[expected].currentTime, 2);
+    audio.update({ mode: 'racing', count: 0, position });
+    audio.update({ mode: 'finished', count: 0, position });
+    assert.equal(tracks[expected].currentTime, 0, 'a new finish restarts the result music');
+    audio.dispose();
+  });
+}
+
+test('finishing muted resumes the correct result track when sound is enabled', () => {
+  const { audio, tracks, events } = setup(true);
+  audio.enable();
+  audio.update({ mode: 'finished', count: 0, position: 2 });
+  assert.equal(events.filter((event) => event.startsWith('play:')).length, 0);
+  audio.toggleMute();
+  assert.equal(events.at(-1), 'play:finishSecond');
+  audio.startRace(() => {});
+  assert.equal(events.at(-1), 'play:intro');
+  tracks.intro.onended();
+  audio.update({ mode: 'countdown', count: 3 });
+  audio.update({ mode: 'racing', count: 0 });
+  assert.equal(events.at(-1), 'play:circuit');
   audio.dispose();
 });
