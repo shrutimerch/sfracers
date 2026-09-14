@@ -196,6 +196,11 @@ export function createRaceSimulation(
     step,
     setKey,
     start: reset,
+    garage() {
+      if (mode !== 'finished') return;
+      reset();
+      mode = 'ready';
+    },
     pause,
     recover,
     blur() {

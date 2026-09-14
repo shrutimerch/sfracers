@@ -185,6 +185,7 @@ export function makeGame(
     selectCharacter: characterSelection.selectCharacter,
     start,
     pause: sim.pause,
+    garage: sim.garage,
     recover: sim.recover,
     toggleCamera,
     setKey: sim.setKey,
