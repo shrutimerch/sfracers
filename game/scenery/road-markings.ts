@@ -1,5 +1,9 @@
 import { embarcaderoBikeCenter } from './config/embarcadero-layout';
-import { hasBrannanDoubleYellow, hasObservedGreenLane } from './config/scenery-locations';
+import {
+  hasBrannanDoubleYellow,
+  hasObservedGreenLane,
+  isOracleServiceAlley,
+} from './config/scenery-locations';
 import * as T from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import data from './data/road-marking-data';
@@ -136,7 +140,7 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
     roughness: 1,
   });
   for (const road of d.roads.filter((r) => r.name === '2nd Street'))
-    lines(road.points, 14, asphalt, 0, 0.079);
+    lines(road.points, road.width ?? 14, asphalt, 0, 0.079);
   const paintSegments = data.crossings.filter((f) => crossingStyle(f.tags as Tags));
   const meeting = new Map<string, { point: Point; names: Set<string> }>();
   for (const road of d.roads) {
@@ -179,7 +183,9 @@ export function buildRoadMarkings(scene: T.Scene, d: MapData) {
     }
   }
   // Photo-supported double yellow on Second and Brannan's Second-to-courtyard stretch.
-  for (const road of d.roads.filter((r) => r.name === '2nd Street' || r.name === 'Brannan Street'))
+  for (const road of d.roads.filter(
+    (r) => !isOracleServiceAlley(r) && (r.name === '2nd Street' || r.name === 'Brannan Street'),
+  ))
     for (let i = 1; i < road.points.length; i++) {
       const a = road.points[i - 1],
         b = road.points[i],

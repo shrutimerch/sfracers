@@ -65,3 +65,13 @@ export function hasObservedGreenLane(name: string | undefined, point: Point) {
     (name === '3rd Street' && point[1] > ROAD_APPEARANCE.thirdGreenLaneMinZ)
   );
 }
+
+// Second Street's short service access on the ballpark side of King Street.
+// Keep the normal city blocks of Second Street unchanged.
+export function isOracleServiceAlley(road: { name: string; points: Point[] }) {
+  return (
+    road.name === '2nd Street' &&
+    road.points.length > 1 &&
+    road.points.every(([x, z]) => x >= 500 && z >= 676)
+  );
+}

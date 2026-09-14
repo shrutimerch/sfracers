@@ -1,3 +1,5 @@
+import { oracleGroundGeometry } from '../scenery/oracle-approach-garden';
+import { createRaceLighting, RACE_SKY } from './race-lighting';
 import { parkParkingObstacles } from '../scenery/south-park-parking';
 import { ORACLE_GENERIC_BUILDING_IDS } from '../scenery/oracle-park';
 import { buildPromenadePaving } from '../scenery/promenade-paving';
@@ -28,34 +30,19 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
     powerPreference: 'high-performance',
   });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-  renderer.setClearColor('#becbcf');
+  renderer.setClearColor(RACE_SKY);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = T.PCFShadowMap;
   renderer.outputColorSpace = T.SRGBColorSpace;
   renderer.toneMapping = T.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   const scene = new T.Scene();
-  scene.fog = new T.Fog('#becbcf', 450, 1800);
+  scene.fog = new T.Fog(RACE_SKY, 450, 1800);
   const camera = new T.PerspectiveCamera(65, 1, 0.15, 2800);
-  scene.add(new T.HemisphereLight('#e3e8e7', '#707267', 1.65));
-  const sun = new T.DirectionalLight('#fff3dc', 2.0);
-  sun.position.set(-70, 160, 370);
-  sun.target.position.set(90, 0, 490);
-  sun.castShadow = true;
-  sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, {
-    left: -155,
-    right: 155,
-    top: 155,
-    bottom: -155,
-    near: 1,
-    far: 600,
-  });
-  sun.shadow.normalBias = 0.08;
-  scene.add(sun, sun.target);
+  const lighting = createRaceLighting(scene);
   const material = (color: T.ColorRepresentation) =>
     new T.MeshStandardMaterial({ color, roughness: 0.85 });
-  const ground = new T.Mesh(new T.PlaneGeometry(6500, 6500), material('#abaea5'));
+  const ground = new T.Mesh(oracleGroundGeometry(), material('#abaea5'));
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.2;
   scene.add(ground);
@@ -276,7 +263,19 @@ export function createWorld(canvas: HTMLCanvasElement, d: MapData, facades: Faca
   for (const o of scene.children.slice())
     if (o instanceof T.Mesh || o instanceof T.Group) scenery.add(o);
   scene.add(scenery);
+  scenery.traverse((object) => {
+    if (!(object instanceof T.Mesh)) return;
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    if (!materials.some((m) => m instanceof T.MeshStandardMaterial && !m.transparent)) return;
+    object.receiveShadow = true;
+    // Flat paving receives shadows without adding coplanar shadow casters.
+    object.geometry.computeBoundingBox();
+    const bounds = object.geometry.boundingBox;
+    if (bounds && (bounds.max.y - bounds.min.y) * Math.abs(object.scale.y) > 0.4)
+      object.castShadow = true;
+  });
   return {
+    lighting,
     renderer,
     scene,
     camera,

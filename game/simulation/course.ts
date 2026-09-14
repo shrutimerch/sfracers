@@ -1,3 +1,4 @@
+import { isOracleServiceAlley } from '../scenery/config/scenery-locations.ts';
 import { isEastParkEntrance, isWestParkEntrance } from '../scenery/south-park-parking.ts';
 import type { MapData } from '../types';
 import { EMBARCADERO_LAYOUT, hasEmbarcaderoParking } from '../scenery/config/embarcadero-layout.ts';
@@ -45,13 +46,15 @@ export function prepareCourse(data: MapData): MapData {
       };
     }),
     roads: data.roads.map((r) =>
-      isEastParkEntrance(r) || isWestParkEntrance(r)
-        ? { ...r, width: 14.8 }
-        : hasEmbarcaderoParking(r)
-          ? { ...r, width: EMBARCADERO_LAYOUT.roadWidth }
-          : r.name === 'King Street' || r.name === 'The Embarcadero'
-            ? { ...r, width: 9.6 }
-            : r,
+      isOracleServiceAlley(r)
+        ? { ...r, width: 3.4 }
+        : isEastParkEntrance(r) || isWestParkEntrance(r)
+          ? { ...r, width: 14.8 }
+          : hasEmbarcaderoParking(r)
+            ? { ...r, width: EMBARCADERO_LAYOUT.roadWidth }
+            : r.name === 'King Street' || r.name === 'The Embarcadero'
+              ? { ...r, width: 9.6 }
+              : r,
     ),
   };
 }
