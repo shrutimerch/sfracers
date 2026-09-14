@@ -2,7 +2,7 @@ import { cyclingStrips } from './cycling-layout.ts';
 import { buildCyclist } from './cyclist.ts';
 import { parkSurfaceHeight } from './park-surface.ts';
 import type { SidewalkWalk } from './sidewalks';
-import { buildParkDogs } from './park-dogs.ts';
+import { buildParkDogs, parkClearance } from './park-dogs.ts';
 import * as T from 'three';
 import survey from './data/waterfront-geometry.ts';
 import type { TrafficObstacle } from '../simulation/traffic-collision';
@@ -165,7 +165,27 @@ export function buildCityMotion(scene: T.Scene, data: MapData, sidewalks: Sidewa
       actor.group.name = 'Cyclist';
       cyclists.set(actor, buildCyclist(actor.group, i));
     });
+  const southParkWalks = (data.parkDetails?.paths ?? [])
+    .filter((path) => path.id === 549848273)
+    .map((path) => {
+      // Follow the same smoothed central promenade used by the park paving.
+      const curve = new T.CatmullRomCurve3(path.points.map(([x, z]) => new T.Vector3(x, 0, z)));
+      const runs: Point[][] = [[]];
+      for (const p of curve.getSpacedPoints(Math.ceil(curve.getLength()))) {
+        const point: Point = [p.x, p.z];
+        if (parkClearance(point, data.parks?.[0] ?? []) > 1.5) runs[runs.length - 1].push(point);
+        else if (runs[runs.length - 1].length) runs.push([]);
+      }
+      return {
+        points: runs.sort((a, b) => b.length - a.length)[0],
+        width: 3.3,
+        promenade: false,
+        sidewalk: false,
+        name: 'South Park interior',
+      };
+    });
   const walkingPaths = [
+    ...southParkWalks,
     ...survey.parkPaths.map((path) => ({
       ...path,
       width: 2,
@@ -210,6 +230,10 @@ export function buildCityMotion(scene: T.Scene, data: MapData, sidewalks: Sidewa
         const { group } = actor;
         group.scale.setScalar(0.91 + variation * 0.17);
         group.name = 'Walking pedestrian';
+        if (path.name === 'South Park interior') {
+          actor.groundHeight = 0.27;
+          group.userData.park = 'South Park';
+        }
         const shirt = ['#b1543e', '#416478', '#dab957', '#637857', '#784f76', '#e0d5bb'][
           (i + j) % 6
         ];
