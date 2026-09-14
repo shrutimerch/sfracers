@@ -6,6 +6,7 @@ https://www.youtube.com/watch?v=7WPNkLaGFis
 
 start-grid.m4a — Start Grid Grand Prix (pre-grid sting; play once)
 https://www.youtube.com/watch?v=QOfNPwZVoIo
+Trimmed to source 0.24–2.90 seconds to remove silent padding before the countdown.
 
 circuit.m4a — Yoshi Circuit (race; loop)
 https://www.youtube.com/watch?v=gynpCNZcL_o

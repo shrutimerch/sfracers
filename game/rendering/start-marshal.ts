@@ -2,8 +2,8 @@ import * as T from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 
 export function startSignal(mode: string, count: number, time: number) {
-  if (mode === 'countdown') return count > 2 ? 0 : 1;
-  if (mode === 'racing' && time < 2.5) return 2;
+  if (mode === 'countdown') return count > 2 ? 0 : count > 1 ? 1 : 2;
+  if (mode === 'racing' && time < 2.5) return 3;
   return -1;
 }
 
@@ -53,13 +53,14 @@ export function createStartMarshal(scene: T.Scene, start: { x: number; z: number
     rope.position.set(side * 0.72, -0.4, 0.36);
     root.add(rope);
   }
-  const panel = new T.Mesh(new RoundedBoxGeometry(2.55, 0.88, 0.28, 3, 0.13), dark);
+  const panel = new T.Mesh(new RoundedBoxGeometry(3.35, 0.88, 0.28, 3, 0.13), dark);
   panel.position.set(0, -1, 0.36);
   root.add(panel);
-  const lights = ['#ff433d', '#ffd23f', '#54ee89'].map((color, i) => {
+  const colors = ['#ff433d', '#ff433d', '#ff433d', '#54ee89'];
+  const lights = colors.map((color, i) => {
     const m = new T.MeshStandardMaterial({ color, emissive: color, roughness: 0.25 });
-    egg(dark, (i - 1) * 0.8, -1, 0.53, 0.34, 0.34, 0.075);
-    egg(m, (i - 1) * 0.8, -1, 0.59, 0.27, 0.27, 0.07);
+    egg(dark, (i - 1.5) * 0.8, -1, 0.53, 0.34, 0.34, 0.075);
+    egg(m, (i - 1.5) * 0.8, -1, 0.59, 0.27, 0.27, 0.07);
     return m;
   });
   function update(mode: string, count: number, time: number, elapsed: number, groundHeight = 0) {
@@ -72,13 +73,13 @@ export function createStartMarshal(scene: T.Scene, start: { x: number; z: number
       groundHeight +
         4.8 +
         Math.sin(elapsed * 2.5) * 0.12 +
-        (signal === 2 ? Math.max(0, time - 1) * 3 : 0),
+        (signal === 3 ? Math.max(0, time - 1) * 3 : 0),
       start.z,
     );
     root.rotation.z = Math.sin(elapsed * 1.8) * 0.035;
     lights.forEach((m, i) => {
       m.emissiveIntensity = i === signal ? 2.4 : 0;
-      m.color.set(['#ff433d', '#ffd23f', '#54ee89'][i]).multiplyScalar(i === signal ? 1 : 0.17);
+      m.color.set(colors[i]).multiplyScalar(i === signal ? 1 : 0.17);
     });
   }
   root.visible = false;
