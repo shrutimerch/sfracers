@@ -46,10 +46,10 @@ export function embarcaderoLampPositions(d: MapData, mapped: Point[]): Point[] {
 
 export function buildEmbarcaderoLamps(scene: T.Scene, positions: Point[]) {
   const group = new T.Group();
-  group.name = 'Embarcadero heritage green lampposts';
+  group.name = 'Embarcadero single blue lampposts';
   scene.add(group);
-  const green = new T.MeshStandardMaterial({ color: '#31594f', roughness: 0.72, metalness: 0.28 });
-  const edge = new T.MeshStandardMaterial({ color: '#52766a', roughness: 0.78, metalness: 0.2 });
+  const green = new T.MeshStandardMaterial({ color: '#567e91', roughness: 0.72, metalness: 0.28 });
+  const edge = new T.MeshStandardMaterial({ color: '#7596a5', roughness: 0.78, metalness: 0.2 });
   const globe = new T.MeshStandardMaterial({
     color: '#e8e5c9',
     emissive: '#ddd5a8',
@@ -80,7 +80,7 @@ export function buildEmbarcaderoLamps(scene: T.Scene, positions: Point[]) {
     cylinder(x, 0.16, z, 0.34, 0.4, 0.32, green, 'octagonal plinth', 8);
     cylinder(x, 0.61, z, 0.23, 0.32, 0.62, green, 'tapered pedestal');
     cylinder(x, 1.06, z, 0.2, 0.25, 0.26, edge, 'pedestal collar');
-    cylinder(x, 3.55, z, 0.085, 0.16, 4.8, green, 'tall tapered green shaft');
+    cylinder(x, 3.55, z, 0.085, 0.16, 4.8, green, 'tall tapered blue shaft');
     for (let i = 0; i < 10; i++) {
       const a = (i * Math.PI) / 5;
       const flute = new T.CylinderGeometry(0.012, 0.018, 0.58, 4);

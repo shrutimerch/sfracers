@@ -765,7 +765,12 @@ export function buildRouteScenery(scene: T.Scene, d: MapData, facades: Facades) 
   );
   for (const lamp of survey.lamps) {
     const [x, z] = lamp.point;
-    if (isEmbarcaderoLamp(lamp.point) || routeDistance(x, z) > 70) continue;
+    if (
+      isEmbarcaderoLamp(lamp.point) ||
+      routeDistance(x, z) > 70 ||
+      medianLamps.some(({ point }) => Math.hypot(point[0] - x, point[1] - z) < 5)
+    )
+      continue;
     rod(new T.Vector3(x, 0, z), new T.Vector3(x, 6.5, z), 0.075, blue);
     box(x, 0.2, z, 0.4, 0.4, 0.4, blue);
     const g = new T.SphereGeometry(0.24, 8, 6);
